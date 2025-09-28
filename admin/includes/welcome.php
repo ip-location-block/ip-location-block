@@ -39,7 +39,7 @@ $url_wordpress = 'https://wordpress.org/support/plugin/ip-location-block/';
                 <p class="desc"><?php _e( 'IP Location Block provides complete <strong class="underline">geolocation blocking</strong> solution to block unwanted visitors on your website.', 'ip-location-block' ); ?></p>
                 <p class="desc"><?php _e( 'The plugin is <strong>FREE</strong> and supports geolocation based blacklisting/whitelisting by country. If you want precision blocking by city/state, check <a href="https://iplocationblock.com/codex/native-geo-location-provider/?utm_source=plugin&utm_medium=welcome&utm_campaign=codex_views" target="_blank">Native Geo-Location Provider</a>.', 'ip-location-block' ); ?></p>
                 <p class="desc"><?php _e( 'If you found this plugin <strong>useful</strong> useful, we will greatly appreciate if you take a minute to <a target="_blank" title="Give this plugin a good five star rating :)" href="https://wordpress.org/support/plugin/ip-location-block/reviews/#new-post">rate it. &#9733;&#9733;&#9733;&#9733;&#9733;</a>', 'ip-location-block' ); ?></p>
-                <p class="desc"><?php _e( sprintf( '<a target="_blank" class="button button-primary" title="Plugin Documentation" href="%s">Read Docs</a>', $url_docs ), 'ip-location-block' ); ?></p>
+                <p class="desc"><?php echo sprintf( __( '<a target="_blank" class="button button-primary" title="Plugin Documentation" href="%s">Read Docs</a>', 'ip-location-block' ), esc_url( $url_docs ) ); ?></p>
             </div>
         </div>
         <div class="ilb-instructions-row ilb-instructions-mb-10">
@@ -48,7 +48,7 @@ $url_wordpress = 'https://wordpress.org/support/plugin/ip-location-block/';
                     <h4 style="margin-top:0;"
                         class="navy"><?php _e( 'Precision blocking by state or city <span class="ilb-notice-badge">New from v1.2.0+</span>', 'ip-location-block' ); ?></h4>
                     <p>
-						<?php _e( sprintf( 'If you need a better and more precise IP Geo-Location matching by <strong>CITY</strong> and <strong>STATE</strong>, sign up for a <a target="_blank" href="%s">premium plan</a> and <a target="_blank" href="%s">learn how to set up</a>.', $url_purchase, $url_prem_docs ), 'ip-location-block' ); ?>
+						<?php printf( __( 'If you need a better and more precise IP Geo-Location matching by <strong>CITY</strong> and <strong>STATE</strong>, sign up for a <a target="_blank" href="%s">premium plan</a> and <a target="_blank" href="%s">learn how to set up</a>.', 'ip-location-block' ), esc_url( $url_purchase ), esc_url( $url_prem_docs ) ); ?>
                     </p>
                 </div>
             </div>
@@ -56,7 +56,7 @@ $url_wordpress = 'https://wordpress.org/support/plugin/ip-location-block/';
                 <div class="ilb-instructions-extra">
                     <h4 class="navy"><?php _e( 'Found problem? Report it!', 'ip-location-block' ); ?></h4>
                     <p style="margin-bottom: 0;">
-						<?php _e( sprintf( 'If you found a bug, or you want to report a problem please open a support ticket <a target="_blank" href="%s">here</a> or on <a target="_blank" href="%s">Github!</a>', $url_wordpress, $url_github ), 'ip-location-block' ); ?>
+						<?php printf( __( 'If you found a bug, or you want to report a problem please open a support ticket <a target="_blank" href="%s">here</a> or on <a target="_blank" href="%s">Github!</a>', 'ip-location-block' ), esc_url( $url_wordpress ), esc_url( $url_github ) ); ?>
                     </p>
                 </div>
             </div>
