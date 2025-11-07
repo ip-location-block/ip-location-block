@@ -252,6 +252,7 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 *Release Date - 07 Nov 2025*
 
 * New: Add instructions to migrate to latest IP Location Block platform
+* New: Test with latest WordPress
 
 = 1.3.6 =
 *Release Date - 06 Aug 2025*
