@@ -78,6 +78,70 @@ class IP_Location_Block_Admin {
 	}
 
 	/**
+	 * Print admin notice for API key upgrade requirement
+	 * @return void
+	 */
+	public function show_api_key_upgrade_notice() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$settings = IP_Location_Block::get_option();
+
+		// Check if we've already marked this as completed (user upgraded or dismissed)
+		if ( isset( $settings['api_key_upgraded'] ) && $settings['api_key_upgraded'] ) {
+			return;
+		}
+
+		// Check if IP Location Block provider is being used
+		$providers = IP_Location_Block_Provider::get_valid_providers( $settings );
+		$uses_api  = in_array( 'IP Location Block', $providers );
+
+		if ( ! $uses_api ) {
+			return;
+		}
+
+		// Get API key
+		$api_key = ! empty( $settings['providers']['IP Location Block'] ) ? $settings['providers']['IP Location Block'] : '';
+
+		if ( empty( $api_key ) ) {
+			return;
+		}
+
+		// Check quota to see if upgrade is required
+		$quota = IP_Location_Block_Provider::get_native_quota( $api_key );
+
+		// If API key needs upgrade, show the notice
+		if ( isset( $quota['name'] ) && $quota['name'] === 'requires-api-key-upgrade' ) {
+			$upgrade_url = 'https://app.iplocationblock.com/upgrade-api-key?api_key=' . urlencode( $api_key );
+			ob_start();
+			?>
+			<div class="notice notice-warning ip-location-block-notice-api-key-upgrade">
+				<p>
+					<strong><?php _e( 'IP Location Block: API Key Upgrade Required', 'ip-location-block' ); ?></strong>
+				</p>
+				<p>
+					<?php _e( 'Your API key needs to be upgraded due to security improvements. This is a one-time process and will only take a moment.', 'ip-location-block' ); ?>
+				</p>
+				<p>
+					<a href="<?php echo esc_url( $upgrade_url ); ?>" class="button button-primary" target="_blank">
+						<?php _e( 'Upgrade API Key Now', 'ip-location-block' ); ?>
+					</a>
+					<a href="https://iplocationblock.com/api-platform-upgrade/" class="button button-secondary" target="_blank">
+						<?php _e( 'Learn More', 'ip-location-block' ); ?>
+					</a>
+				</p>
+			</div>
+			<?php
+			echo ob_get_clean();
+		} elseif ( isset( $quota['name'] ) && $quota['name'] !== 'requires-api-key-upgrade' ) {
+			// API key is valid and doesn't need upgrade, mark as completed so we don't check again
+			$settings['api_key_upgraded'] = true;
+			IP_Location_Block::update_option( $settings );
+		}
+	}
+
+	/**
 	 * Load the plugin text domain for translation and add body class.
 	 *
 	 */
@@ -873,6 +937,8 @@ class IP_Location_Block_Admin {
 		add_action( 'network_admin_notices', array( $this, 'show_admin_notices' ) );
 		// Welcome screen
 		add_action( 'admin_notices', array( $this, 'show_intro_notice' ) );
+		// API key upgrade notice
+		add_action( 'admin_notices', array( $this, 'show_api_key_upgrade_notice' ) );
 	}
 
 	/**
