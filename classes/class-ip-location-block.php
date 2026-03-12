@@ -821,6 +821,11 @@ class IP_Location_Block {
 			}
 		}
 
+		// If no IPs were validated (e.g. empty proxy config), bail out early
+		if ( null === $validate ) {
+			return $validate;
+		}
+
 		if ( $die ) // send response code to die if validation fails
 		{
 			$this->endof_validate( $hook, $validate, $settings, self::is_blocked( $validate['result'] ) );

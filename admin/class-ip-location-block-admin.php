@@ -831,54 +831,56 @@ class IP_Location_Block_Admin {
 			$instance = IP_Location_Block::get_instance();
 			$validate = $instance->validate_ip( 'login', $settings, true, false ); // skip authentication check
 
-			switch ( $validate['result'] ) {
-				case 'limited':
-					self::add_admin_notice( 'error',
-						__( 'Once you logout, you will be unable to login again because the number of login attempts reaches the limit.', 'ip-location-block' ) . ' ' .
-						sprintf(
-							__( 'Please remove your IP address in &#8220;%1$sStatistics in IP address cache%2$s&#8221; on &#8220;%3$sStatistics%4$s&#8221; tab to prevent locking yourself out.', 'ip-location-block' ),
-							'<strong><a href="' . esc_url( add_query_arg( array(
-									'page' => IP_Location_Block::PLUGIN_NAME,
-									'tab'  => 1,
-									'sec'  => 2
-								), $adminurl ) . '#' . IP_Location_Block::PLUGIN_NAME . '-section-2' ) . '">', '</a></strong>',
-							'<strong>', '</strong>'
-						)
-					);
-					break;
-
-				case 'blocked':
-				case 'extra':
-					self::add_admin_notice( 'error',
-						( $settings['matching_rule'] ?
-							__( 'Once you logout, you will be unable to login again because your country code or IP address is in the blacklist.', 'ip-location-block' ) :
-							__( 'Once you logout, you will be unable to login again because your country code or IP address is not in the whitelist.', 'ip-location-block' )
-						) . ' ' .
-						( 'ZZ' !== $validate['code'] ?
+			if ( $validate && isset( $validate['result'] ) ) {
+				switch ( $validate['result'] ) {
+					case 'limited':
+						self::add_admin_notice( 'error',
+							__( 'Once you logout, you will be unable to login again because the number of login attempts reaches the limit.', 'ip-location-block' ) . ' ' .
 							sprintf(
-								__( 'Please check your &#8220;%sValidation rules and behavior%s&#8221;.', 'ip-location-block' ),
-								'<strong><a href="' . esc_url( add_query_arg( array(
-										'page' => IP_Location_Block::PLUGIN_NAME,
-										'tab'  => 0,
-										'sec'  => 0
-									), $network ) . '#' . IP_Location_Block::PLUGIN_NAME . '-section-0' ) . '">', '</a></strong>'
-							) :
-							sprintf(
-								__( 'Please confirm your local geolocation database files exist at &#8220;%sLocal database settings%s&#8221; section, or remove your IP address in cache at &#8220;%sStatistics in cache%s&#8221; section.', 'ip-location-block' ),
-								'<strong><a href="' . esc_url( add_query_arg( array(
-										'page' => IP_Location_Block::PLUGIN_NAME,
-										'tab'  => 0,
-										'sec'  => 5
-									), $network ) . '#' . IP_Location_Block::PLUGIN_NAME . '-section-5' ) . '">', '</a></strong>',
+								__( 'Please remove your IP address in &#8220;%1$sStatistics in IP address cache%2$s&#8221; on &#8220;%3$sStatistics%4$s&#8221; tab to prevent locking yourself out.', 'ip-location-block' ),
 								'<strong><a href="' . esc_url( add_query_arg( array(
 										'page' => IP_Location_Block::PLUGIN_NAME,
 										'tab'  => 1,
 										'sec'  => 2
-									), $adminurl ) . '#' . IP_Location_Block::PLUGIN_NAME . '-section-2' ) . '">', '</a></strong>'
+									), $adminurl ) . '#' . IP_Location_Block::PLUGIN_NAME . '-section-2' ) . '">', '</a></strong>',
+								'<strong>', '</strong>'
 							)
-						)
-					);
-					break;
+						);
+						break;
+
+					case 'blocked':
+					case 'extra':
+						self::add_admin_notice( 'error',
+							( $settings['matching_rule'] ?
+								__( 'Once you logout, you will be unable to login again because your country code or IP address is in the blacklist.', 'ip-location-block' ) :
+								__( 'Once you logout, you will be unable to login again because your country code or IP address is not in the whitelist.', 'ip-location-block' )
+							) . ' ' .
+							( 'ZZ' !== $validate['code'] ?
+								sprintf(
+									__( 'Please check your &#8220;%sValidation rules and behavior%s&#8221;.', 'ip-location-block' ),
+									'<strong><a href="' . esc_url( add_query_arg( array(
+											'page' => IP_Location_Block::PLUGIN_NAME,
+											'tab'  => 0,
+											'sec'  => 0
+										), $network ) . '#' . IP_Location_Block::PLUGIN_NAME . '-section-0' ) . '">', '</a></strong>'
+								) :
+								sprintf(
+									__( 'Please confirm your local geolocation database files exist at &#8220;%sLocal database settings%s&#8221; section, or remove your IP address in cache at &#8220;%sStatistics in cache%s&#8221; section.', 'ip-location-block' ),
+									'<strong><a href="' . esc_url( add_query_arg( array(
+											'page' => IP_Location_Block::PLUGIN_NAME,
+											'tab'  => 0,
+											'sec'  => 5
+										), $network ) . '#' . IP_Location_Block::PLUGIN_NAME . '-section-5' ) . '">', '</a></strong>',
+									'<strong><a href="' . esc_url( add_query_arg( array(
+											'page' => IP_Location_Block::PLUGIN_NAME,
+											'tab'  => 1,
+											'sec'  => 2
+										), $adminurl ) . '#' . IP_Location_Block::PLUGIN_NAME . '-section-2' ) . '">', '</a></strong>'
+								)
+							)
+						);
+						break;
+				}
 			}
 		}
 
