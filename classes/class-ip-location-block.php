@@ -34,6 +34,16 @@ class IP_Location_Block {
 	private static $wp_path = array();
 	private static $remote_addr = null;
 
+	/**
+	 * Check if WP-ZEP is enabled via filter.
+	 * WP-ZEP is deprecated and disabled by default.
+	 *
+	 * @return bool
+	 */
+	public static function is_wp_zep_enabled() {
+		return apply_filters( 'ip_location_block_wp_zep', false );
+	}
+
 	private $pagenow = null;
 	private $request_uri = null;
 	private $target_type = null;
@@ -348,17 +358,25 @@ class IP_Location_Block {
 		$settings = self::get_option();
 		$validate = $settings['validation'];
 
+		$zep_enabled = self::is_wp_zep_enabled();
+
 		$args['sites'] = IP_Location_Block_Util::get_sites_of_user();
 		$args['nonce'] = IP_Location_Block_Util::create_nonce( self::$auth_key );
-		$args['key']   = $validate['admin'] & 2 || $validate['ajax'] & 2 || $validate['plugins'] & 2 || $validate['themes'] & 2 ? self::$auth_key : false;
+		$args['key']   = $zep_enabled && ( $validate['admin'] & 2 || $validate['ajax'] & 2 || $validate['plugins'] & 2 || $validate['themes'] & 2 ) ? self::$auth_key : false;
 
-		$script = plugins_url(
-			! defined( 'IP_LOCATION_BLOCK_DEBUG' ) || ! IP_LOCATION_BLOCK_DEBUG ?
-				'admin/js/authenticate.min.js' : 'admin/js/authenticate.js', IP_LOCATION_BLOCK_BASE
-		);
+		if ( $zep_enabled ) {
+			$script = plugins_url(
+				! defined( 'IP_LOCATION_BLOCK_DEBUG' ) || ! IP_LOCATION_BLOCK_DEBUG ?
+					'admin/js/authenticate.min.js' : 'admin/js/authenticate.js', IP_LOCATION_BLOCK_BASE
+			);
 
-		wp_enqueue_script( self::$auth_key, $script, array( 'jquery' ), IP_LOCATION_BLOCK_VERSION );
-		wp_localize_script( self::$auth_key, 'IP_LOCATION_BLOCK_AUTH', $args + self::$wp_path );
+			wp_enqueue_script( self::$auth_key, $script, array( 'jquery' ), IP_LOCATION_BLOCK_VERSION );
+			wp_localize_script( self::$auth_key, 'IP_LOCATION_BLOCK_AUTH', $args + self::$wp_path );
+		} else {
+			wp_register_script( self::$auth_key, false );
+			wp_enqueue_script( self::$auth_key );
+			wp_localize_script( self::$auth_key, 'IP_LOCATION_BLOCK_AUTH', $args + self::$wp_path );
+		}
 
 	}
 
@@ -991,6 +1009,12 @@ class IP_Location_Block {
 				$rule = (int) $settings['validation']['admin'];
 		}
 
+		// WP-ZEP is deprecated and disabled by default
+		if ( ! self::is_wp_zep_enabled() ) {
+			$rule &= ~2;
+			$zep = false;
+		}
+
 		// list of request for specific action or page to bypass WP-ZEP
 		$list = IP_Location_Block_Util::allowed_pages_actions( $settings );
 		// skip validation of country code and WP-ZEP if exceptions matches action or page
@@ -1033,6 +1057,11 @@ class IP_Location_Block {
 		// set validation rules by target (0: Bypass, 1: Block by country, 2: WP-ZEP)
 		$settings = self::get_option();
 		$rule     = (int) $settings['validation'][ $type ];
+
+		// WP-ZEP is deprecated and disabled by default
+		if ( ! self::is_wp_zep_enabled() ) {
+			$rule &= ~2;
+		}
 
 		// list of request for specific action or page to bypass WP-ZEP
 		$path = array( 'includes' => array( 'ms-files.php', 'js/tinymce/wp-tinymce.php', ), /* for wp-includes */ );

@@ -306,6 +306,13 @@ class IP_Location_Block_Opts {
 			IP_Location_Block_Opts::upgrade_validation_timing_mu_plugin( $settings );
 		}
 
+		// Strip WP-ZEP bit from stored settings (WP-ZEP deprecated)
+		if ( version_compare( $version, '1.3.8' ) < 0 ) {
+			foreach ( array( 'admin', 'ajax', 'plugins', 'themes' ) as $tmp ) {
+				$settings['validation'][ $tmp ] &= ~2;
+			}
+		}
+
 		// Update Settings
 		$settings['version']    = IP_LOCATION_BLOCK_VERSION;
 		$settings['request_ua'] = trim( str_replace( array( 'InfiniteWP' ), '', isset( $_SERVER['HTTP_USER_AGENT'] ) ? $_SERVER['HTTP_USER_AGENT'] : '' ) );
