@@ -2,16 +2,16 @@
 Contributors: darkog
 Tags: country, block, ip address, ip geo block, geolocation
 Requires at least: 3.7
-Tested up to: 6.8
-Stable tag: 1.3.7
+Tested up to: 7.0
+Stable tag: 1.3.8
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
-Easily block visitors by country, state or ISP provider. Also, protects your site from spam, login attempts, zero-day exploits, malicious access & more.
+Easily block visitors by country, state or ISP provider. Also, protects your site from spam, login attempts, malicious access & more.
 
 == Description ==
 
-IP Location Block plugin that allows you to block access to your site based on the visitor location while also keeping your site safe from malicious attacks. The plugin brings a smart and powerful protection methods named as "**WP Zero-day Exploit Prevention**" and "**WP Metadata Exploit Protection**".
+IP Location Block plugin that allows you to block access to your site based on the visitor location while also keeping your site safe from malicious attacks. The plugin brings a smart and powerful protection methods such as "**WP Metadata Exploit Protection**".
 
 Combined with those methods and IP address geolocation, you'll be surprised to find a bunch of malicious or undesirable access blocked in the logs of this plugin after several days of installation.
 
@@ -27,9 +27,6 @@ Combined with those methods and IP address geolocation, you'll be surprised to f
 
 * **Immigration control:**
   Access to the basic and important entrances into back-end such as `wp-comments-post.php`, `xmlrpc.php`, `wp-login.php`, `wp-signup.php`, `wp-admin/admin.php`, `wp-admin/admin-ajax.php`, `wp-admin/admin-post.php` will be validated by means of a country code based on IP address. It allows you to configure either whitelist or blacklist to [specify the countires](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements "ISO 3166-1 alpha-2 - Wikipedia"), [CIDR notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing "Classless Inter-Domain Routing - Wikipedia") for a range of IP addresses and [AS number](https://en.wikipedia.org/wiki/Autonomous_system_(Internet) "Autonomous system (Internet) - Wikipedia") for a group of IP networks.
-
-* **Zero-day Exploit Prevention:**
-  Unlike other security firewalls based on attack patterns (vectors), the original feature "**W**ord**P**ress **Z**ero-day **E**xploit **P**revention" (WP-ZEP) is focused on patterns of vulnerability. It is simple but still smart and strong enough to block any malicious accesses to `wp-admin/*.php`, `plugins/*.php` and `themes/*.php` even from the permitted countries. It will protect your site against certain types of attack such as CSRF, LFI, SQLi, XSS and so on, **even if you have some vulnerable plugins and themes in your site**.
 
 * **Guard against login attempts:**
   In order to prevent hacking through the login form and XML-RPC by brute-force and the reverse-brute-force attacks, the number of login attempts will be limited per IP address even from the permitted countries.
@@ -139,7 +136,7 @@ You can find the long answer and the compatibility list of cache plugins at "[Co
 
 Absolutely, YES.
 
-Sometimes, a WordFence Security user would report this type of claim when he/she found some accesses in its Live traffic view. But please don't worry. Before WordPress runs, WordFence cleverly filters out malicious requests to your site using <a href="https://php.net/manual/en/ini.core.php#ini.auto-prepend-file" title="PHP: Description of core php.ini directives - Manual">auto_prepend_file</a> directive to include PHP based Web Application Firewall. Then this plugin validates the rest of the requests that pass over Wordfence because those were not in WAF rules, especially you enables "**Prevent Zero-day Exploit**".
+Sometimes, a WordFence Security user would report this type of claim when he/she found some accesses in its Live traffic view. But please don't worry. Before WordPress runs, WordFence cleverly filters out malicious requests to your site using <a href="https://php.net/manual/en/ini.core.php#ini.auto-prepend-file" title="PHP: Description of core php.ini directives - Manual">auto_prepend_file</a> directive to include PHP based Web Application Firewall. Then this plugin validates the rest of the requests that pass over Wordfence because those were not in WAF rules.
 
 It would also possibly be caused by the accuracy of country code in the geolocation databases. Actually, there is a case that a same IP address has different country code.
 
@@ -189,9 +186,6 @@ Yes. Roughly speaking, the strategy of this plugin has been constructed as follo
 
 - **Block by country**
   It blocks malicious requests from outside your country.
-
-- **Prevent Zero-day Exploit**
-  It blocks malicious requests from your country.
 
 - **Force to load WP core**
   It blocks the request which has not been covered in the above two.
@@ -247,6 +241,16 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 11. **IP Location Plugin** - Multisite list on network
 
 == Changelog ==
+
+= 1.3.8 =
+
+*Release Date - 13 Mar 2026*
+
+* Fix: PHP Warnings
+* Fix: Deprecated jQuery calls
+* Add: Kinsta/WPEngine
+* Deprecate WP-ZEP (Zero-Day Prevention) to be removed in 1.4.0
+* Test with WordPress 7.0
 
 = 1.3.7 =
 *Release Date - 07 Nov 2025*
