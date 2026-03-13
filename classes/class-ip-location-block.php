@@ -1433,6 +1433,12 @@ class IP_Location_Block {
 
 		// validate country by IP address (block: true, die: false)
 		$this->validate_ip( 'public', $settings, 1 & $settings['validation']['public'] );
+
+		// Prevent PHP-level cache plugins (WP Super Cache, W3TC, WP Rocket, LiteSpeed)
+		// from serving a single cached response to all visitors.
+		if ( 1 & $settings['validation']['public'] ) {
+			defined( 'DONOTCACHEPAGE' ) or define( 'DONOTCACHEPAGE', true );
+		}
 	}
 
 	/**

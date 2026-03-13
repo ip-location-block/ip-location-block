@@ -198,6 +198,7 @@ class IP_Location_Block_Opts {
 		),
 		'use_asn'              => 0,
 		'migrated_from_legacy' => false,
+		'cache_compat_dismissed' => false,
 	);
 
 	/**

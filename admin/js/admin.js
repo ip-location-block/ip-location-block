@@ -2139,6 +2139,23 @@
         })
     })
 
+    $(function(){
+        $(document).on('click', '.ip-location-block-cache-compat-dismiss', function(e){
+            var $notice = $(this).closest('.notice');
+            var notice_id = $notice.data('notice');
+            ajax_post(null, {
+                cmd: 'dismiss-notice',
+                notice_id: notice_id,
+            }, function (data) {
+                if (data.hasOwnProperty('message')) {
+                    $notice.fadeOut();
+                } else {
+                    alert('Unable to dismiss notice.');
+                }
+            });
+        })
+    })
+
 }(jQuery, window, document));
 
 document.addEventListener("DOMContentLoaded", function(){
