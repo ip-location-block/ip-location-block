@@ -182,7 +182,7 @@
         $this.siblings('input[name^="' + ID('%', 'settings') + '"]:checkbox').prop('disabled', !stat);
 
         // folding the list
-        if ($.isArray($elem)) {
+        if (Array.isArray($elem)) {
             $.each($elem, function (i, elm) {
                 $(elm).nextAll(ID('.', 'settings-folding')).each(function (j, obj) {
                     fold_elements($(obj), stat && mask[i]);
@@ -262,7 +262,7 @@
 
         // Render descendant element
         if (checked) {
-            behave.change();
+            behave.trigger('change');
         }
     }
 
@@ -315,21 +315,21 @@
 
             // reset all checkboxes
             if (clear) {
-                $('input[type="checkbox"]').prop('checked', false).change();
-                $('input[name*=providers]').prop('disabled', false).change();
+                $('input[type="checkbox"]').prop('checked', false).trigger('change');
+                $('input[name*=providers]').prop('disabled', false).trigger('change');
             }
 
             // deserialize to the form
             $(ID('#', 'import')).closest('form').deserialize(json);
 
             // update textfield, checkbox (Exceptions, Mimetype)
-            $(ID('@', 'exception_admin') + ',' + ID('@', 'validation_mimetype')).change();
+            $(ID('@', 'exception_admin') + ',' + ID('@', 'validation_mimetype')).trigger('change');
 
             // update selection
-            $('select[name*="' + ID('%', 'settings') + '"]').change();
+            $('select[name*="' + ID('%', 'settings') + '"]').trigger('change');
 
             // folding list at Login form
-            $(ID('@', 'validation_login')).change();
+            $(ID('@', 'validation_login')).trigger('change');
 
             // Public facing pages
             set_front_end($(ID('@', 'validation_public')));
@@ -1045,7 +1045,7 @@
                     $(ID('@', 'white_list')).closest('tr').toggle(value === '0');
                     $(ID('@', 'black_list')).closest('tr').toggle(value === '1');
                     return false;
-                }).change();
+                }).trigger('change');
 
                 // CIDR calculator
                 $(ID('.', 'icon-cidr')).on('click', function () {
@@ -1074,7 +1074,7 @@
                         fold_elements($(obj), (stat === i + 1) || (stat && 2 === i));
                     });
                     return stopPropergation(event);
-                }).change();
+                }).trigger('change');
 
                 // Response message and Redirect URL
                 $('select[name*="response_code"]').on('change', function (event) {
@@ -1114,7 +1114,7 @@
                         });
                     }
                     return stopPropergation(event);
-                }).change();
+                }).trigger('change');
 
                 // Decode
                 $(ID('#', 'decode')).on('click', function (/*event*/) {
@@ -1136,7 +1136,7 @@
                     var $this = $(this);
                     show_descendants($this, $this, name, true);
                     return stopPropergation(event);
-                }).change();
+                }).trigger('change');
 
                 // Exceptions for Admin ajax/post
                 ajax_post(null, {
@@ -1153,7 +1153,7 @@
                         if (data.hasOwnProperty(key)) {
                             key = stripTag(key);
                             id = ID('!', 'exception_admin_' + key.replaceAll('/', '_'));
-                            if (!$this.find('#' + id).size()) {
+                            if (!$this.find('#' + id).length) {
                                 i = input.cloneNode(false);
                                 i.setAttribute('id', id);
                                 i.setAttribute('value', key);
@@ -1199,7 +1199,7 @@
                         });
 
                         return stopPropergation(event);
-                    }).change();
+                    }).trigger('change');
 
                     // Admin ajax/post: Candidate actions
                     $(ID('#', 'list-admin')).on('click', 'input', function (/*event*/) {
@@ -1220,7 +1220,7 @@
                             actions.splice(i, 1);
                         }
 
-                        $text.val(actions.join(',')).change();
+                        $text.val(actions.join(',')).trigger('change');
                     });
 
                     // Admin ajax/post: Find the blocked request in logs
@@ -1291,7 +1291,7 @@
                 // Admin ajax/post: Enable / Disable Exceptions
                 $('input[id^="' + ID('!', 'validation_ajax_') + '"]').on('change', function (/*event*/) {
                     show_folding_ajax($(this));
-                }).change();
+                }).trigger('change');
 
                 /*---------------------------
                  * Front-end target settings
@@ -1300,23 +1300,23 @@
                 $(ID('@', 'validation_public')).on('change', function (event) {
                     set_front_end($(this));
                     return stopPropergation(event);
-                }).change();
+                }).trigger('change');
 
                 // Matching rule on front-end
                 $(ID('@', 'public_matching_rule')).on('change', function (event) {
                     var value = this.value;
                     $(ID('@', 'public_white_list')).closest('tr').toggle(value === '0');
                     $(ID('@', 'public_black_list')).closest('tr').toggle(value === '1');
-                    $(ID('@', 'public_response_code')).change().closest('tr').toggle(value !== '-1');
+                    $(ID('@', 'public_response_code')).trigger('change').closest('tr').toggle(value !== '-1');
                     return stopPropergation(event);
-                }).change();
+                }).trigger('change');
 
                 // Badly-behaved bots and crawlers
                 $(ID('@', 'public_behavior')).on('change', function (event) {
                     var $this = $(this);
                     fold_elements($this.siblings('ul'), $this.prop('checked'));
                     return stopPropergation(event);
-                }).change();
+                }).trigger('change');
 
                 /*---------------------------
                  * Local database settings
@@ -1554,7 +1554,7 @@
                     show_description($this);
                     show_descendants($this, $this, name, true);
                     return false;
-                }).change();
+                }).trigger('change');
 
                 // Toggle checkbox
                 $(ID('.', 'icon-cycle')).on('click', function (/*event*/) {
@@ -1921,7 +1921,7 @@
                     }
 
                     saveCookie(cookie);
-                }).change();
+                }).trigger('change');
 
                 // Search Geolocation
                 $(ID('@', 'get_location')).on('click', function (/*event*/) {
@@ -2134,6 +2134,23 @@
                     console.log(data.message);
                 } else {
                     alert('Unable to dismiss nonce.');
+                }
+            });
+        })
+    })
+
+    $(function(){
+        $(document).on('click', '.ip-location-block-cache-compat-dismiss', function(e){
+            var $notice = $(this).closest('.notice');
+            var notice_id = $notice.data('notice');
+            ajax_post(null, {
+                cmd: 'dismiss-notice',
+                notice_id: notice_id,
+            }, function (data) {
+                if (data.hasOwnProperty('message')) {
+                    $notice.fadeOut();
+                } else {
+                    alert('Unable to dismiss notice.');
                 }
             });
         })

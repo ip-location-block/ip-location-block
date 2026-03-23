@@ -591,12 +591,10 @@ class IP_Location_Block_Admin_Tab {
 
 		$list = array(
 			1 => __( 'Block by location', 'ip-location-block' ),
-			2 => __( 'Prevent Zero-day Exploit', 'ip-location-block' ),
 		);
 
 		$desc = array(
 			1 => __( 'It will block a request related to the services for both &#8220;non-logged in user&#8221; and &#8220;logged-in user&#8221;.', 'ip-location-block' ),
-			2 => __( 'Regardless of the country code, it will block a malicious request related to the services only for &#8220;logged-in user&#8221;.', 'ip-location-block' ),
 		);
 
 		// Max failed login attempts per IP address
@@ -741,9 +739,7 @@ class IP_Location_Block_Admin_Tab {
 				'sub-field' => 'plugins',
 				'value'     => $options['validation']['plugins'],
 				'list'      => $list,
-				'desc'      => array(
-					2 => sprintf( $desc[0], $val ),
-				),
+				'desc'      => array(),
 				'after'     => '<ul class="ip-location-block-settings-folding ip-location-block-dropup">' . "\n" .
 				               '	<dfn title="' . $desc[1] . '">' . __( 'Exceptions', 'ip-location-block' ) . "</dfn>\n" .
 				               '	<a class="ip-location-block-hide ip-location-block-icon ip-location-block-icon-cycle">' . $common[2] . '</a><a class="ip-location-block-icon ip-location-block-icon-find ip-location-block-hide" data-target="plugins">' . $common[3] . "</a>\n" .
@@ -792,9 +788,7 @@ class IP_Location_Block_Admin_Tab {
 				'sub-field' => 'themes',
 				'value'     => $options['validation']['themes'],
 				'list'      => $list,
-				'desc'      => array(
-					2 => sprintf( $desc[0], $val ),
-				),
+				'desc'      => array(),
 				'after'     => '<ul class="ip-location-block-settings-folding ip-location-block-dropup">' . "\n" .
 				               '	<dfn title="' . $desc[1] . '">' . __( 'Exceptions', 'ip-location-block' ) . "</dfn>\n" .
 				               '	<a class="ip-location-block-hide ip-location-block-icon ip-location-block-icon-cycle">' . $common[2] . '</a><a class="ip-location-block-icon ip-location-block-icon-find ip-location-block-hide" data-target="themes">' . $common[3] . "</a>\n" .

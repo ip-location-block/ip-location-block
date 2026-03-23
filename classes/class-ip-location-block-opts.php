@@ -198,6 +198,7 @@ class IP_Location_Block_Opts {
 		),
 		'use_asn'              => 0,
 		'migrated_from_legacy' => false,
+		'cache_compat_dismissed' => false,
 	);
 
 	/**
@@ -304,6 +305,13 @@ class IP_Location_Block_Opts {
 		// Upgrade the mu files
 		if ( version_compare( $version, '1.3.6' ) < 0 ) {
 			IP_Location_Block_Opts::upgrade_validation_timing_mu_plugin( $settings );
+		}
+
+		// Strip WP-ZEP bit from stored settings (WP-ZEP deprecated)
+		if ( version_compare( $version, '1.3.8' ) < 0 ) {
+			foreach ( array( 'admin', 'ajax', 'plugins', 'themes' ) as $tmp ) {
+				$settings['validation'][ $tmp ] &= ~2;
+			}
 		}
 
 		// Update Settings
