@@ -48,7 +48,7 @@ $url_wordpress = 'https://wordpress.org/support/plugin/ip-location-block/';
                     <h4 style="margin-top:0;"
                         class="navy"><?php _e( 'Precision blocking by region or state <span class="ilb-notice-badge">New from v1.2.0+</span>', 'ip-location-block' ); ?></h4>
                     <p>
-						<?php printf( __( 'If you need a better and more precise IP Geo-Location matching by <strong>CITY</strong> and <strong>STATE</strong>, sign up for a <a target="_blank" href="%s">premium plan</a> and <a target="_blank" href="%s">learn how to set up</a>.', 'ip-location-block' ), esc_url( $url_purchase ), esc_url( $url_prem_docs ) ); ?>
+						<?php printf( __( 'If you need a better and more precise IP Geo-Location matching by <strong>Region</strong> and <strong>STATE</strong>, not only a country, sign up for a <a target="_blank" href="%s">premium plan</a> and <a target="_blank" href="%s">learn how to set up</a>.', 'ip-location-block' ), esc_url( $url_purchase ), esc_url( $url_prem_docs ) ); ?>
                     </p>
                 </div>
             </div>
