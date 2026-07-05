@@ -2,3 +2,20 @@
 	max-width: 1100px;
 	margin: 20px 0;
 }
+
+.ilb-badge {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	background: #3858e9;
+	color: #fff;
+	border-radius: 3px;
+	padding: 2px 6px;
+	vertical-align: middle;
+}
+
+.ilb-tab-panel {
+	margin-top: 12px;
+}

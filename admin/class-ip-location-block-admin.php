@@ -1441,7 +1441,11 @@ class IP_Location_Block_Admin {
 						$output[ $key ]['black_list'] = sanitize_text_field( $input[ $key ]['black_list'] );
 					}
 					if ( isset( $input[ $key ]['capability'] ) ) {
-						$output[ $key ]['capability'] = array_map( 'sanitize_key', explode( ',', trim( $input[ $key ]['capability'], ',' ) ) ); // @since 3.0.0
+						$cap = $input[ $key ]['capability'];
+						if ( is_string( $cap ) ) { // classic form submits a CSV string; get_option() stores an array
+							$cap = explode( ',', trim( $cap, ',' ) );
+						}
+						$output[ $key ]['capability'] = array_map( 'sanitize_key', (array) $cap ); // @since 3.0.0
 					}
 					break;
 

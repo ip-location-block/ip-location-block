@@ -36,12 +36,18 @@ class IP_Location_Block_Rest {
 	public static function register_routes() {
 		$perm = array( __CLASS__, 'permission' );
 
-		// Settings (read). Saving is added with the Settings tab (needs the
-		// admin sanitizer, which is not loaded on REST requests).
+		// Settings (read + save).
 		register_rest_route( self::NS, '/settings', array(
-			'methods'             => WP_REST_Server::READABLE,
-			'callback'            => array( __CLASS__, 'get_settings' ),
-			'permission_callback' => $perm,
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( __CLASS__, 'get_settings' ),
+				'permission_callback' => $perm,
+			),
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( __CLASS__, 'update_settings' ),
+				'permission_callback' => $perm,
+			),
 		) );
 
 		// Statistics.
@@ -84,6 +90,44 @@ class IP_Location_Block_Rest {
 	 * --------------------------------------------------------------------- */
 
 	public static function get_settings() {
+		return rest_ensure_response( IP_Location_Block::get_option() );
+	}
+
+	/**
+	 * Save settings. The React app POSTs the full settings object, which is run
+	 * through the exact classic sanitizer for parity. Reusing the admin instance
+	 * is safe here: `init` has already fired by the time this REST callback runs,
+	 * so the admin constructor's `init` hook is a no-op (admin_init never runs).
+	 */
+	public static function update_settings( WP_REST_Request $request ) {
+		$input = $request->get_json_params();
+		if ( ! is_array( $input ) ) {
+			return new WP_Error(
+				'ilb_invalid_settings',
+				__( 'Invalid settings payload.', 'ip-location-block' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( ! class_exists( 'IP_Location_Block_Admin', false ) ) {
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
+		}
+
+		// Mirror validate_settings() minus the options-page nonce (REST auth
+		// already gated this request via the wp_rest nonce + capability).
+		$options = IP_Location_Block_Admin::get_instance()->sanitize_options( $input );
+
+		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-opts.php';
+		$file = IP_Location_Block_Opts::setup_validation_timing( $options );
+		if ( is_wp_error( $file ) ) {
+			$options['validation']['timing'] = 0;
+		}
+
+		delete_transient( IP_Location_Block::CRON_NAME );
+		do_action( 'ip-location-block-settings-updated', $options, true );
+
+		IP_Location_Block::update_option( $options );
+
 		return rest_ensure_response( IP_Location_Block::get_option() );
 	}
 
