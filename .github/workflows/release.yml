@@ -129,9 +129,24 @@ jobs:
           svn add "tags/$VERSION"
 
           echo "➤ Committing SVN tag only (trunk unchanged)..."
-          svn commit -m "Tag $VERSION (pre-release; trunk untouched)" \
-            --no-auth-cache --non-interactive \
-            --username "$SVN_USERNAME" --password "$SVN_PASSWORD"
+          # wp.org SVN frequently times out ACKing large first-time commits even
+          # though the commit lands server-side (svn: E175012 Connection timed out).
+          # Don't fail on that: if the commit returns non-zero, verify the tag
+          # actually exists on wp.org and treat that as success.
+          if ! svn commit -m "Tag $VERSION (pre-release; trunk untouched)" \
+               --no-auth-cache --non-interactive \
+               --config-option servers:global:http-timeout=1800 \
+               --username "$SVN_USERNAME" --password "$SVN_PASSWORD"; then
+            echo "⚠ svn commit returned non-zero; checking whether the tag landed on wp.org..."
+            if svn info "https://plugins.svn.wordpress.org/$SLUG/tags/$VERSION" \
+                 --no-auth-cache --non-interactive \
+                 --username "$SVN_USERNAME" --password "$SVN_PASSWORD" >/dev/null 2>&1; then
+              echo "✓ tags/$VERSION is present on wp.org despite the client timeout — treating as success."
+            else
+              echo "::error::svn commit failed and tags/$VERSION is not present on wp.org."
+              exit 1
+            fi
+          fi
 
           echo "✓ RC tag $VERSION published. Available via:"
           echo "  - Plugin page → Advanced View → Previous Versions"
