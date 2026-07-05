@@ -834,6 +834,23 @@ class IP_Location_Block_Admin_Tab {
 			)
 		);
 
+		// Bypass page cache (opt-in; disables full-page caching so every visitor is geo-checked)
+		add_settings_field(
+			$option_name . '_public_cache_bypass',
+			'<dfn title="' . __( 'When enabled, full-page caching (WP-Optimize, WP Rocket, W3TC, etc.) is disabled on the front end so every visitor is geo-checked. Leave off to keep your page cache working.', 'ip-location-block' ) . '">' . __( 'Bypass page cache', 'ip-location-block' ) . '</dfn>',
+			array( $context, 'callback_field' ),
+			$option_slug,
+			$section,
+			array(
+				'type'      => 'checkbox',
+				'option'    => $option_name,
+				'field'     => 'public',
+				'sub-field' => 'cache_bypass',
+				'value'     => isset( $options['public']['cache_bypass'] ) ? $options['public']['cache_bypass'] : false,
+				'text'      => __( 'Disable full-page caching to enforce per-visitor blocking', 'ip-location-block' ),
+			)
+		);
+
 		// Matching rule
 		add_settings_field(
 			$option_name . '_public_matching_rule',

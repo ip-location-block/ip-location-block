@@ -1632,7 +1632,8 @@ class IP_Location_Block_Admin {
 				'target_cates',
 				'target_tags',
 				'dnslkup',
-				'behavior'
+				'behavior',
+				'cache_bypass'
 			) as $key
 		) {
 			$output['public'][ $key ] = is_array( $default['public'][ $key ] ) ? array() : false;

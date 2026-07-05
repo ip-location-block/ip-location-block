@@ -247,6 +247,7 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 *Release Date - 5 Jul 2026*
 
 * Fix: Admin scripts and styles were enqueued on unrelated wp-admin pages, which could disable checkboxes on other plugins' screens (e.g. WP to Buffer). Assets now load only on IP Location Block's own screens.
+* Fix: Front-end "Block by location" defined DONOTCACHEPAGE on every request, disabling page caching (e.g. WP-Optimize). This is now opt-in via a new "Bypass page cache" option (default off), so caching works again.
 
 = 1.3.8 =
 

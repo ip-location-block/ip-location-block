@@ -158,7 +158,9 @@ class IP_Location_Block_Opts {
 			'redirect_uri'  => self::DEFAULT_REDIRECT_URL,    // home
 			'response_msg'  => 'Sorry, your request cannot be accepted.', // message on blocking
 			// since version 3.0.10
-			'behavior'      => false    // Bad behavior
+			'behavior'      => false,   // Bad behavior
+			// since version 1.3.9
+			'cache_bypass'  => false     // define DONOTCACHEPAGE to enforce per-visitor front-end blocking (breaks full-page cache)
 		),
 		// since version 3.0.3
 		'mimetype'             => array(
