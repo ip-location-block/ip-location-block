@@ -19,3 +19,28 @@
 .ilb-tab-panel {
 	margin-top: 12px;
 }
+
+.ilb-settings {
+	.components-panel__body > .components-base-control {
+		margin-bottom: 16px;
+	}
+
+	&__save {
+		position: sticky;
+		bottom: 0;
+		z-index: 1;
+		background: #fff;
+		padding: 12px 0;
+		margin-top: 8px;
+		border-top: 1px solid #dcdcde;
+	}
+}
+
+.ilb-field-advanced {
+	padding: 8px 0;
+	color: #757575;
+
+	em {
+		font-style: italic;
+	}
+}

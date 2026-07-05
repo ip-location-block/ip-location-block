@@ -1,25 +1,18 @@
 /**
- * Settings tab (pilot). Loads the full settings object via REST, edits a
- * representative subset of the "Validation rules and behavior" section, and
- * saves the whole object back through the classic sanitizer. Proves the
- * load → edit → save → reload round-trip; remaining sections/fields are
- * added incrementally.
+ * Settings tab — the full 7-section form, driven by settingsSchema. Loads the
+ * settings object via REST, edits in place, and saves the whole object back
+ * through the classic sanitizer. Fields flagged `advanced` (provider table,
+ * WP-content pickers, exception discovery) show a placeholder until their
+ * supporting REST endpoints are built.
  */
 import { useState, useEffect } from '@wordpress/element';
-import {
-	Card,
-	CardBody,
-	SelectControl,
-	TextControl,
-	ToggleControl,
-	Button,
-	Notice,
-	Spinner,
-	__experimentalHeading as Heading,
-} from '@wordpress/components';
+import { Panel, PanelBody, Button, Notice, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 import { getSettings, saveSettings } from '../api';
+import { SECTIONS } from './settingsSchema';
+import { setPath } from './paths';
+import SettingsField from './SettingsField';
 
 export default function Settings() {
 	const [ settings, setSettings ] = useState( null );
@@ -45,7 +38,7 @@ export default function Settings() {
 		);
 	}
 
-	const set = ( key, value ) => setSettings( ( s ) => ( { ...s, [ key ]: value } ) );
+	const onChange = ( path, value ) => setSettings( ( s ) => setPath( s, path, value ) );
 
 	const onSave = () => {
 		setSaving( true );
@@ -60,73 +53,33 @@ export default function Settings() {
 	};
 
 	return (
-		<Card>
-			<CardBody>
-				<Heading level={ 3 }>
-					{ __( 'Validation rules and behavior', 'ip-location-block' ) }
-				</Heading>
+		<div className="ilb-settings">
+			{ notice && (
+				<Notice status={ notice.status } onRemove={ () => setNotice( null ) }>
+					{ notice.msg }
+				</Notice>
+			) }
 
-				{ notice && (
-					<Notice status={ notice.status } onRemove={ () => setNotice( null ) }>
-						{ notice.msg }
-					</Notice>
-				) }
+			<Panel>
+				{ SECTIONS.map( ( section, i ) => (
+					<PanelBody key={ section.key } title={ section.title } initialOpen={ i === 0 }>
+						{ section.fields.map( ( field ) => (
+							<SettingsField
+								key={ field.path }
+								field={ field }
+								settings={ settings }
+								onChange={ onChange }
+							/>
+						) ) }
+					</PanelBody>
+				) ) }
+			</Panel>
 
-				<SelectControl
-					__nextHasNoMarginBottom
-					label={ __( 'Matching rule', 'ip-location-block' ) }
-					value={ String( settings.matching_rule ) }
-					options={ [
-						{ label: __( 'Disable', 'ip-location-block' ), value: '-1' },
-						{ label: __( 'White list', 'ip-location-block' ), value: '0' },
-						{ label: __( 'Black list', 'ip-location-block' ), value: '1' },
-					] }
-					onChange={ ( v ) => set( 'matching_rule', Number( v ) ) }
-				/>
-
-				<TextControl
-					__nextHasNoMarginBottom
-					label={ __( 'White list of country code', 'ip-location-block' ) }
-					help={ __( 'Comma-separated ISO 3166-1 alpha-2 codes.', 'ip-location-block' ) }
-					value={ settings.white_list || '' }
-					onChange={ ( v ) => set( 'white_list', v ) }
-				/>
-
-				<TextControl
-					__nextHasNoMarginBottom
-					label={ __( 'Black list of country code', 'ip-location-block' ) }
-					value={ settings.black_list || '' }
-					onChange={ ( v ) => set( 'black_list', v ) }
-				/>
-
-				<TextControl
-					__nextHasNoMarginBottom
-					type="number"
-					label={ __( 'Response code', 'ip-location-block' ) }
-					value={ settings.response_code }
-					onChange={ ( v ) => set( 'response_code', Number( v ) ) }
-				/>
-
-				<TextControl
-					__nextHasNoMarginBottom
-					label={ __( 'Response message', 'ip-location-block' ) }
-					value={ settings.response_msg || '' }
-					onChange={ ( v ) => set( 'response_msg', v ) }
-				/>
-
-				<ToggleControl
-					__nextHasNoMarginBottom
-					label={ __( 'Simulation mode (log only, do not block)', 'ip-location-block' ) }
-					checked={ !! settings.simulate }
-					onChange={ ( v ) => set( 'simulate', v ) }
-				/>
-
-				<div style={ { marginTop: '16px' } }>
-					<Button variant="primary" isBusy={ saving } disabled={ saving } onClick={ onSave }>
-						{ __( 'Save Changes', 'ip-location-block' ) }
-					</Button>
-				</div>
-			</CardBody>
-		</Card>
+			<div className="ilb-settings__save">
+				<Button variant="primary" isBusy={ saving } disabled={ saving } onClick={ onSave }>
+					{ __( 'Save Changes', 'ip-location-block' ) }
+				</Button>
+			</div>
+		</div>
 	);
 }
