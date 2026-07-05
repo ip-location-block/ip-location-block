@@ -138,6 +138,10 @@ if ( ! class_exists( 'IP_Location_Block', false ) ):
 	if ( is_admin() ) {
 		require IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
 		add_action( 'plugins_loaded', array( 'IP_Location_Block_Admin', 'get_instance' ) );
+
+		// React (Beta) admin — separate opt-in menu; classic admin stays default.
+		require IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-beta.php';
+		add_action( 'plugins_loaded', array( 'IP_Location_Block_Beta', 'get_instance' ) );
 	}
 
 	/*----------------------------------------------------------------------------*
