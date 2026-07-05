@@ -20,6 +20,7 @@ import {
 import { SECTIONS } from './settingsSchema';
 import { setPath } from './paths';
 import SettingsField from './SettingsField';
+import SettingsActions from './SettingsActions';
 
 export default function Settings() {
 	const [ settings, setSettings ] = useState( null );
@@ -97,6 +98,8 @@ export default function Settings() {
 					</PanelBody>
 				) ) }
 			</Panel>
+
+			<SettingsActions settings={ settings } onReplace={ setSettings } />
 
 			<div className="ilb-settings__save">
 				<Button variant="primary" isBusy={ saving } disabled={ saving } onClick={ onSave }>

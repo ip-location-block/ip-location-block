@@ -50,6 +50,19 @@ class IP_Location_Block_Rest {
 			),
 		) );
 
+		register_rest_route( self::NS, '/settings/defaults', array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => array( __CLASS__, 'get_defaults' ),
+			'permission_callback' => $perm,
+		) );
+
+		// Actions.
+		register_rest_route( self::NS, '/database/update', array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => array( __CLASS__, 'update_database' ),
+			'permission_callback' => $perm,
+		) );
+
 		// Statistics.
 		register_rest_route( self::NS, '/statistics', array(
 			array(
@@ -283,6 +296,17 @@ class IP_Location_Block_Rest {
 		}
 
 		return rest_ensure_response( compact( 'plugins', 'themes' ) );
+	}
+
+	public static function get_defaults() {
+		return rest_ensure_response( IP_Location_Block::get_default() );
+	}
+
+	/**
+	 * Trigger a local-database download/update.
+	 */
+	public static function update_database() {
+		return rest_ensure_response( IP_Location_Block::get_instance()->exec_update_db() );
 	}
 
 	public static function get_statistics() {
