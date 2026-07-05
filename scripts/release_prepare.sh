@@ -10,6 +10,11 @@ if [[ -f "$PLUGIN_DIR/composer.json" ]]; then
   composer install --no-dev
 fi
 
+# Build the React (Beta) admin assets if a package.json is present (WS2)
+if [[ -f "$PLUGIN_DIR/package.json" ]]; then
+  ( cd "$PLUGIN_DIR" && npm ci && npm run build )
+fi
+
 if [ -f "$PLUGINS_ROOT_DIR/$PLUGIN_SLUG.zip" ]; then
   rm "$PLUGINS_ROOT_DIR/$PLUGIN_SLUG.zip"
 fi

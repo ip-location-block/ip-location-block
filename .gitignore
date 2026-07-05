@@ -1,0 +1,5 @@
+# Node / build tooling (WS2). The compiled admin/build/ output IS committed
+# (shipped to wp.org, since there is no CI build step); only source deps here.
+/node_modules/
+/dist/
+npm-debug.log*

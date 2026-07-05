@@ -21,6 +21,10 @@
 /tests
 /bin
 /node_modules
+/package.json
+/package-lock.json
+/admin/src
+/webpack.config.js
 /composer.json
 /composer.lock
 /phpcs.xml

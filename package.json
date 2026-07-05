@@ -1,0 +1,24 @@
+{
+  "name": "ip-location-block-admin",
+  "version": "1.4.0",
+  "description": "React (Beta) admin for the IP Location Block WordPress plugin.",
+  "private": true,
+  "license": "GPL-3.0",
+  "scripts": {
+    "build": "wp-scripts build admin/src/index.js --output-path=admin/build",
+    "start": "wp-scripts start admin/src/index.js --output-path=admin/build",
+    "lint:js": "wp-scripts lint-js admin/src",
+    "format": "wp-scripts format admin/src",
+    "test:unit": "wp-scripts test-unit-js"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^32.6.0"
+  },
+  "dependencies": {
+    "@wordpress/api-fetch": "^7.0.0",
+    "@wordpress/components": "^29.0.0",
+    "@wordpress/data": "^10.0.0",
+    "@wordpress/element": "^6.0.0",
+    "@wordpress/i18n": "^5.0.0"
+  }
+}

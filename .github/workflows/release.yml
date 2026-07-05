@@ -40,6 +40,17 @@ jobs:
           [ "$BASE_VERSION" = "$README_VERSION" ]       || { echo "::error::tag $BASE_VERSION != readme Stable tag $README_VERSION"; exit 1; }
           echo "✅ versions match: $BASE_VERSION"
 
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build admin assets
+        run: |
+          npm ci
+          npm run build
+
       - name: Create distribution directory
         run: |
           mkdir -p dist/ip-location-block
