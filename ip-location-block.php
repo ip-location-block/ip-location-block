@@ -72,6 +72,7 @@ if ( ! class_exists( 'IP_Location_Block', false ) ):
 	require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-apis.php';
 	require IP_LOCATION_BLOCK_PATH . 'classes/db-providers/ip2location/class-ip2location.php';
 	require IP_LOCATION_BLOCK_PATH . 'classes/db-providers/maxmind/class-maxmind-geolite2.php';
+	require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-rest.php';
 
 
 	function ip_location_block_activate( $network_wide = false ) {
@@ -122,6 +123,9 @@ if ( ! class_exists( 'IP_Location_Block', false ) ):
 	 *
 	 */
 	add_action( 'plugins_loaded', array( 'IP_Location_Block', 'get_instance' ) );
+
+	// Register the REST API (ip-location-block/v1) used by the React (Beta) admin.
+	add_action( 'rest_api_init', array( 'IP_Location_Block_Rest', 'register_routes' ) );
 
 	/*----------------------------------------------------------------------------*
 	 * Dashboard and Administrative Functionality
