@@ -6,14 +6,29 @@ import { SelectControl, TextControl, TextareaControl, ToggleControl } from '@wor
 import { __ } from '@wordpress/i18n';
 
 import { getPath } from './paths';
+import CheckboxList from '../components/CheckboxList';
 
-export default function SettingsField( { field, settings, onChange } ) {
+export default function SettingsField( { field, settings, sources, onChange } ) {
 	if ( field.showIf && ! field.showIf( settings ) ) {
 		return null;
 	}
 
 	const value = getPath( settings, field.path );
 	const set = ( v ) => onChange( field.path, v );
+
+	if ( field.type === 'checkbox-list' ) {
+		return (
+			<div className="ilb-field-list">
+				<strong className="ilb-field-list__label">{ field.label }</strong>
+				<CheckboxList
+					items={ getPath( sources, field.source ) }
+					value={ value }
+					shape={ field.shape }
+					onChange={ set }
+				/>
+			</div>
+		);
+	}
 	const common = {
 		__nextHasNoMarginBottom: true,
 		label: field.label,

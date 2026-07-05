@@ -17,6 +17,10 @@ export const getSettings = () => apiFetch( { path: `/${ ns }/settings` } );
 export const saveSettings = ( data ) =>
 	apiFetch( { path: `/${ ns }/settings`, method: 'POST', data } );
 
+export const getContent = () => apiFetch( { path: `/${ ns }/content` } );
+
+export const getExceptions = () => apiFetch( { path: `/${ ns }/exceptions` } );
+
 export const getStatistics = () => apiFetch( { path: `/${ ns }/statistics` } );
 
 export const getLogs = ( hook ) =>

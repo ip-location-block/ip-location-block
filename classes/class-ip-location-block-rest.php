@@ -64,6 +64,18 @@ class IP_Location_Block_Rest {
 			),
 		) );
 
+		// Dynamic option data for the "advanced" settings fields (read-only).
+		register_rest_route( self::NS, '/content', array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => array( __CLASS__, 'get_content' ),
+			'permission_callback' => $perm,
+		) );
+		register_rest_route( self::NS, '/exceptions', array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => array( __CLASS__, 'get_exceptions' ),
+			'permission_callback' => $perm,
+		) );
+
 		// Validation logs.
 		register_rest_route( self::NS, '/logs', array(
 			array(
@@ -129,6 +141,66 @@ class IP_Location_Block_Rest {
 		IP_Location_Block::update_option( $options );
 
 		return rest_ensure_response( IP_Location_Block::get_option() );
+	}
+
+	/**
+	 * WP content available as front-end blocking targets
+	 * (public.target_pages / target_posts / target_cates / target_tags).
+	 */
+	public static function get_content() {
+		$pages = array();
+		foreach ( get_pages() as $p ) {
+			$pages[] = array( 'value' => $p->post_name, 'label' => $p->post_title );
+		}
+
+		$posts = array();
+		foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $pt ) {
+			$posts[] = array( 'value' => $pt->name, 'label' => $pt->label );
+		}
+
+		$cates = array();
+		foreach ( get_categories( array( 'hide_empty' => false ) ) as $c ) {
+			$cates[] = array( 'value' => $c->slug, 'label' => $c->name );
+		}
+
+		$tags = array();
+		foreach ( get_tags( array( 'hide_empty' => false ) ) as $t ) {
+			$tags[] = array( 'value' => $t->slug, 'label' => $t->name );
+		}
+
+		return rest_ensure_response( compact( 'pages', 'posts', 'cates', 'tags' ) );
+	}
+
+	/**
+	 * Installed plugins/themes available as validation exceptions
+	 * (exception.plugins / exception.themes).
+	 */
+	public static function get_exceptions() {
+		if ( ! function_exists( 'get_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		$active = (array) get_option( 'active_plugins', array() );
+		$plugins = array();
+		foreach ( get_plugins() as $file => $data ) {
+			$slug = dirname( $file );
+			$plugins[] = array(
+				'value'  => '.' === $slug ? $file : $slug,
+				'label'  => $data['Name'],
+				'active' => in_array( $file, $active, true ),
+			);
+		}
+
+		$themes = array();
+		foreach ( wp_get_themes() as $slug => $theme ) {
+			$themes[] = array(
+				'value'  => $slug,
+				'label'  => $theme->get( 'Name' ),
+				'active' => $slug === get_stylesheet(),
+			);
+		}
+
+		return rest_ensure_response( compact( 'plugins', 'themes' ) );
 	}
 
 	public static function get_statistics() {

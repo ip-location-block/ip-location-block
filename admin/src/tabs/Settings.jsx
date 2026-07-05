@@ -9,20 +9,24 @@ import { useState, useEffect } from '@wordpress/element';
 import { Panel, PanelBody, Button, Notice, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-import { getSettings, saveSettings } from '../api';
+import { getSettings, saveSettings, getContent, getExceptions } from '../api';
 import { SECTIONS } from './settingsSchema';
 import { setPath } from './paths';
 import SettingsField from './SettingsField';
 
 export default function Settings() {
 	const [ settings, setSettings ] = useState( null );
+	const [ sources, setSources ] = useState( { content: {}, exceptions: {} } );
 	const [ loading, setLoading ] = useState( true );
 	const [ saving, setSaving ] = useState( false );
 	const [ notice, setNotice ] = useState( null );
 
 	useEffect( () => {
-		getSettings()
-			.then( ( s ) => setSettings( s ) )
+		Promise.all( [ getSettings(), getContent(), getExceptions() ] )
+			.then( ( [ s, content, exceptions ] ) => {
+				setSettings( s );
+				setSources( { content, exceptions } );
+			} )
 			.catch( ( e ) => setNotice( { status: 'error', msg: e.message } ) )
 			.finally( () => setLoading( false ) );
 	}, [] );
@@ -68,6 +72,7 @@ export default function Settings() {
 								key={ field.path }
 								field={ field }
 								settings={ settings }
+								sources={ sources }
 								onChange={ onChange }
 							/>
 						) ) }
