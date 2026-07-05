@@ -80,6 +80,14 @@ jobs:
           fi
 
       - name: Deploy to WordPress.org (full)
+        # NOTE: wp.org SVN can time out ACKing a large commit even though it lands
+        # server-side (svn: E175012 "Connection timed out"). If this step ever fails
+        # but the version IS visible at
+        # https://plugins.svn.wordpress.org/ip-location-block/tags/<version>/ ,
+        # it's a false negative — the deploy actually succeeded; just re-run the
+        # workflow (it will no-op the existing tag) to get the GitHub Release.
+        # The RC step below guards against this explicitly; this 10up action does
+        # not expose a hook to do the same.
         if: steps.check-svn.outputs.mode == 'full'
         uses: 10up/action-wordpress-plugin-deploy@stable
         with:
