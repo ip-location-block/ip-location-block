@@ -355,28 +355,18 @@ class IP_Location_Block {
 			return;
 		}
 
-		$settings = self::get_option();
-		$validate = $settings['validation'];
+		// WP-ZEP has been removed. This data object (IP_LOCATION_BLOCK_AUTH) is
+		// still consumed by the classic admin.js, so it is registered as a
+		// data-only script. No auth key is injected into requests (key = false).
+		$args = array(
+			'sites' => IP_Location_Block_Util::get_sites_of_user(),
+			'nonce' => IP_Location_Block_Util::create_nonce( self::$auth_key ),
+			'key'   => false,
+		);
 
-		$zep_enabled = self::is_wp_zep_enabled();
-
-		$args['sites'] = IP_Location_Block_Util::get_sites_of_user();
-		$args['nonce'] = IP_Location_Block_Util::create_nonce( self::$auth_key );
-		$args['key']   = $zep_enabled && ( $validate['admin'] & 2 || $validate['ajax'] & 2 || $validate['plugins'] & 2 || $validate['themes'] & 2 ) ? self::$auth_key : false;
-
-		if ( $zep_enabled ) {
-			$script = plugins_url(
-				! defined( 'IP_LOCATION_BLOCK_DEBUG' ) || ! IP_LOCATION_BLOCK_DEBUG ?
-					'admin/js/authenticate.min.js' : 'admin/js/authenticate.js', IP_LOCATION_BLOCK_BASE
-			);
-
-			wp_enqueue_script( self::$auth_key, $script, array( 'jquery' ), IP_LOCATION_BLOCK_VERSION );
-			wp_localize_script( self::$auth_key, 'IP_LOCATION_BLOCK_AUTH', $args + self::$wp_path );
-		} else {
-			wp_register_script( self::$auth_key, false );
-			wp_enqueue_script( self::$auth_key );
-			wp_localize_script( self::$auth_key, 'IP_LOCATION_BLOCK_AUTH', $args + self::$wp_path );
-		}
+		wp_register_script( self::$auth_key, false );
+		wp_enqueue_script( self::$auth_key );
+		wp_localize_script( self::$auth_key, 'IP_LOCATION_BLOCK_AUTH', $args + self::$wp_path );
 
 	}
 
