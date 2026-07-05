@@ -45,9 +45,6 @@ class IP_Location_Block_Admin {
 		// Add suggest text for inclusion in the site's privacy policy. @since 4.9.6
 		// add_action( 'admin_init', array( $this, 'add_privacy_policy' ) );
 
-		// Setup a nonce to validate authentication.
-		add_filter( 'wp_redirect', array( $this, 'add_redirect_nonce' ), 10, 2 ); // @since  0.2.1.0
-
 	}
 
 	/**
@@ -194,7 +191,6 @@ class IP_Location_Block_Admin {
 		add_action( 'admin_menu', array( $this, 'setup_admin_page' ) ); // @since: 2.5.0
 		add_action( 'admin_post_ip_location_block', array( $this, 'admin_ajax_callback' ) ); // @since: 2.6.0
 		add_action( 'wp_ajax_ip_location_block', array( $this, 'admin_ajax_callback' ) ); // @since: 2.1.0
-		add_filter( 'wp_prepare_revision_for_js', array( $this, 'add_revision_nonce' ), 10, 3 );
         add_action( 'admin_enqueue_scripts', array($this, 'enqueue_admin_assets'), 15);
 
 		if ( IP_Location_Block_Util::is_user_logged_in() ) {
@@ -240,52 +236,6 @@ class IP_Location_Block_Admin {
 	 */
 	public function add_webview_class( $classes ) {
 		return $classes . ( $classes ? ' ' : '' ) . 'webview';
-	}
-
-	/**
-	 * Add nonce when redirect into wp-admin area.
-	 *
-	 * @param $location
-	 * @param $status
-	 *
-	 * @return string
-	 */
-	public function add_redirect_nonce( $location, $status ) {
-		$status = true; // default is `retrieve` a nonce
-		$urls   = array( wp_login_url() );
-
-		// avoid multiple redirection caused by WP hide 1.4.9.1
-		if ( is_plugin_active( 'wp-hide-security-enhancer/wp-hide.php' ) ) {
-			$urls[] = 'options-permalink.php';
-		}
-
-		foreach ( $urls as $url ) {
-			if ( false !== strpos( $location, $url ) ) {
-				$status = false; // do not `retieve` a nonce
-				break;
-			}
-		}
-
-		return IP_Location_Block_Util::rebuild_nonce( $location, $status );
-	}
-
-	/**
-	 * Add nonce to revision @param $revisions_data
-	 *
-	 * @param $revision
-	 * @param $post
-	 *
-	 * @return mixed
-	 * @since 4.4.0
-	 */
-	public function add_revision_nonce( $revisions_data, $revision, $post ) {
-		$revisions_data['restoreUrl'] = add_query_arg(
-			$nonce = IP_Location_Block::get_auth_key(),
-			IP_Location_Block_Util::create_nonce( $nonce ),
-			$revisions_data['restoreUrl']
-		);
-
-		return $revisions_data;
 	}
 
 	/**
@@ -1831,13 +1781,6 @@ class IP_Location_Block_Admin {
 		} else {
 			$nonce = check_admin_referer( 'ip-location-block-options' );
 		} // a postfix '-options' is added at settings_fields().
-
-		$settings = IP_Location_Block::get_option();
-		if ( ( $ajax and $settings['validation']['ajax'] & 2 ) ||
-		     ( ! $ajax and $settings['validation']['admin'] & 2 ) ) {
-			$action = IP_Location_Block::get_auth_key();
-			$nonce  &= IP_Location_Block_Util::verify_nonce( IP_Location_Block_Util::retrieve_nonce( $action ), $action );
-		}
 
 		if ( ! $nonce || ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'manage_network_options' ) ) ) {
 			status_header( 403 );

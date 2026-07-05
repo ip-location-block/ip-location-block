@@ -34,16 +34,6 @@ class IP_Location_Block {
 	private static $wp_path = array();
 	private static $remote_addr = null;
 
-	/**
-	 * Check if WP-ZEP is enabled via filter.
-	 * WP-ZEP is deprecated and disabled by default.
-	 *
-	 * @return bool
-	 */
-	public static function is_wp_zep_enabled() {
-		return apply_filters( 'ip_location_block_wp_zep', false );
-	}
-
 	private $pagenow = null;
 	private $request_uri = null;
 	private $target_type = null;
@@ -193,10 +183,6 @@ class IP_Location_Block {
 			add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_nonce' ), $priority[0] ); // @since  0.2.8.0
 		}
 
-		// force to redirect on logout to remove nonce, embed a nonce into pages
-		add_filter( 'wp_redirect', array( $this, 'logout_redirect' ), 20, 2 ); // logout_redirect @4.2
-		add_filter( 'http_request_args', array( $this, 'request_nonce' ), $priority[1], 2 ); // @since  0.2.7.0
-
 		// register validation of updating metadata
 		if ( $validate['metadata'] ) {
 			$this->validate_metadata( $settings, $priority[0] );
@@ -307,37 +293,6 @@ class IP_Location_Block {
 	 */
 	public static function update_metadata( $metadata, $cache = true ) {
 		return update_option( self::OPTION_META, $metadata );
-	}
-
-	/**
-	 * Remove a nonce from the redirecting URL on logout to prevent disclosing a nonce.
-	 *
-	 * @param $location
-	 *
-	 * @return string
-	 */
-	public function logout_redirect( $location ) {
-		if ( isset( $_REQUEST['action'] ) && 'logout' === $_REQUEST['action'] ) {
-			return IP_Location_Block_Util::rebuild_nonce( $location, false );
-		} else {
-			return $location;
-		}
-	}
-
-	/**
-	 * Add nonce into arguments used in an HTTP request.
-	 *
-	 * @param array $args
-	 * @param string $url
-	 *
-	 * @return array|mixed
-	 */
-	public function request_nonce( $args = array(), $url = '' ) {
-		if ( 0 === strpos( $url, admin_url() ) && empty( $args[ self::$auth_key ] ) ) {
-			$args += array( self::$auth_key => IP_Location_Block_Util::create_nonce( self::$auth_key ) );
-		}
-
-		return $args;
 	}
 
 	/**
@@ -982,44 +937,21 @@ class IP_Location_Block {
 
 		switch ( $this->pagenow ) {
 			case 'admin-ajax.php':
-				// if the request has an action for no privilege user, skip WP-ZEP
-				$zep  = ! has_action( 'wp_ajax_nopriv_' . $action );
-				$rule = (int) $settings['validation']['ajax'];
-				break;
-
 			case 'admin-post.php':
-				// if the request has an action for no privilege user, skip WP-ZEP
-				$zep  = ! has_action( 'admin_post_nopriv' . ( $action ? '_' . $action : '' ) );
 				$rule = (int) $settings['validation']['ajax'];
 				break;
 
 			default:
-				// if the request has no page and no action, skip WP-ZEP
-				$zep  = ( $page || $action ) ? true : false;
 				$rule = (int) $settings['validation']['admin'];
 		}
 
-		// WP-ZEP is deprecated and disabled by default
-		if ( ! self::is_wp_zep_enabled() ) {
-			$rule &= ~2;
-			$zep = false;
-		}
+		// WP-ZEP removed: only country blocking (bit 1) applies in the admin area.
+		$rule &= ~2;
 
-		// list of request for specific action or page to bypass WP-ZEP
-		$list = IP_Location_Block_Util::allowed_pages_actions( $settings );
-		// skip validation of country code and WP-ZEP if exceptions matches action or page
+		// skip validation of country code if exceptions match the action or page
 		if ( ( $page || $action ) && $this->check_exceptions( $action, $page, $settings['exception']['admin'] ) ) {
-			$rule &= ~( $zep ? 2 : 3 );
-		} // 2: WP-ZEP, 1: Block by country (validation of bad signature is still in effective)
-
-		// combination with vulnerable keys should be prevented to bypass WP-ZEP
-		elseif ( ! $this->check_exceptions( $action, $page, $list ) ) {
-			if ( ( 2 & $rule ) && $zep ) {
-				// redirect if valid nonce in referer, otherwise register WP-ZEP (2: WP-ZEP)
-				IP_Location_Block_Util::trace_nonce( self::$auth_key );
-				add_filter( 'ip-location-block-admin', array( $this, 'check_nonce' ), 4, 2 );
-			}
-		}
+			$rule &= ~3;
+		} // 1: Block by country (bad-signature validation is still in effect)
 
 		// register validation of malicious signature (except in the comment and post)
 		if ( ! IP_Location_Block_Util::is_user_logged_in() && ! in_array( $this->pagenow, array(
@@ -1044,28 +976,16 @@ class IP_Location_Block {
 		preg_match( "!($path)($name)!", $this->request_uri, $name );
 		$name = empty( $name[2] ) ? $name[1] : $name[2];
 
-		// set validation rules by target (0: Bypass, 1: Block by country, 2: WP-ZEP)
+		// set validation rules by target (0: Bypass, 1: Block by country)
 		$settings = self::get_option();
 		$rule     = (int) $settings['validation'][ $type ];
 
-		// WP-ZEP is deprecated and disabled by default
-		if ( ! self::is_wp_zep_enabled() ) {
-			$rule &= ~2;
-		}
+		// WP-ZEP removed: only country blocking (bit 1) applies.
+		$rule &= ~2;
 
-		// list of request for specific action or page to bypass WP-ZEP
-		$path = array( 'includes' => array( 'ms-files.php', 'js/tinymce/wp-tinymce.php', ), /* for wp-includes */ );
-		$path = apply_filters( self::PLUGIN_NAME . "-bypass-{$type}", isset( $path[ $type ] ) ? $path[ $type ] : array(), $settings );
-
-		// skip validation of country code if exceptions matches action or page
+		// skip validation of country code if exceptions match the target
 		if ( in_array( $name, $settings['exception'][ $type ], true ) ) {
 			$rule = 0;
-		} elseif ( ! in_array( $name, $path, true ) ) {
-			if ( 2 & $rule ) {
-				// redirect if valid nonce in referer, otherwise register WP-ZEP (2: WP-ZEP)
-				IP_Location_Block_Util::trace_nonce( self::$auth_key );
-				add_filter( 'ip-location-block-admin', array( $this, 'check_nonce' ), 4, 2 );
-			}
 		}
 
 		// register validation of malicious signature
@@ -1145,20 +1065,6 @@ class IP_Location_Block {
 	 */
 	public function check_auth( $validate, $settings ) {
 		return $validate['auth'] ? $validate + array( 'result' => 'passed' ) : $validate; // can't overwrite existing result
-	}
-
-	/**
-	 * Should be passed when nonce is valid. can't overwrite existing result
-	 *
-	 * @param $validate
-	 * @param $settings
-	 *
-	 * @return string[]
-	 */
-	public function check_nonce( $validate, $settings ) {
-		$nonce = IP_Location_Block_Util::retrieve_nonce( self::$auth_key );
-
-		return $validate + array( 'result' => IP_Location_Block_Util::verify_nonce( $nonce, self::$auth_key ) || 'XX' === $validate['code'] ? 'passed' : 'wp-zep' );
 	}
 
 	/**

@@ -274,7 +274,7 @@ class IP_Location_Block_Admin_Tab {
 		// Bad signatures
 		add_settings_field(
 			$option_name . '_signature',
-			__( '<dfn title="It validates malicious signatures independently of &#8220;Block by location&#8221; and &#8220;Prevent Zero-day Exploit&#8221; for the target &#8220;Admin area&#8221;, &#8220;Admin ajax/post&#8221;, &#8220;Plugins area&#8221; and &#8220;Themes area&#8221;.">Bad signatures in query</dfn> <nobr>(<a class="ip-location-block-icon ip-location-block-icon-cycle" id="ip-location-block-decode" title="When you find ugly character string in the text area, please click to restore."><span></span></a>)</nobr>', 'ip-location-block' ),
+			__( '<dfn title="It validates malicious signatures independently of &#8220;Block by location&#8221; for the target &#8220;Admin area&#8221;, &#8220;Admin ajax/post&#8221;, &#8220;Plugins area&#8221; and &#8220;Themes area&#8221;.">Bad signatures in query</dfn> <nobr>(<a class="ip-location-block-icon ip-location-block-icon-cycle" id="ip-location-block-decode" title="When you find ugly character string in the text area, please click to restore."><span></span></a>)</nobr>', 'ip-location-block' ),
 			array( $context, 'callback_field' ),
 			$option_slug,
 			$section,
@@ -678,7 +678,7 @@ class IP_Location_Block_Admin_Tab {
 				'desc'      => $desc,
 				'after'     =>
 					'<ul class="ip-location-block-settings-folding ip-location-block-dropup">' . "\n" .
-					'	<dfn title="' . __( 'Specify the action name (&#8220;action=&hellip;&#8221;) or the page name (&#8220;page=&hellip;&#8221;) to prevent unintended blocking caused by &#8220;Block by location&#8221; (for non logged-in user) and &#8220;Prevent Zero-day Exploit&#8221; (for logged-in user).', 'ip-location-block' ) . '">' . __( 'Exceptions', 'ip-location-block' ) . "</dfn>\n" .
+					'	<dfn title="' . __( 'Specify the action name (&#8220;action=&hellip;&#8221;) or the page name (&#8220;page=&hellip;&#8221;) to prevent unintended blocking caused by &#8220;Block by location&#8221;.', 'ip-location-block' ) . '">' . __( 'Exceptions', 'ip-location-block' ) . "</dfn>\n" .
 					'	<a class="ip-location-block-hide ip-location-block-icon ip-location-block-icon-unlock"><span title="' . __( 'Toggle with non logged-in user', 'ip-location-block' ) . '"></span></a><a class="ip-location-block-icon ip-location-block-icon-cycle ip-location-block-hide" data-target="admin">' . $common[2] . '</a><a class="ip-location-block-icon ip-location-block-icon-find ip-location-block-hide" data-target="admin">' . $common[3] . "</a>\n" .
 					'	<li class="ip-location-block-hide">' . "\n" .
 					'		<input class="regular-text code" id="ip_location_block_settings_exception_admin" name="ip_location_block_settings[exception][admin]" type="text" value="' . esc_attr( implode( ',', $options['exception']['admin'] ) ) . '">' . $common[0] . "\n" .
@@ -1605,7 +1605,7 @@ class IP_Location_Block_Admin_Tab {
 				'type'   => 'none',
 				'before' =>
 					'<a class="button-secondary"' . ' id="ip-location-block-default" title="' . __( 'Import the default settings to revert to the &#8220;Right after installing&#8221; state', 'ip-location-block' ) . '" href="#!">' . __( 'Default settings', 'ip-location-block' ) . '</a>&nbsp;' .
-					'<a class="button-secondary ip-location-block-primary" id="ip-location-block-preferred" title="' . __( 'Import the preferred settings mainly by enabling Zero-day Exploit Prevention for the &#8220;Back-end target settings&#8221;', 'ip-location-block' ) . '" href="#!">' . __( 'Best for Back-end', 'ip-location-block' ) . '</a>',
+					'<a class="button-secondary ip-location-block-primary" id="ip-location-block-preferred" title="' . __( 'Import the recommended protection settings for the &#8220;Back-end target settings&#8221;', 'ip-location-block' ) . '" href="#!">' . __( 'Best for Back-end', 'ip-location-block' ) . '</a>',
 				'after'  => '<div id="ip-location-block-pre-defined"></div>',
 			)
 		);

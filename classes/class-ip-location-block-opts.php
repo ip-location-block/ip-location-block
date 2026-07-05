@@ -316,6 +316,14 @@ class IP_Location_Block_Opts {
 			}
 		}
 
+		// WP-ZEP removed in 1.4.0: re-strip bit 2 in case a 1.3.8/1.3.9 preset
+		// re-introduced it (plugins/themes that only used WP-ZEP become 0).
+		if ( version_compare( $version, '1.4.0' ) < 0 ) {
+			foreach ( array( 'admin', 'ajax', 'plugins', 'themes' ) as $tmp ) {
+				$settings['validation'][ $tmp ] &= ~2;
+			}
+		}
+
 		// Update Settings
 		$settings['version']    = IP_LOCATION_BLOCK_VERSION;
 		$settings['request_ua'] = trim( str_replace( array( 'InfiniteWP' ), '', isset( $_SERVER['HTTP_USER_AGENT'] ) ? $_SERVER['HTTP_USER_AGENT'] : '' ) );

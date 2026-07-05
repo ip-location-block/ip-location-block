@@ -773,12 +773,12 @@ class IP_Location_Block_Admin_Ajax {
 				'validation'  => array(   // Action hook for validation
 					'comment'  => true,    // Validate on comment post
 					'login'    => 1,       // Validate on login
-					'admin'    => 3,       // Validate on admin (1:country 2:ZEP)
-					'ajax'     => 3,       // Validate on ajax/post (1:country 2:ZEP)
+					'admin'    => 1,       // Validate on admin (1:country)
+					'ajax'     => 1,       // Validate on ajax/post (1:country)
 					'xmlrpc'   => 1,       // Validate on xmlrpc (1:country 2:close)
 					'postkey'  => 'action,comment,log,pwd,FILES', // Keys in $_POST and $_FILES
-					'plugins'  => 2,       // Validate on wp-content/plugins
-					'themes'   => 2,       // Validate on wp-content/themes
+					'plugins'  => 0,       // wp-content/plugins (WP-ZEP removed)
+					'themes'   => 0,       // wp-content/themes (WP-ZEP removed)
 					'timing'   => 1,       // 0:init, 1:mu-plugins, 2:drop-in
 					'mimetype' => 1,       // 0:disable, 1:white_list, 2:black_list
 				),

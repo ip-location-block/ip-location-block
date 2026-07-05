@@ -450,65 +450,6 @@ class IP_Location_Block_Util {
 	}
 
 	/**
-	 * Trace nonce
-	 *
-	 * @param $nonce
-	 */
-	public static function trace_nonce( $nonce ) {
-		if ( self::is_user_logged_in() && empty( $_REQUEST[ $nonce ] ) &&
-		     self::retrieve_nonce( $nonce ) && 'GET' === IP_Location_Block_Util::get_request_method() ) {
-			// add nonce at add_admin_nonce() to handle the client side redirection.
-			self::redirect( esc_url_raw( $_SERVER['REQUEST_URI'] ), 302 );
-			exit;
-		}
-	}
-
-	/**
-	 * Retrieve or remove nonce and rebuild query strings.
-	 *
-	 * @param $location
-	 * @param bool $retrieve
-	 *
-	 * @return string
-	 */
-	public static function rebuild_nonce( $location, $retrieve = true ) {
-		// check if the location is internal
-		$url = parse_url( $location );
-		$key = IP_Location_Block::get_auth_key();
-
-		if ( empty( $url['host'] ) || $url['host'] === parse_url( home_url(), PHP_URL_HOST ) ) {
-			if ( $retrieve ) {
-				// it doesn't care a nonce is valid or not, but must be sanitized
-				if ( $nonce = self::retrieve_nonce( $key ) ) {
-					return esc_url_raw( add_query_arg(
-						array(
-							$key => false, // delete onece
-							$key => $nonce // add again
-						),
-						$location
-					) );
-				}
-			} else {
-				// remove a nonce from existing query
-				$location = esc_url_raw( add_query_arg( $key, false, $location ) );
-				wp_parse_str( isset( $url['query'] ) ? $url['query'] : '', $query );
-				$args = array();
-				foreach ( $query as $arg => $val ) { // $val is url decoded
-					if ( false !== strpos( $val, $key ) ) {
-						$val = urlencode( add_query_arg( $key, false, $val ) );
-					}
-					$args[] = "$arg=$val";
-				}
-				$url['query'] = implode( '&', $args );
-
-				return self::unparse_url( $url );
-			}
-		}
-
-		return $location;
-	}
-
-	/**
 	 * Convert back to string from a parsed url.
 	 *
 	 * @source https://php.net/manual/en/function.parse-url.php#106731
@@ -904,8 +845,6 @@ class IP_Location_Block_Util {
 	 * @return bool
 	 */
 	public static function redirect( $location, $status = 302 ) {
-		// retrieve nonce from referer and add it to the location
-		$location = self::rebuild_nonce( $location, true );
 		$location = self::sanitize_redirect( $location );
 
 		if ( $location ) {
