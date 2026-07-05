@@ -355,10 +355,19 @@ class IP_Location_Block_Admin {
 
 	/**
 	 * Register and enqueue plugin-specific style sheet and JavaScript.
+	 *
+	 * @param string $hook_suffix The current admin page hook, passed by `admin_enqueue_scripts`.
 	 */
-	public function enqueue_admin_assets() {
+	public function enqueue_admin_assets( $hook_suffix = '' ) {
 
 		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'manage_network_options' ) ) {
+			return;
+		}
+
+		// Only load the plugin's admin UI assets on its own settings screen(s).
+		// Loading admin.js elsewhere interferes with unrelated admin pages (e.g. disabling checkboxes).
+		$slug = IP_Location_Block::PLUGIN_NAME;
+		if ( ! in_array( $hook_suffix, array( 'settings_page_' . $slug, 'toplevel_page_' . $slug ), true ) ) {
 			return;
 		}
 
@@ -694,11 +703,6 @@ class IP_Location_Block_Admin {
 			);
 		}
 
-		// If successful, load admin assets only on this page.
-		if ( ! empty( $hook ) ) // 'admin_enqueue_scripts'
-		{
-			//add_action( "load-$hook", array( $this, 'enqueue_admin_assets' ) );
-		}
 	}
 
 	/**

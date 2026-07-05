@@ -979,6 +979,12 @@
     $(function () {
         // Get tab number
         var tabNo = ip_location_block && ip_location_block.hasOwnProperty('tab') ? Number(ip_location_block.tab) : -1;
+
+        // Not on an IP Location Block screen — do not touch this page's DOM/handlers.
+        if (-1 === tabNo) {
+            return;
+        }
+
         // Attach event handler and manage cookie
         var cookie = manageSection(tabNo);
 
