@@ -1,0 +1,147 @@
+name: Deploy to WordPress.org
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the GitHub Release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Validate version consistency
+        id: validate_version
+        run: |
+          TAG_VERSION="${{ steps.get_version.outputs.VERSION }}"
+          # strip pre-release suffix (-test/-alpha/-beta/-rc[.N]) for comparison
+          BASE_VERSION=$(echo "$TAG_VERSION" | sed -E 's/-(test|alpha|beta|rc)[.0-9]*$//')
+          PHP_HEADER_VERSION=$(grep -Po "Version:\s*\K[0-9]+\.[0-9]+\.[0-9]+" ip-location-block.php | head -1)
+          PHP_CONSTANT_VERSION=$(grep -Po "IP_LOCATION_BLOCK_VERSION',\s*'\K[0-9]+\.[0-9]+\.[0-9]+" ip-location-block.php)
+          README_VERSION=$(grep -Po "Stable tag:\s*\K[0-9]+\.[0-9]+\.[0-9]+" readme.txt)
+          echo "tag=$TAG_VERSION base=$BASE_VERSION header=$PHP_HEADER_VERSION const=$PHP_CONSTANT_VERSION readme=$README_VERSION"
+          if [ "$TAG_VERSION" != "$BASE_VERSION" ]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          [ "$BASE_VERSION" = "$PHP_HEADER_VERSION" ]   || { echo "::error::tag $BASE_VERSION != header $PHP_HEADER_VERSION"; exit 1; }
+          [ "$BASE_VERSION" = "$PHP_CONSTANT_VERSION" ] || { echo "::error::tag $BASE_VERSION != IP_LOCATION_BLOCK_VERSION $PHP_CONSTANT_VERSION"; exit 1; }
+          [ "$BASE_VERSION" = "$README_VERSION" ]       || { echo "::error::tag $BASE_VERSION != readme Stable tag $README_VERSION"; exit 1; }
+          echo "✅ versions match: $BASE_VERSION"
+
+      - name: Create distribution directory
+        run: |
+          mkdir -p dist/ip-location-block
+          rsync -av --exclude-from='.distignore' ./ dist/ip-location-block/
+
+      - name: Create ZIP artifact
+        run: |
+          cd dist
+          zip -r ip-location-block-${{ steps.get_version.outputs.VERSION }}.zip ip-location-block
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ip-location-block-${{ steps.get_version.outputs.VERSION }}
+          path: dist/ip-location-block-${{ steps.get_version.outputs.VERSION }}.zip
+
+      - name: Determine SVN deployment mode
+        id: check-svn
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          # none        = no SVN (no creds, or -test/-alpha/-beta pre-release)
+          # rc-tag-only = create tags/$VERSION on SVN but DO NOT touch trunk (Stable tag stays put)
+          # full        = standard 10up deploy (rsync trunk + create tag)
+          if [ -z "$SVN_USERNAME" ] || [ -z "$SVN_PASSWORD" ]; then
+            echo "Skipping WordPress.org deployment: SVN credentials not set"
+            echo "mode=none" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_name }}" =~ -(test|alpha|beta) ]]; then
+            echo "Skipping WordPress.org deployment for pre-release: ${{ github.ref_name }}"
+            echo "mode=none" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_name }}" =~ -rc ]]; then
+            echo "RC tag: will create SVN tag only (trunk untouched)"
+            echo "mode=rc-tag-only" >> $GITHUB_OUTPUT
+          else
+            echo "Stable tag: full WordPress.org deployment"
+            echo "mode=full" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to WordPress.org (full)
+        if: steps.check-svn.outputs.mode == 'full'
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          generate-zip: false
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: ip-location-block
+          BUILD_DIR: dist/ip-location-block   # pre-filtered by .distignore above
+
+      - name: Deploy RC tag to WordPress.org (SVN tag only, trunk untouched)
+        if: steps.check-svn.outputs.mode == 'rc-tag-only'
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+          SLUG: ip-location-block
+        run: |
+          set -eo pipefail
+          SVN_DIR="$HOME/svn-$SLUG"
+
+          if ! command -v svn >/dev/null 2>&1; then
+            sudo apt-get update -y && sudo apt-get install -y subversion
+          fi
+
+          echo "➤ Checking out SVN (tags dir only)..."
+          svn checkout --depth immediates "https://plugins.svn.wordpress.org/$SLUG/" "$SVN_DIR"
+          svn update --set-depth immediates "$SVN_DIR/tags"
+
+          if [ -d "$SVN_DIR/tags/$VERSION" ]; then
+            echo "ℹ︎ tags/$VERSION already exists on WP.org SVN — nothing to do."
+            exit 0
+          fi
+
+          echo "➤ Creating tags/$VERSION from dist/..."
+          mkdir -p "$SVN_DIR/tags/$VERSION"
+          rsync -rc "$GITHUB_WORKSPACE/dist/$SLUG/" "$SVN_DIR/tags/$VERSION/"
+
+          # Keep the tagged dir's readme.txt self-consistent. This does NOT affect
+          # what WP.org serves — only trunk's Stable tag drives downloads/updates,
+          # and trunk is untouched here.
+          if [ -f "$SVN_DIR/tags/$VERSION/readme.txt" ]; then
+            sed -i "s/^Stable tag:.*/Stable tag: $VERSION/" "$SVN_DIR/tags/$VERSION/readme.txt"
+          fi
+
+          cd "$SVN_DIR"
+          svn add "tags/$VERSION"
+
+          echo "➤ Committing SVN tag only (trunk unchanged)..."
+          svn commit -m "Tag $VERSION (pre-release; trunk untouched)" \
+            --no-auth-cache --non-interactive \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD"
+
+          echo "✓ RC tag $VERSION published. Available via:"
+          echo "  - Plugin page → Advanced View → Previous Versions"
+          echo "  - https://downloads.wordpress.org/plugin/$SLUG.$VERSION.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ip-location-block-${{ steps.get_version.outputs.VERSION }}.zip
+          generate_release_notes: true
+          prerelease: ${{ steps.validate_version.outputs.is_prerelease == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

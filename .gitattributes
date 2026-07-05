@@ -1,0 +1,9 @@
+# Normalize line endings for text files; declare binaries so they are never munged.
+* text=auto
+*.php text eol=lf
+*.txt text eol=lf
+*.png binary
+*.jpg binary
+*.ttf binary
+*.po binary
+*.mo binary

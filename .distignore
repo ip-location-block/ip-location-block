@@ -1,0 +1,45 @@
+# Files EXCLUDED from the WordPress.org release. Consumed by rsync --exclude-from.
+# Leading "/" ANCHORS to repo root: excludes ONLY top-level dev cruft and never
+# reaches into the three committed runtime vendor trees (admin/vendor,
+# classes/db-providers/ip2location/vendor, classes/db-providers/maxmind/vendor),
+# which contain their own tests/composer.json/phpunit.xml.dist and MUST ship.
+# NEVER add a bare "vendor" line. "/dist" is required (prevents rsync self-recursion).
+
+# --- Version control / CI ---
+/.git
+/.gitignore
+/.gitattributes
+/.github
+/.distignore
+
+# --- Distribution + wp.org marketing assets (assets live in SVN /assets) ---
+/.wordpress-org
+/dist
+
+# --- Dev / test tooling (top-level only) ---
+/scripts
+/tests
+/bin
+/node_modules
+/composer.json
+/composer.lock
+/phpcs.xml
+/phpcs.xml.dist
+/phpunit.xml
+/phpunit.xml.dist
+/.phpunit.result.cache
+/.travis.yml
+/.editorconfig
+
+# --- Dev docs (readme.txt / changelog.txt / license.txt still ship) ---
+/README.md
+/CHANGELOG.md
+/CONTRIBUTING.md
+
+# --- IDE / OS / temp (unanchored) ---
+.idea
+.vscode
+*.code-workspace
+.DS_Store
+Thumbs.db
+_tmp
