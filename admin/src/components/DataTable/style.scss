@@ -1,0 +1,81 @@
+.ilb-datatable {
+	&__toolbar {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+		gap: 12px;
+		margin-bottom: 8px;
+		flex-wrap: wrap;
+	}
+
+	&__bulk {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	&__sort {
+		background: none;
+		border: 0;
+		padding: 0;
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+		color: inherit;
+		display: inline-flex;
+		align-items: center;
+	}
+
+	&__sort-ind {
+		opacity: 0.7;
+	}
+
+	&__empty {
+		text-align: center;
+		padding: 24px;
+		color: #757575;
+	}
+
+	mark {
+		background: #fff8c5;
+		color: inherit;
+		padding: 0;
+	}
+
+	tr.is-selected td,
+	tr.is-selected th {
+		background: #f0f6fc;
+	}
+
+	&__footer {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		margin-top: 10px;
+		flex-wrap: wrap;
+	}
+
+	&__count {
+		color: #757575;
+	}
+
+	&__pager {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-left: auto;
+	}
+
+	// Responsive: drop low-priority columns as the viewport narrows.
+	@media screen and (max-width: 782px) {
+		.ilb-prio-3 {
+			display: none;
+		}
+	}
+
+	@media screen and (max-width: 600px) {
+		.ilb-prio-2 {
+			display: none;
+		}
+	}
+}
