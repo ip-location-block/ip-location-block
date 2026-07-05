@@ -7,6 +7,8 @@ import { __ } from '@wordpress/i18n';
 
 import { getPath } from './paths';
 import CheckboxList from '../components/CheckboxList';
+import ProviderTable from '../components/ProviderTable';
+import DatabaseStatus from '../components/DatabaseStatus';
 
 export default function SettingsField( { field, settings, sources, onChange } ) {
 	if ( field.showIf && ! field.showIf( settings ) ) {
@@ -26,6 +28,24 @@ export default function SettingsField( { field, settings, sources, onChange } ) 
 					shape={ field.shape }
 					onChange={ set }
 				/>
+			</div>
+		);
+	}
+
+	if ( field.type === 'provider-table' ) {
+		return (
+			<div className="ilb-field-list">
+				<strong className="ilb-field-list__label">{ field.label }</strong>
+				<ProviderTable providers={ sources.providers } value={ value } onChange={ set } />
+			</div>
+		);
+	}
+
+	if ( field.type === 'db-status' ) {
+		return (
+			<div className="ilb-field-list">
+				<strong className="ilb-field-list__label">{ field.label }</strong>
+				<DatabaseStatus rows={ sources.dbStatus } />
 			</div>
 		);
 	}

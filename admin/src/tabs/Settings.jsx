@@ -9,23 +9,41 @@ import { useState, useEffect } from '@wordpress/element';
 import { Panel, PanelBody, Button, Notice, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-import { getSettings, saveSettings, getContent, getExceptions } from '../api';
+import {
+	getSettings,
+	saveSettings,
+	getContent,
+	getExceptions,
+	getProviders,
+	getDatabaseStatus,
+} from '../api';
 import { SECTIONS } from './settingsSchema';
 import { setPath } from './paths';
 import SettingsField from './SettingsField';
 
 export default function Settings() {
 	const [ settings, setSettings ] = useState( null );
-	const [ sources, setSources ] = useState( { content: {}, exceptions: {} } );
+	const [ sources, setSources ] = useState( {
+		content: {},
+		exceptions: {},
+		providers: [],
+		dbStatus: [],
+	} );
 	const [ loading, setLoading ] = useState( true );
 	const [ saving, setSaving ] = useState( false );
 	const [ notice, setNotice ] = useState( null );
 
 	useEffect( () => {
-		Promise.all( [ getSettings(), getContent(), getExceptions() ] )
-			.then( ( [ s, content, exceptions ] ) => {
+		Promise.all( [
+			getSettings(),
+			getContent(),
+			getExceptions(),
+			getProviders(),
+			getDatabaseStatus(),
+		] )
+			.then( ( [ s, content, exceptions, providers, dbStatus ] ) => {
 				setSettings( s );
-				setSources( { content, exceptions } );
+				setSources( { content, exceptions, providers, dbStatus } );
 			} )
 			.catch( ( e ) => setNotice( { status: 'error', msg: e.message } ) )
 			.finally( () => setLoading( false ) );

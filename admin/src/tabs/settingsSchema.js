@@ -146,7 +146,7 @@ export const SECTIONS = [
 		key: 'provider',
 		title: __( 'Geolocation API settings', 'ip-location-block' ),
 		fields: [
-			{ path: 'providers', label: __( 'API selection and key settings', 'ip-location-block' ), type: 'text', advanced: true },
+			{ path: 'providers', label: __( 'API selection and key settings', 'ip-location-block' ), type: 'provider-table' },
 		],
 	},
 	{
@@ -154,7 +154,7 @@ export const SECTIONS = [
 		title: __( 'Local database settings', 'ip-location-block' ),
 		fields: [
 			{ path: 'update.auto', label: __( 'Auto updating (once a month)', 'ip-location-block' ), type: 'toggle' },
-			{ path: 'IP2Location.ipv4_path', label: __( 'Database file paths', 'ip-location-block' ), type: 'text', advanced: true },
+			{ path: 'IP2Location.ipv4_path', label: __( 'Database file status', 'ip-location-block' ), type: 'db-status' },
 		],
 	},
 	{

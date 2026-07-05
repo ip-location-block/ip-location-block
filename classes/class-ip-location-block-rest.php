@@ -65,6 +65,16 @@ class IP_Location_Block_Rest {
 		) );
 
 		// Dynamic option data for the "advanced" settings fields (read-only).
+		register_rest_route( self::NS, '/providers', array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => array( __CLASS__, 'get_providers' ),
+			'permission_callback' => $perm,
+		) );
+		register_rest_route( self::NS, '/database/status', array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => array( __CLASS__, 'get_database_status' ),
+			'permission_callback' => $perm,
+		) );
 		register_rest_route( self::NS, '/content', array(
 			'methods'             => WP_REST_Server::READABLE,
 			'callback'            => array( __CLASS__, 'get_content' ),
@@ -129,6 +139,20 @@ class IP_Location_Block_Rest {
 		// already gated this request via the wp_rest nonce + capability).
 		$options = IP_Location_Block_Admin::get_instance()->sanitize_options( $input );
 
+		// Providers: the classic sanitize is presence-based (built for the
+		// partial form POST) and does not fit a full-object REST payload, so
+		// honor the React map directly. Stored value: '' (off), '@' (on, no
+		// key) or the API key. get_valid_providers() only checks !empty().
+		if ( isset( $input['providers'] ) && is_array( $input['providers'] ) ) {
+			$providers = array();
+			foreach ( $input['providers'] as $name => $val ) {
+				$providers[ (string) $name ] = is_string( $val )
+					? sanitize_text_field( $val )
+					: ( $val ? '@' : '' );
+			}
+			$options['providers'] = $providers;
+		}
+
 		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-opts.php';
 		$file = IP_Location_Block_Opts::setup_validation_timing( $options );
 		if ( is_wp_error( $file ) ) {
@@ -141,6 +165,64 @@ class IP_Location_Block_Rest {
 		IP_Location_Block::update_option( $options );
 
 		return rest_ensure_response( IP_Location_Block::get_option() );
+	}
+
+	/**
+	 * External geolocation providers (with API-key support) + current selection.
+	 * Internal/no-key providers (e.g. Cache) are omitted — they are managed
+	 * elsewhere and default-on.
+	 */
+	public static function get_providers() {
+		$settings = IP_Location_Block::get_option();
+		$stored = isset( $settings['providers'] ) ? (array) $settings['providers'] : array();
+
+		$out = array();
+		foreach ( IP_Location_Block_Provider::get_providers( 'key', false, false, true ) as $name => $keyfield ) {
+			if ( null === $keyfield ) {
+				continue; // internal / no API key
+			}
+			$out[] = array(
+				'name'     => $name,
+				'value'    => isset( $stored[ $name ] ) ? $stored[ $name ] : '',
+				'supports' => array(
+					'ipv4' => (bool) IP_Location_Block_Provider::supports( $name, 'ipv4' ),
+					'ipv6' => (bool) IP_Location_Block_Provider::supports( $name, 'ipv6' ),
+					'asn'  => (bool) IP_Location_Block_Provider::supports( $name, array( 'asn', 'asn_database' ) ),
+					'city' => (bool) IP_Location_Block_Provider::supports( $name, array( 'city' ) ),
+				),
+			);
+		}
+
+		return rest_ensure_response( $out );
+	}
+
+	/**
+	 * Local database file status (read-only): path + whether the file exists +
+	 * last-update timestamp, per configured provider.
+	 */
+	public static function get_database_status() {
+		$s = IP_Location_Block::get_option();
+		$rows = array();
+
+		$entries = array(
+			array( __( 'IP2Location IPv4', 'ip-location-block' ), 'IP2Location', 'ipv4_path', 'ipv4_last' ),
+			array( __( 'IP2Location IPv6', 'ip-location-block' ), 'IP2Location', 'ipv6_path', 'ipv6_last' ),
+			array( __( 'GeoLite2 (IP)', 'ip-location-block' ), 'GeoLite2', 'ip_path', 'ip_last' ),
+			array( __( 'GeoLite2 (ASN)', 'ip-location-block' ), 'GeoLite2', 'asn_path', 'asn_last' ),
+		);
+		foreach ( $entries as $e ) {
+			list( $label, $prov, $pathKey, $lastKey ) = $e;
+			$path = isset( $s[ $prov ][ $pathKey ] ) ? $s[ $prov ][ $pathKey ] : '';
+			$last = isset( $s[ $prov ][ $lastKey ] ) ? (int) $s[ $prov ][ $lastKey ] : 0;
+			$rows[] = array(
+				'label'  => $label,
+				'path'   => $path,
+				'exists' => $path && @file_exists( $path ),
+				'last'   => $last ? date_i18n( get_option( 'date_format' ), $last ) : '',
+			);
+		}
+
+		return rest_ensure_response( $rows );
 	}
 
 	/**
