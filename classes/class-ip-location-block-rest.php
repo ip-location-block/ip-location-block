@@ -118,6 +118,19 @@ class IP_Location_Block_Rest {
 				),
 			),
 		) );
+
+		register_rest_route( self::NS, '/logs/entries', array(
+			'methods'             => WP_REST_Server::DELETABLE,
+			'callback'            => array( __CLASS__, 'delete_log_entries' ),
+			'permission_callback' => $perm,
+		) );
+
+		// Append selected IPs/ASNs to the extra-IP white/black list.
+		register_rest_route( self::NS, '/list', array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => array( __CLASS__, 'add_to_list' ),
+			'permission_callback' => $perm,
+		) );
 	}
 
 	/* -----------------------------------------------------------------------
@@ -321,8 +334,66 @@ class IP_Location_Block_Rest {
 
 	public static function get_logs( WP_REST_Request $request ) {
 		$hook = $request->get_param( 'hook' );
+		$rows = IP_Location_Block_Logs::restore_logs( $hook ? $hook : null );
 
-		return rest_ensure_response( IP_Location_Block_Logs::restore_logs( $hook ? $hook : null ) );
+		// restore_logs() returns raw positional rows:
+		// [ No, hook, time, ip, code, city, state, result, asn, method, ua, headers, data ]
+		$out = array();
+		foreach ( (array) $rows as $r ) {
+			$out[] = array(
+				'id'     => (int) $r[0],
+				'target' => $r[1],
+				'time'   => (int) $r[2],
+				'ip'     => $r[3],
+				'code'   => $r[4],
+				'city'   => $r[5],
+				'state'  => $r[6],
+				'result' => $r[7],
+				'asn'    => $r[8],
+				'method' => $r[9],
+				'ua'     => $r[10],
+			);
+		}
+
+		return rest_ensure_response( $out );
+	}
+
+	/**
+	 * Append IP/CIDR/ASN values to the extra-IP white or black list
+	 * (bulk whitelist/blacklist from the Logs tab).
+	 */
+	public static function add_to_list( WP_REST_Request $request ) {
+		$key = 'white' === $request->get_param( 'list' ) ? 'white_list' : 'black_list';
+		$values = (array) $request->get_param( 'values' );
+
+		$settings = IP_Location_Block::get_option();
+		$current = isset( $settings['extra_ips'][ $key ] ) ? $settings['extra_ips'][ $key ] : '';
+		$entries = array_filter( array_map( 'trim', preg_split( '/[,\r\n]+/', (string) $current ) ) );
+
+		foreach ( $values as $v ) {
+			$v = sanitize_text_field( $v );
+			if ( '' !== $v && ! in_array( $v, $entries, true ) ) {
+				$entries[] = $v;
+			}
+		}
+
+		if ( ! isset( $settings['extra_ips'] ) || ! is_array( $settings['extra_ips'] ) ) {
+			$settings['extra_ips'] = array();
+		}
+		$settings['extra_ips'][ $key ] = implode( ',', $entries );
+		IP_Location_Block::update_option( $settings );
+
+		return rest_ensure_response( array( 'success' => true, 'list' => $settings['extra_ips'][ $key ] ) );
+	}
+
+	/**
+	 * Delete validation-log entries by IP address (bulk erase).
+	 */
+	public static function delete_log_entries( WP_REST_Request $request ) {
+		$ips = array_map( 'sanitize_text_field', (array) $request->get_param( 'ips' ) );
+		IP_Location_Block_Logs::delete_logs_entry( $ips );
+
+		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	public static function clear_logs( WP_REST_Request $request ) {

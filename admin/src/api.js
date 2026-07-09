@@ -36,3 +36,15 @@ export const getLogs = ( hook ) =>
 	apiFetch( {
 		path: `/${ ns }/logs` + ( hook ? `?hook=${ encodeURIComponent( hook ) }` : '' ),
 	} );
+
+export const clearLogs = ( hook ) =>
+	apiFetch( {
+		path: `/${ ns }/logs` + ( hook ? `?hook=${ encodeURIComponent( hook ) }` : '' ),
+		method: 'DELETE',
+	} );
+
+export const eraseLogEntries = ( ips ) =>
+	apiFetch( { path: `/${ ns }/logs/entries`, method: 'DELETE', data: { ips } } );
+
+export const addToList = ( list, values ) =>
+	apiFetch( { path: `/${ ns }/list`, method: 'POST', data: { list, values } } );

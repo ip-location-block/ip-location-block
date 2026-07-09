@@ -6,11 +6,11 @@ import { TabPanel } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 import Settings from './tabs/Settings';
-import LogsDemo from './tabs/LogsDemo';
+import Logs from './tabs/Logs';
 
 const TABS = [
 	{ name: 'settings', title: __( 'Settings', 'ip-location-block' ), Component: Settings },
-	{ name: 'logs', title: __( 'Logs (preview)', 'ip-location-block' ), Component: LogsDemo },
+	{ name: 'logs', title: __( 'Logs', 'ip-location-block' ), Component: Logs },
 ];
 
 export default function App() {
