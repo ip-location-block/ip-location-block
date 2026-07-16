@@ -50,6 +50,12 @@ class IP_Location_Block_Rest {
 			),
 		) );
 
+		register_rest_route( self::NS, '/geolocation/search', array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => array( __CLASS__, 'search_geolocation' ),
+			'permission_callback' => $perm,
+		) );
+
 		register_rest_route( self::NS, '/settings/defaults', array(
 			'methods'             => WP_REST_Server::READABLE,
 			'callback'            => array( __CLASS__, 'get_defaults' ),
@@ -131,6 +137,13 @@ class IP_Location_Block_Rest {
 			'callback'            => array( __CLASS__, 'add_to_list' ),
 			'permission_callback' => $perm,
 		) );
+
+		// Per-blog blocked counts (network admin only).
+		register_rest_route( self::NS, '/network/stats', array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => array( __CLASS__, 'get_network_stats' ),
+			'permission_callback' => $perm,
+		) );
 	}
 
 	/* -----------------------------------------------------------------------
@@ -201,15 +214,19 @@ class IP_Location_Block_Rest {
 	public static function get_providers() {
 		$settings = IP_Location_Block::get_option();
 		$stored = isset( $settings['providers'] ) ? (array) $settings['providers'] : array();
+		$all = IP_Location_Block_Provider::all();
 
 		$out = array();
 		foreach ( IP_Location_Block_Provider::get_providers( 'key', false, false, true ) as $name => $keyfield ) {
 			if ( null === $keyfield ) {
 				continue; // internal / no API key
 			}
+			$meta = isset( $all[ $name ] ) ? $all[ $name ] : array();
 			$out[] = array(
 				'name'     => $name,
 				'value'    => isset( $stored[ $name ] ) ? $stored[ $name ] : '',
+				'link'     => isset( $meta['link'] ) ? (string) $meta['link'] : '',
+				'type'     => isset( $meta['type'] ) ? (string) $meta['type'] : '',
 				'supports' => array(
 					'ipv4' => (bool) IP_Location_Block_Provider::supports( $name, 'ipv4' ),
 					'ipv6' => (bool) IP_Location_Block_Provider::supports( $name, 'ipv6' ),
@@ -316,6 +333,60 @@ class IP_Location_Block_Rest {
 	}
 
 	/**
+	 * Geolocation lookup for the Search tab. search_ip() reads $_POST['ip'],
+	 * so populate it before delegating.
+	 */
+	public static function search_geolocation( WP_REST_Request $request ) {
+		$provider = sanitize_text_field( (string) $request->get_param( 'provider' ) );
+		$_POST['ip'] = sanitize_text_field( (string) $request->get_param( 'ip' ) );
+
+		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+		}
+
+		return rest_ensure_response( IP_Location_Block_Admin_Ajax::search_ip( $provider ) );
+	}
+
+	/**
+	 * Per-blog blocked counts across the network (network admin only).
+	 * Maps IP_Location_Block_Admin_Ajax::restore_network() into flat rows.
+	 */
+	public static function get_network_stats( WP_REST_Request $request ) {
+		if ( ! is_multisite() ) {
+			return rest_ensure_response( array() );
+		}
+
+		$duration = (int) $request->get_param( 'duration' ); // 0=all,1=hour,2=day,3=week,4=month
+		$offset   = (int) $request->get_param( 'offset' );
+		$length   = $request->get_param( 'length' );
+		$length   = null === $length ? 100 : (int) $length;
+
+		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+		}
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		$hooks = array( 'comment', 'xmlrpc', 'login', 'admin', 'public' );
+		$rows  = array();
+		foreach ( IP_Location_Block_Admin_Ajax::restore_network( $duration, $offset, $length, false ) as $site => $counts ) {
+			$row   = array( 'site' => (string) $site );
+			$total = 0;
+			foreach ( $hooks as $h ) {
+				$v = isset( $counts[ $h ] ) ? (int) $counts[ $h ] : 0;
+				$row[ $h ] = $v;
+				$total    += $v;
+			}
+			$row['total'] = $total;
+			$row['link']  = isset( $counts['link'] ) ? (string) $counts['link'] : '';
+			$rows[]       = $row;
+		}
+
+		return rest_ensure_response( $rows );
+	}
+
+	/**
 	 * Trigger a local-database download/update.
 	 */
 	public static function update_database() {
@@ -323,7 +394,43 @@ class IP_Location_Block_Rest {
 	}
 
 	public static function get_statistics() {
-		return rest_ensure_response( IP_Location_Block_Logs::restore_stat() );
+		$s = IP_Location_Block_Logs::restore_stat();
+
+		// countries: { code: count } -> [ {code, count} ] desc
+		$countries = array();
+		if ( ! empty( $s['countries'] ) && is_array( $s['countries'] ) ) {
+			arsort( $s['countries'] );
+			foreach ( $s['countries'] as $code => $count ) {
+				$countries[] = array( 'code' => (string) $code, 'count' => (int) $count );
+			}
+		}
+
+		// daystats: { time: { comment,xmlrpc,login,admin,public } } -> [ {date, …, total} ] asc
+		$hooks = array( 'comment', 'xmlrpc', 'login', 'admin', 'public' );
+		$daily = array();
+		if ( ! empty( $s['daystats'] ) && is_array( $s['daystats'] ) ) {
+			ksort( $s['daystats'] );
+			foreach ( $s['daystats'] as $time => $counts ) {
+				$row = array( 'date' => (int) $time );
+				$total = 0;
+				foreach ( $hooks as $h ) {
+					$v = isset( $counts[ $h ] ) ? (int) $counts[ $h ] : 0;
+					$row[ $h ] = $v;
+					$total += $v;
+				}
+				$row['total'] = $total;
+				$daily[] = $row;
+			}
+		}
+
+		return rest_ensure_response( array(
+			'blocked'   => isset( $s['blocked'] ) ? (int) $s['blocked'] : 0,
+			'unknown'   => isset( $s['unknown'] ) ? (int) $s['unknown'] : 0,
+			'ipv4'      => isset( $s['IPv4'] ) ? (int) $s['IPv4'] : 0,
+			'ipv6'      => isset( $s['IPv6'] ) ? (int) $s['IPv6'] : 0,
+			'countries' => $countries,
+			'daily'     => $daily,
+		) );
 	}
 
 	public static function clear_statistics() {

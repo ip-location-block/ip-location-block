@@ -44,3 +44,141 @@
 		font-style: italic;
 	}
 }
+
+.ilb-stat-tiles {
+	margin-bottom: 4px;
+}
+
+.ilb-stat-tile {
+	min-width: 120px;
+
+	&__value {
+		font-size: 26px;
+		font-weight: 600;
+		line-height: 1.1;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__label {
+		margin-top: 2px;
+		color: #757575;
+		font-size: 12px;
+		text-transform: uppercase;
+		letter-spacing: 0.4px;
+	}
+}
+
+/* Search tab */
+.ilb-search {
+	&__notice,
+	&__results {
+		margin-top: 16px;
+	}
+
+	&__loading {
+		display: flex;
+		justify-content: center;
+		padding: 32px 0;
+	}
+
+	&__map-card {
+		margin-top: 16px;
+	}
+
+	&__details {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0;
+		margin: 0;
+	}
+
+	&__row {
+		display: grid;
+		grid-template-columns: 200px 1fr;
+		gap: 12px;
+		padding: 8px 0;
+		border-bottom: 1px solid #f0f0f1;
+
+		&:last-child {
+			border-bottom: 0;
+		}
+
+		dt {
+			margin: 0;
+			color: #757575;
+			font-weight: 600;
+		}
+
+		dd {
+			margin: 0;
+			font-variant-numeric: tabular-nums;
+			word-break: break-word;
+		}
+	}
+}
+
+.ilb-map {
+	height: 340px;
+	border-radius: 4px;
+	overflow: hidden;
+
+	// Leaflet controls/tiles sit fine, but guard against theme resets.
+	.leaflet-container {
+		font: inherit;
+	}
+}
+
+/* Attribution tab */
+.ilb-attribution {
+	&__intro {
+		max-width: 720px;
+		color: #50575e;
+	}
+
+	&__list {
+		margin: 0;
+		list-style: none;
+	}
+
+	&__item {
+		display: grid;
+		grid-template-columns: 180px minmax(0, 1fr) auto;
+		gap: 12px;
+		align-items: baseline;
+		padding: 10px 0;
+		border-bottom: 1px solid #f0f0f1;
+
+		&:last-child {
+			border-bottom: 0;
+		}
+	}
+
+	&__name {
+		font-weight: 600;
+	}
+
+	&__link {
+		word-break: break-all;
+
+		&--none {
+			color: #a7aaad;
+		}
+	}
+
+	&__type {
+		color: #757575;
+		font-size: 12px;
+		text-align: right;
+	}
+}
+
+@media ( max-width: 782px ) {
+	.ilb-search__row,
+	.ilb-attribution__item {
+		grid-template-columns: 1fr;
+	}
+
+	.ilb-attribution__type {
+		text-align: left;
+	}
+}

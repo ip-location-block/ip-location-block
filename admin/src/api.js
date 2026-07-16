@@ -32,6 +32,9 @@ export const getExceptions = () => apiFetch( { path: `/${ ns }/exceptions` } );
 
 export const getStatistics = () => apiFetch( { path: `/${ ns }/statistics` } );
 
+export const clearStatistics = () =>
+	apiFetch( { path: `/${ ns }/statistics`, method: 'DELETE' } );
+
 export const getLogs = ( hook ) =>
 	apiFetch( {
 		path: `/${ ns }/logs` + ( hook ? `?hook=${ encodeURIComponent( hook ) }` : '' ),
@@ -48,3 +51,15 @@ export const eraseLogEntries = ( ips ) =>
 
 export const addToList = ( list, values ) =>
 	apiFetch( { path: `/${ ns }/list`, method: 'POST', data: { list, values } } );
+
+export const searchIp = ( ip, provider ) =>
+	apiFetch( {
+		path: `/${ ns }/geolocation/search`,
+		method: 'POST',
+		data: { ip, provider },
+	} );
+
+export const getNetworkStats = ( duration = 0 ) =>
+	apiFetch( {
+		path: `/${ ns }/network/stats?duration=${ encodeURIComponent( duration ) }`,
+	} );

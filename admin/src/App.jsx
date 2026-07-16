@@ -7,10 +7,22 @@ import { __ } from '@wordpress/i18n';
 
 import Settings from './tabs/Settings';
 import Logs from './tabs/Logs';
+import Statistics from './tabs/Statistics';
+import Search from './tabs/Search';
+import Attribution from './tabs/Attribution';
+import Sites from './tabs/Sites';
+
+const isNetwork = !! ( window.ipLocationBlockBeta && window.ipLocationBlockBeta.isNetwork );
 
 const TABS = [
 	{ name: 'settings', title: __( 'Settings', 'ip-location-block' ), Component: Settings },
+	{ name: 'statistics', title: __( 'Statistics', 'ip-location-block' ), Component: Statistics },
 	{ name: 'logs', title: __( 'Logs', 'ip-location-block' ), Component: Logs },
+	{ name: 'search', title: __( 'Search', 'ip-location-block' ), Component: Search },
+	{ name: 'attribution', title: __( 'Attribution', 'ip-location-block' ), Component: Attribution },
+	...( isNetwork
+		? [ { name: 'sites', title: __( 'Sites', 'ip-location-block' ), Component: Sites } ]
+		: [] ),
 ];
 
 export default function App() {

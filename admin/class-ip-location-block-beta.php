@@ -70,21 +70,49 @@ class IP_Location_Block_Beta {
 		}
 		$asset = require $asset_path;
 
+		// Bundled Leaflet for the Search tab map (exposes window.L).
+		wp_enqueue_style(
+			'ip-location-block-leaflet',
+			plugins_url( 'admin/vendor/leaflet/leaflet.css', IP_LOCATION_BLOCK_BASE ),
+			array(),
+			IP_LOCATION_BLOCK_VERSION
+		);
+		wp_enqueue_script(
+			'ip-location-block-leaflet',
+			plugins_url( 'admin/vendor/leaflet/leaflet.js', IP_LOCATION_BLOCK_BASE ),
+			array(),
+			IP_LOCATION_BLOCK_VERSION,
+			true
+		);
+
 		wp_enqueue_script(
 			self::SLUG,
 			plugins_url( 'admin/build/index.js', IP_LOCATION_BLOCK_BASE ),
-			$asset['dependencies'],
+			array_merge( $asset['dependencies'], array( 'ip-location-block-leaflet' ) ),
 			$asset['version'],
 			true
 		);
 
 		wp_enqueue_style( 'wp-components' );
+
+		// @wordpress/scripts splits extracted CSS into two files: shared styles
+		// from any `style.scss` land in style-index.css, while styles imported
+		// from other-named modules (e.g. charts.scss) land in index.css. Enqueue
+		// both so every component's styles load.
 		wp_enqueue_style(
 			self::SLUG,
 			plugins_url( 'admin/build/style-index.css', IP_LOCATION_BLOCK_BASE ),
 			array( 'wp-components' ),
 			$asset['version']
 		);
+		if ( file_exists( IP_LOCATION_BLOCK_PATH . 'admin/build/index.css' ) ) {
+			wp_enqueue_style(
+				self::SLUG . '-components',
+				plugins_url( 'admin/build/index.css', IP_LOCATION_BLOCK_BASE ),
+				array( self::SLUG ),
+				$asset['version']
+			);
+		}
 
 		wp_localize_script( self::SLUG, 'ipLocationBlockBeta', array(
 			'restNamespace' => 'ip-location-block/v1',
