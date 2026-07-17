@@ -22,17 +22,22 @@ export const SECTIONS = [
 		key: 'validation-rule',
 		title: __( 'Validation rules and behavior', 'ip-location-block' ),
 		fields: [
+			{ path: '__scan', type: 'scan-country' },
 			{ path: 'matching_rule', label: __( 'Matching rule', 'ip-location-block' ), type: 'select', options: [
 				{ label: __( '— select —', 'ip-location-block' ), value: '-1' },
 				{ label: __( 'Whitelist', 'ip-location-block' ), value: '0' },
 				{ label: __( 'Blacklist', 'ip-location-block' ), value: '1' },
-			], help: __( 'How “Block by location” behaves.', 'ip-location-block' ) },
+			], tip: __( 'Whitelist passes only listed countries; blacklist blocks listed countries.', 'ip-location-block' ), optionDesc: {
+				'-1': __( 'Country blocking is off until you pick whitelist or blacklist.', 'ip-location-block' ),
+				0: __( 'Whitelist: block everyone whose country is NOT in the list.', 'ip-location-block' ),
+				1: __( 'Blacklist: block everyone whose country IS in the list.', 'ip-location-block' ),
+			} },
 			{ path: 'white_list', label: __( 'Whitelist of country code', 'ip-location-block' ), type: 'text', showIf: ( s ) => Number( s.matching_rule ) === 0, help: __( 'Comma-separated codes. XX=private, ZZ=unknown, YY=non-country.', 'ip-location-block' ) },
 			{ path: 'black_list', label: __( 'Blacklist of country code', 'ip-location-block' ), type: 'text', showIf: ( s ) => Number( s.matching_rule ) === 1 },
-			{ path: 'use_asn', label: __( 'Use Autonomous System Number (ASN)', 'ip-location-block' ), type: 'toggle' },
+			{ path: 'use_asn', label: __( 'Use Autonomous System Number (ASN)', 'ip-location-block' ), type: 'toggle', tip: __( 'Also match by AS number. Make sure only ASN-capable providers are enabled.', 'ip-location-block' ) },
 			{ path: 'validation.proxy', label: __( '$_SERVER keys for extra IP addresses', 'ip-location-block' ), type: 'text', help: __( 'e.g. HTTP_X_FORWARDED_FOR when behind a proxy.', 'ip-location-block' ) },
-			{ path: 'extra_ips.white_list', label: __( 'Whitelist of extra IPs (CIDR, ASN)', 'ip-location-block' ), type: 'textarea' },
-			{ path: 'extra_ips.black_list', label: __( 'Blacklist of extra IPs (CIDR, ASN)', 'ip-location-block' ), type: 'textarea' },
+			{ path: 'extra_ips.white_list', label: __( 'Whitelist of extra IPs (CIDR, ASN)', 'ip-location-block' ), type: 'textarea', tool: 'cidr', help: __( 'Comma or newline separated. Use the CIDR calculator to convert a range.', 'ip-location-block' ) },
+			{ path: 'extra_ips.black_list', label: __( 'Blacklist of extra IPs (CIDR, ASN)', 'ip-location-block' ), type: 'textarea', tool: 'cidr', help: __( 'Comma or newline separated. Use the CIDR calculator to convert a range.', 'ip-location-block' ) },
 			{ path: 'signature', label: __( 'Bad signatures in query', 'ip-location-block' ), type: 'textarea', help: __( 'Comma/newline-separated malicious signatures.', 'ip-location-block' ) },
 			{ path: 'validation.mimetype', label: __( 'Prevent malicious file uploading', 'ip-location-block' ), type: 'select', options: [
 				{ label: __( 'Disable', 'ip-location-block' ), value: '0' },
@@ -48,8 +53,11 @@ export const SECTIONS = [
 			{ path: 'validation.timing', label: __( 'Validation timing', 'ip-location-block' ), type: 'select', options: [
 				{ label: __( '“init” action hook', 'ip-location-block' ), value: '0' },
 				{ label: __( '“mu-plugins”', 'ip-location-block' ), value: '1' },
-			] },
-			{ path: 'simulate', label: __( 'Simulation mode (log only, do not block)', 'ip-location-block' ), type: 'toggle' },
+			], tip: __( 'When the geolocation check runs during the request lifecycle.', 'ip-location-block' ), optionDesc: {
+				0: __( 'Runs on the “init” hook — compatible with most setups.', 'ip-location-block' ),
+				1: __( 'Runs earlier as a mu-plugin — blocks before other plugins load, but is more invasive.', 'ip-location-block' ),
+			} },
+			{ path: 'simulate', label: __( 'Simulation mode (log only, do not block)', 'ip-location-block' ), type: 'toggle', tip: __( 'Records what would be blocked without actually blocking — use to test rules safely.', 'ip-location-block' ) },
 		],
 	},
 	{
@@ -122,8 +130,8 @@ export const SECTIONS = [
 		key: 'recording',
 		title: __( 'Privacy and record settings', 'ip-location-block' ),
 		fields: [
-			{ path: 'anonymize', label: __( 'Anonymize IP address', 'ip-location-block' ), type: 'toggle' },
-			{ path: 'restrict_api', label: __( 'Do not send IP address to external APIs', 'ip-location-block' ), type: 'toggle' },
+			{ path: 'anonymize', label: __( 'Anonymize IP address', 'ip-location-block' ), type: 'toggle', tip: __( 'Masks the last octet of recorded IPs for privacy compliance.', 'ip-location-block' ) },
+			{ path: 'restrict_api', label: __( 'Do not send IP address to external APIs', 'ip-location-block' ), type: 'toggle', tip: __( 'Only use local databases — no visitor IP leaves your server. Disables remote providers.', 'ip-location-block' ) },
 			{ path: 'cache_hold', label: __( 'Record “IP address cache”', 'ip-location-block' ), type: 'toggle' },
 			{ path: 'cache_time', label: __( 'Cache expiration time [sec]', 'ip-location-block' ), type: 'number' },
 			{ path: 'validation.reclogs', label: __( 'Record “Validation logs”', 'ip-location-block' ), type: 'select', options: [
@@ -146,6 +154,7 @@ export const SECTIONS = [
 		key: 'provider',
 		title: __( 'Geolocation API settings', 'ip-location-block' ),
 		fields: [
+			{ path: '__precision', type: 'precision-upsell' },
 			{ path: 'providers', label: __( 'API selection and key settings', 'ip-location-block' ), type: 'provider-table' },
 		],
 	},

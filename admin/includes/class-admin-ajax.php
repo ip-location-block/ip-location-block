@@ -763,27 +763,37 @@ class IP_Location_Block_Admin_Ajax {
 
 
 	/**
+	 * The recommended "Best for Back-end" override set. Applied on top of the
+	 * current settings (only these keys change).
+	 *
+	 * @return array
+	 */
+	public static function preferred_overrides() {
+		return array(
+			'login_fails' => 10,      // Limited number of login attempts
+			'validation'  => array(   // Action hook for validation
+				'comment'  => true,    // Validate on comment post
+				'login'    => 1,       // Validate on login
+				'admin'    => 1,       // Validate on admin (1:country)
+				'ajax'     => 1,       // Validate on ajax/post (1:country)
+				'xmlrpc'   => 1,       // Validate on xmlrpc (1:country 2:close)
+				'postkey'  => 'action,comment,log,pwd,FILES', // Keys in $_POST and $_FILES
+				'plugins'  => 0,       // wp-content/plugins (WP-ZEP removed)
+				'themes'   => 0,       // wp-content/themes (WP-ZEP removed)
+				'timing'   => 1,       // 0:init, 1:mu-plugins, 2:drop-in
+				'mimetype' => 1,       // 0:disable, 1:white_list, 2:black_list
+			),
+			'signature'   => "../,/wp-config.php,/passwd\ncurl,wget,eval,base64\nselect:.5,where:.5,union:.5\nload_file:.5,create:.6,password:.4",
+		);
+	}
+
+	/**
 	 * Make preferred settings with formatted json
 	 * @return array
 	 */
 	public static function preferred_to_json() {
 		return self::settings_to_json(
-			array(
-				'login_fails' => 10,      // Limited number of login attempts
-				'validation'  => array(   // Action hook for validation
-					'comment'  => true,    // Validate on comment post
-					'login'    => 1,       // Validate on login
-					'admin'    => 1,       // Validate on admin (1:country)
-					'ajax'     => 1,       // Validate on ajax/post (1:country)
-					'xmlrpc'   => 1,       // Validate on xmlrpc (1:country 2:close)
-					'postkey'  => 'action,comment,log,pwd,FILES', // Keys in $_POST and $_FILES
-					'plugins'  => 0,       // wp-content/plugins (WP-ZEP removed)
-					'themes'   => 0,       // wp-content/themes (WP-ZEP removed)
-					'timing'   => 1,       // 0:init, 1:mu-plugins, 2:drop-in
-					'mimetype' => 1,       // 0:disable, 1:white_list, 2:black_list
-				),
-				'signature'   => "../,/wp-config.php,/passwd\ncurl,wget,eval,base64\nselect:.5,where:.5,union:.5\nload_file:.5,create:.6,password:.4",
-			),
+			self::preferred_overrides(),
 			false // should not overwrite the existing parameters
 		);
 	}

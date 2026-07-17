@@ -152,6 +152,27 @@ class IP_Location_Block_Rest {
 			'callback'            => array( __CLASS__, 'dismiss_notice' ),
 			'permission_callback' => $perm,
 		) );
+
+		// Scan the current IP against every enabled provider (country verdicts).
+		register_rest_route( self::NS, '/geolocation/scan', array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => array( __CLASS__, 'scan_country' ),
+			'permission_callback' => $perm,
+		) );
+
+		// Geolocation "mode": Native (IP Location Block only) vs Standard.
+		register_rest_route( self::NS, '/geolocation/mode', array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => array( __CLASS__, 'get_mode' ),
+			'permission_callback' => $perm,
+		) );
+
+		// Compute a settings preset (default / preferred) without saving it.
+		register_rest_route( self::NS, '/settings/preset', array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => array( __CLASS__, 'get_preset' ),
+			'permission_callback' => $perm,
+		) );
 	}
 
 	/**
@@ -175,6 +196,86 @@ class IP_Location_Block_Rest {
 		IP_Location_Block::update_option( $settings );
 
 		return rest_ensure_response( array( 'dismissed' => true ) );
+	}
+
+	/**
+	 * Country verdict from every enabled provider for the current IP.
+	 * Reshapes IP_Location_Block_Admin_Ajax::scan_country() into
+	 * { ip, providers: [ { name, type, code } ] }.
+	 */
+	public static function scan_country() {
+		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+		}
+
+		$raw = IP_Location_Block_Admin_Ajax::scan_country( 'ip_client' );
+		$ip  = isset( $raw['IP address'] ) ? $raw['IP address'] : '';
+		unset( $raw['IP address'] );
+
+		$providers = array();
+		foreach ( $raw as $name => $info ) {
+			$providers[] = array(
+				'name' => (string) $name,
+				'type' => isset( $info['type'] ) ? (string) $info['type'] : '',
+				'code' => isset( $info['code'] ) ? (string) $info['code'] : '',
+			);
+		}
+
+		return rest_ensure_response( array( 'ip' => (string) $ip, 'providers' => $providers ) );
+	}
+
+	/**
+	 * Geolocation "mode" signals for the precision upsell.
+	 * Native = the IP Location Block provider is the only valid one.
+	 */
+	public static function get_mode() {
+		$settings = IP_Location_Block::get_option();
+		$valid    = array_values( IP_Location_Block_Provider::get_valid_providers( $settings, false, false, false ) );
+		$stored   = isset( $settings['providers'] ) && is_array( $settings['providers'] ) ? $settings['providers'] : array();
+		$key      = isset( $stored['IP Location Block'] ) ? $stored['IP Location Block'] : '';
+
+		$others = array_values( array_filter( $valid, static function ( $name ) {
+			return 'IP Location Block' !== $name && 'Cache' !== $name;
+		} ) );
+
+		return rest_ensure_response( array(
+			'native'     => (bool) IP_Location_Block_Provider::is_native( $settings ),
+			'apiEnabled' => in_array( 'IP Location Block', $valid, true ),
+			'apiKey'     => ( '' !== $key && '@' !== $key ),
+			'others'     => $others,
+		) );
+	}
+
+	/**
+	 * Compute a settings preset WITHOUT saving it. The React app applies the
+	 * returned object to the live form so the user can review and Save.
+	 *  - default   : the plugin defaults.
+	 *  - preferred : the "Best for Back-end" overrides merged over current.
+	 */
+	public static function get_preset( WP_REST_Request $request ) {
+		$preset = sanitize_key( (string) $request->get_param( 'preset' ) );
+
+		if ( 'default' === $preset ) {
+			return rest_ensure_response( IP_Location_Block::get_default() );
+		}
+
+		if ( 'preferred' === $preset ) {
+			if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
+				require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+			}
+			$merged = array_replace_recursive(
+				IP_Location_Block::get_option(),
+				IP_Location_Block_Admin_Ajax::preferred_overrides()
+			);
+
+			return rest_ensure_response( $merged );
+		}
+
+		return new WP_Error(
+			'ilb_unknown_preset',
+			__( 'Unknown preset.', 'ip-location-block' ),
+			array( 'status' => 400 )
+		);
 	}
 
 	/* -----------------------------------------------------------------------
@@ -254,15 +355,22 @@ class IP_Location_Block_Rest {
 			}
 			$meta = isset( $all[ $name ] ) ? $all[ $name ] : array();
 			$out[] = array(
-				'name'     => $name,
-				'value'    => isset( $stored[ $name ] ) ? $stored[ $name ] : '',
-				'link'     => isset( $meta['link'] ) ? (string) $meta['link'] : '',
-				'type'     => isset( $meta['type'] ) ? (string) $meta['type'] : '',
-				'supports' => array(
-					'ipv4' => (bool) IP_Location_Block_Provider::supports( $name, 'ipv4' ),
-					'ipv6' => (bool) IP_Location_Block_Provider::supports( $name, 'ipv6' ),
-					'asn'  => (bool) IP_Location_Block_Provider::supports( $name, array( 'asn', 'asn_database' ) ),
-					'city' => (bool) IP_Location_Block_Provider::supports( $name, array( 'city' ) ),
+				'name'        => $name,
+				'value'       => isset( $stored[ $name ] ) ? $stored[ $name ] : '',
+				'link'        => isset( $meta['link'] ) ? (string) $meta['link'] : '',
+				'type'        => isset( $meta['type'] ) ? (string) $meta['type'] : '',
+				'requests'    => isset( $meta['requests'] ) && is_array( $meta['requests'] ) ? array(
+					'total' => (int) $meta['requests']['total'],
+					'term'  => isset( $meta['requests']['term'] ) ? (string) $meta['requests']['term'] : '',
+				) : null,
+				'recommended' => ( 'IP Location Block' === $name ),
+				'local'       => ! empty( $meta['local'] ),
+				'supports'    => array(
+					'ipv4'  => (bool) IP_Location_Block_Provider::supports( $name, 'ipv4' ),
+					'ipv6'  => (bool) IP_Location_Block_Provider::supports( $name, 'ipv6' ),
+					'asn'   => (bool) IP_Location_Block_Provider::supports( $name, array( 'asn', 'asn_database' ) ),
+					'city'  => (bool) IP_Location_Block_Provider::supports( $name, array( 'city' ) ),
+					'state' => (bool) IP_Location_Block_Provider::supports( $name, array( 'state' ) ),
 				),
 			);
 		}

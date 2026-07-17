@@ -11,7 +11,7 @@ import Statistics from './tabs/Statistics';
 import Search from './tabs/Search';
 import Attribution from './tabs/Attribution';
 import Sites from './tabs/Sites';
-import { getSettings } from './api';
+import { getSettings, getMode } from './api';
 
 const boot = window.ipLocationBlockBeta || {};
 const isNetwork = !! boot.isNetwork;
@@ -35,11 +35,15 @@ const isProtected = ( s ) =>
 
 function Header() {
 	const [ status, setStatus ] = useState( null ); // null = unknown, bool once loaded
+	const [ mode, setMode ] = useState( null ); // geolocation Native/Standard mode
 
 	useEffect( () => {
 		let alive = true;
 		getSettings()
 			.then( ( s ) => alive && setStatus( isProtected( s ) ) )
+			.catch( () => {} );
+		getMode()
+			.then( ( m ) => alive && setMode( m ) )
 			.catch( () => {} );
 		return () => {
 			alive = false;
@@ -63,6 +67,19 @@ function Header() {
 				) }
 			</div>
 			<div className="ilb-header__spacer" />
+			{ mode && (
+				<span
+					className={ `ilb-mode ilb-mode--${ mode.native ? 'native' : 'standard' }` }
+					title={ __(
+						'Native mode gives better precision and city/state level blocking.',
+						'ip-location-block'
+					) }
+				>
+					{ mode.native
+						? __( 'Native Mode', 'ip-location-block' )
+						: __( 'Standard Mode', 'ip-location-block' ) }
+				</span>
+			) }
 			{ status !== null && (
 				<span
 					className={ `ilb-status ilb-status--${ status ? 'on' : 'off' }` }

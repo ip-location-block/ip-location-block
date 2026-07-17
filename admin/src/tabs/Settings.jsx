@@ -24,6 +24,7 @@ import {
 	getExceptions,
 	getProviders,
 	getDatabaseStatus,
+	getMode,
 } from '../api';
 import { SECTIONS } from './settingsSchema';
 import { setPath } from './paths';
@@ -75,10 +76,11 @@ export default function Settings() {
 			getExceptions(),
 			getProviders(),
 			getDatabaseStatus(),
+			getMode().catch( () => null ),
 		] )
-			.then( ( [ s, content, exceptions, providers, dbStatus ] ) => {
+			.then( ( [ s, content, exceptions, providers, dbStatus, geoMode ] ) => {
 				setSettings( s );
-				setSources( { content, exceptions, providers, dbStatus } );
+				setSources( { content, exceptions, providers, dbStatus, mode: geoMode } );
 				setMode( readStoredMode() || ( looksUnconfigured( s ) ? 'simple' : 'advanced' ) );
 			} )
 			.catch( ( e ) => setNotice( { status: 'error', msg: e.message } ) )

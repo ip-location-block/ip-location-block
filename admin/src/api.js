@@ -63,3 +63,10 @@ export const getNetworkStats = ( duration = 0 ) =>
 	apiFetch( {
 		path: `/${ ns }/network/stats?duration=${ encodeURIComponent( duration ) }`,
 	} );
+
+export const scanCountry = () => apiFetch( { path: `/${ ns }/geolocation/scan` } );
+
+export const getMode = () => apiFetch( { path: `/${ ns }/geolocation/mode` } );
+
+export const applyPreset = ( preset ) =>
+	apiFetch( { path: `/${ ns }/settings/preset`, method: 'POST', data: { preset } } );

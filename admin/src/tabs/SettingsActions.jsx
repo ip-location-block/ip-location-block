@@ -7,7 +7,7 @@ import { useState, useRef } from '@wordpress/element';
 import { Card, CardBody, Button, Notice, Flex, __experimentalHeading as Heading } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-import { getDefaults, updateDatabase } from '../api';
+import { getDefaults, updateDatabase, applyPreset } from '../api';
 
 export default function SettingsActions( { settings, onReplace } ) {
 	const [ busy, setBusy ] = useState( '' );
@@ -54,7 +54,7 @@ export default function SettingsActions( { settings, onReplace } ) {
 		setMsg( null );
 		promise
 			.then( ( res ) => {
-				if ( id === 'defaults' ) {
+				if ( id === 'defaults' || id === 'preferred' ) {
 					onReplace( res );
 				}
 				setMsg( { status: 'success', msg: okMsg } );
@@ -78,6 +78,20 @@ export default function SettingsActions( { settings, onReplace } ) {
 					</Button>
 					<Button variant="secondary" onClick={ () => fileRef.current.click() }>
 						{ __( 'Import settings', 'ip-location-block' ) }
+					</Button>
+					<Button
+						variant="primary"
+						isBusy={ busy === 'preferred' }
+						disabled={ !! busy }
+						onClick={ () =>
+							run(
+								'preferred',
+								applyPreset( 'preferred' ),
+								__( 'Recommended back-end settings applied — review and Save.', 'ip-location-block' )
+							)
+						}
+					>
+						{ __( 'Best for Back-end', 'ip-location-block' ) }
 					</Button>
 					<Button
 						variant="secondary"
