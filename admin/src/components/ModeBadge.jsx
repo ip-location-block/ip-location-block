@@ -11,7 +11,7 @@
 import { useState, useRef, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
-import { StandardList, NativeList, UpgradeNote, UpgradeButton } from './PrecisionContent';
+import { NativeCard, StandardStrip, UpgradeNote, UpgradeButton } from './PrecisionContent';
 
 export default function ModeBadge( { mode } ) {
 	const [ open, setOpen ] = useState( false );
@@ -66,17 +66,10 @@ export default function ModeBadge( { mode } ) {
 		}
 		return (
 			<>
-				<div className="ilb-mode-panel__section">
-					<h5>{ __( 'Standard Mode', 'ip-location-block' ) }</h5>
-					<StandardList />
-				</div>
-				<div className="ilb-mode-panel__section ilb-mode-panel__section--native">
-					<h5>{ __( 'Native Mode', 'ip-location-block' ) }</h5>
-					<NativeList />
-				</div>
-				<hr className="ilb-mode-panel__rule" />
+				<NativeCard />
+				<StandardStrip />
 				<UpgradeNote />
-				<UpgradeButton className="ilb-mode-panel__cta" />
+				<UpgradeButton />
 			</>
 		);
 	};

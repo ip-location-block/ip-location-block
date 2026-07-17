@@ -8,7 +8,7 @@
  */
 import { __ } from '@wordpress/i18n';
 
-import { StandardList, NativeList, UpgradeNote, UpgradeButton } from './PrecisionContent';
+import { NativeCard, StandardStrip, UpgradeNote, UpgradeButton } from './PrecisionContent';
 
 export default function PrecisionUpsell( { mode } ) {
 	if ( ! mode ) {
@@ -53,18 +53,10 @@ export default function PrecisionUpsell( { mode } ) {
 	return (
 		<div className="ilb-precision ilb-precision--upsell">
 			<h4 className="ilb-precision__title">
-				{ __( 'Unlock precision blocking (Native Mode)', 'ip-location-block' ) }
+				{ __( 'Unlock precision blocking', 'ip-location-block' ) }
 			</h4>
-			<div className="ilb-precision__compare">
-				<div className="ilb-precision__col">
-					<h5>{ __( 'Standard Mode', 'ip-location-block' ) }</h5>
-					<StandardList />
-				</div>
-				<div className="ilb-precision__col ilb-precision__col--native">
-					<h5>{ __( 'Native Mode', 'ip-location-block' ) }</h5>
-					<NativeList />
-				</div>
-			</div>
+			<NativeCard />
+			<StandardStrip />
 			<UpgradeNote />
 			<UpgradeButton />
 		</div>
