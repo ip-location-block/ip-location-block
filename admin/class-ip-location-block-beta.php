@@ -94,6 +94,7 @@ class IP_Location_Block_Beta {
 		);
 
 		wp_enqueue_style( 'wp-components' );
+		wp_enqueue_style( 'dashicons' );
 
 		// @wordpress/scripts splits extracted CSS into two files: shared styles
 		// from any `style.scss` land in style-index.css, while styles imported
@@ -114,18 +115,34 @@ class IP_Location_Block_Beta {
 			);
 		}
 
+		// The welcome notice can render above this screen, but the classic
+		// bundle that normally persists its dismissal is not loaded here.
+		wp_enqueue_script(
+			self::SLUG . '-welcome-dismiss',
+			plugins_url( 'admin/js/welcome-dismiss.js', IP_LOCATION_BLOCK_BASE ),
+			array( self::SLUG ),
+			IP_LOCATION_BLOCK_VERSION,
+			true
+		);
+
 		wp_localize_script( self::SLUG, 'ipLocationBlockBeta', array(
 			'restNamespace' => 'ip-location-block/v1',
 			'restRoot'      => esc_url_raw( rest_url() ),
 			'nonce'         => wp_create_nonce( 'wp_rest' ),
 			'isNetwork'     => is_network_admin(),
 			'version'       => IP_LOCATION_BLOCK_VERSION,
+			'logoUrl'       => plugins_url( 'admin/images/logo.svg', IP_LOCATION_BLOCK_BASE ),
 		) );
 
 		wp_set_script_translations( self::SLUG, 'ip-location-block' );
 	}
 
 	public function render() {
-		echo '<div class="wrap"><div id="ip-location-block-app"></div></div>';
+		// The `wp-header-end` marker gives WordPress a definite anchor for
+		// relocating admin notices (welcome banner, warnings). Without it, core
+		// injects them after the first heading it finds — which would be the
+		// React app's own <h1>, landing the notices inside our header. With the
+		// marker they render here, above the mounted app.
+		echo '<div class="wrap"><hr class="wp-header-end" /><div id="ip-location-block-app"></div></div>';
 	}
 }

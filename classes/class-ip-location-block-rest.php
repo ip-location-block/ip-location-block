@@ -144,6 +144,37 @@ class IP_Location_Block_Rest {
 			'callback'            => array( __CLASS__, 'get_network_stats' ),
 			'permission_callback' => $perm,
 		) );
+
+		// Dismiss an admin notice (the classic handler lives in admin.js, which
+		// the Beta screen does not load).
+		register_rest_route( self::NS, '/notices/dismiss', array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => array( __CLASS__, 'dismiss_notice' ),
+			'permission_callback' => $perm,
+		) );
+	}
+
+	/**
+	 * Persist dismissal of an admin notice. Mirrors the classic
+	 * `dismiss-notice` admin-ajax command (the flag lives in the plugin's
+	 * settings, so it is per-site rather than per-user).
+	 */
+	public static function dismiss_notice( WP_REST_Request $request ) {
+		$id = sanitize_text_field( (string) $request->get_param( 'id' ) );
+
+		if ( 'welcome' !== $id ) {
+			return new WP_Error(
+				'ilb_unknown_notice',
+				__( 'Unknown notice.', 'ip-location-block' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$settings            = IP_Location_Block::get_option();
+		$settings['welcome'] = true;
+		IP_Location_Block::update_option( $settings );
+
+		return rest_ensure_response( array( 'dismissed' => true ) );
 	}
 
 	/* -----------------------------------------------------------------------

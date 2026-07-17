@@ -56,15 +56,47 @@ class IP_Location_Block_Admin {
 	}
 
 	/**
+	 * Whether the welcome/intro notice should render for this request.
+	 * @return bool
+	 */
+	private function should_show_intro_notice() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+		$settings = IP_Location_Block::get_option();
+
+		return empty( $settings['welcome'] );
+	}
+
+	/**
+	 * Enqueue the welcome notice stylesheet.
+	 *
+	 * The notice is hooked to `admin_notices`, so it can render on any admin
+	 * screen — including the React Beta page, which deliberately does not load
+	 * the classic admin stylesheet. Keeping these styles in their own small
+	 * file lets them load wherever the notice actually appears, and nowhere
+	 * else (it is skipped once the notice has been dismissed).
+	 *
+	 * @return void
+	 */
+	public function enqueue_welcome_assets() {
+		if ( ! $this->should_show_intro_notice() ) {
+			return;
+		}
+		wp_enqueue_style(
+			'ip-location-block-welcome',
+			plugins_url( 'admin/css/welcome.css', IP_LOCATION_BLOCK_BASE ),
+			array( 'dashicons' ),
+			IP_LOCATION_BLOCK_VERSION
+		);
+	}
+
+	/**
 	 * Print admin notice welcome screen
 	 * @return void
 	 */
 	public function show_intro_notice() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-		$settings = IP_Location_Block::get_option();
-		if ( ! isset( $settings['welcome'] ) || ! $settings['welcome'] ) {
+		if ( $this->should_show_intro_notice() ) {
 			ob_start();
 			echo '<div class="notice notice-info is-dismissible ip-location-block-notice-intro" data-notice="welcome">';
 			include( dirname( __FILE__ ) . '/includes/welcome.php' );
@@ -931,6 +963,7 @@ class IP_Location_Block_Admin {
 		add_action( 'network_admin_notices', array( $this, 'show_admin_notices' ) );
 		// Welcome screen
 		add_action( 'admin_notices', array( $this, 'show_intro_notice' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_welcome_assets' ) );
 		// API key upgrade notice
 		add_action( 'admin_notices', array( $this, 'show_api_key_upgrade_notice' ) );
 		// Cache compatibility notice

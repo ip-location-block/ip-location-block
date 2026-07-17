@@ -1,6 +1,7 @@
 // Validated dataviz palette (categorical blue/green/magenta/yellow/aqua +
-// blue sequential), light & dark surfaces. Dark is selected via prefers-color
-// -scheme and the data-theme stamp (both directions win correctly).
+// blue sequential). The charts live on wp-admin's light card surface, so the
+// palette is tuned for light and does not flip on OS/theme (a dark flip here
+// would put white ink on the white card).
 .ilb-viz {
 	--ilb-ink: #0b0b0b;
 	--ilb-ink-2: #52514e;
@@ -13,28 +14,6 @@
 
 	color: var(--ilb-ink);
 	font-size: 13px;
-}
-
-@media (prefers-color-scheme: dark) {
-	:root:not([data-theme='light']) .ilb-viz {
-		--ilb-ink: #ffffff;
-		--ilb-ink-2: #c3c2b7;
-		--ilb-seq: #3987e5;
-		--ilb-s1: #3987e5;
-		--ilb-s3: #d55181;
-		--ilb-s4: #c98500;
-		--ilb-s5: #199e70;
-	}
-}
-
-:root[data-theme='dark'] .ilb-viz {
-	--ilb-ink: #ffffff;
-	--ilb-ink-2: #c3c2b7;
-	--ilb-seq: #3987e5;
-	--ilb-s1: #3987e5;
-	--ilb-s3: #d55181;
-	--ilb-s4: #c98500;
-	--ilb-s5: #199e70;
 }
 
 .ilb-viz-empty {

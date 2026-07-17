@@ -3,23 +3,22 @@
  * (blocked-by-country, daily blocked-by-hook) from GET /statistics.
  */
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import {
-	Card,
-	CardBody,
-	Button,
-	Notice,
-	Spinner,
-	Flex,
-	__experimentalHeading as Heading,
-} from '@wordpress/components';
+import { Card, CardBody, Button, Notice, Spinner, Flex } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 import { getStatistics, clearStatistics } from '../api';
 import { CountryBars, DailyStacked } from '../components/Charts';
 
-const Tile = ( { label, value } ) => (
-	<Card size="small" className="ilb-stat-tile">
+const Tile = ( { label, value, icon, accent } ) => (
+	<Card
+		size="small"
+		className="ilb-stat-tile"
+		style={ accent ? { '--tile-accent': accent } : undefined }
+	>
 		<CardBody>
+			<div className="ilb-stat-tile__head">
+				<span className={ `dashicons dashicons-${ icon }` } aria-hidden="true" />
+			</div>
 			<div className="ilb-stat-tile__value">{ value }</div>
 			<div className="ilb-stat-tile__label">{ label }</div>
 		</CardBody>
@@ -65,7 +64,7 @@ export default function Statistics() {
 	};
 
 	return (
-		<div className="ilb-stats">
+		<div className="ilb-stats ilb-stack">
 			{ notice && (
 				<Notice status={ notice.status } onRemove={ () => setNotice( null ) }>
 					{ notice.msg }
@@ -73,27 +72,33 @@ export default function Statistics() {
 			) }
 
 			<Flex justify="flex-start" gap={ 3 } wrap className="ilb-stat-tiles">
-				<Tile label={ __( 'Blocked', 'ip-location-block' ) } value={ stat.blocked } />
-				<Tile label={ __( 'IPv4', 'ip-location-block' ) } value={ stat.ipv4 } />
-				<Tile label={ __( 'IPv6', 'ip-location-block' ) } value={ stat.ipv6 } />
-				<Tile label={ __( 'Unknown', 'ip-location-block' ) } value={ stat.unknown } />
+				<Tile label={ __( 'Blocked', 'ip-location-block' ) } value={ stat.blocked } icon="shield" accent="var(--ilb-accent)" />
+				<Tile label={ __( 'IPv4', 'ip-location-block' ) } value={ stat.ipv4 } icon="admin-site-alt3" accent="#2a78d6" />
+				<Tile label={ __( 'IPv6', 'ip-location-block' ) } value={ stat.ipv6 } icon="admin-site-alt" accent="#3858e9" />
+				<Tile label={ __( 'Unknown', 'ip-location-block' ) } value={ stat.unknown } icon="editor-help" accent="var(--ilb-muted)" />
 			</Flex>
 
-			<Card style={ { marginTop: '16px' } }>
+			<Card>
 				<CardBody>
-					<Heading level={ 3 }>{ __( 'Blocked by country', 'ip-location-block' ) }</Heading>
+					<h3 className="ilb-section-title">
+						<span className="dashicons dashicons-admin-site" aria-hidden="true" />
+						{ __( 'Blocked by country', 'ip-location-block' ) }
+					</h3>
 					<CountryBars data={ stat.countries } />
 				</CardBody>
 			</Card>
 
-			<Card style={ { marginTop: '16px' } }>
+			<Card>
 				<CardBody>
-					<Heading level={ 3 }>{ __( 'Daily blocked requests', 'ip-location-block' ) }</Heading>
+					<h3 className="ilb-section-title">
+						<span className="dashicons dashicons-chart-bar" aria-hidden="true" />
+						{ __( 'Daily blocked requests', 'ip-location-block' ) }
+					</h3>
 					<DailyStacked data={ stat.daily } />
 				</CardBody>
 			</Card>
 
-			<div style={ { marginTop: '16px' } }>
+			<div>
 				<Button variant="secondary" isDestructive onClick={ clear }>
 					{ __( 'Clear statistics', 'ip-location-block' ) }
 				</Button>

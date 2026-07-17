@@ -33,18 +33,19 @@
 	&__empty {
 		text-align: center;
 		padding: 24px;
-		color: #757575;
+		color: var( --ilb-muted, #757575 );
 	}
 
 	mark {
-		background: #fff8c5;
+		background: var( --ilb-accent-soft, #fff8c5 );
 		color: inherit;
-		padding: 0;
+		padding: 0 1px;
+		border-radius: 2px;
 	}
 
 	tr.is-selected td,
 	tr.is-selected th {
-		background: #f0f6fc;
+		background: var( --ilb-accent-soft, #f0f6fc );
 	}
 
 	&__footer {
@@ -56,7 +57,7 @@
 	}
 
 	&__count {
-		color: #757575;
+		color: var( --ilb-muted, #757575 );
 	}
 
 	&__pager {
