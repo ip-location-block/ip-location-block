@@ -1,30 +1,20 @@
 /**
- * Standard -> Native precision upsell. Ports the classic status.php conversion
- * panel into the Geolocation API settings section. Three states driven by the
- * geolocation "mode":
+ * Standard -> Native precision upsell card for the Geolocation API settings
+ * section. Three states driven by the geolocation "mode":
  *   - native            : precision is on — reassure.
  *   - api on, not native : Standard Mode — tell them which providers to disable.
  *   - api off            : the free-user comparison + Upgrade CTA.
+ * Copy is shared with the header dropdown via PrecisionContent.
  */
-import { Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-const UPGRADE_URL =
-	'https://iplocationblock.com/pricing/?utm_source=wordpress&utm_medium=site&utm_campaign=cloud';
-const PATTERNS_URL = 'https://iplocationblock.com/codex/supported-geo-location-rule-formats/';
-
-const STANDARD = [
-	__( 'Country blocking', 'ip-location-block' ),
-	__( 'Normal data precision', 'ip-location-block' ),
-	__( 'Normal support (1–3 day response)', 'ip-location-block' ),
-];
+import { StandardList, NativeList, UpgradeNote, UpgradeButton } from './PrecisionContent';
 
 export default function PrecisionUpsell( { mode } ) {
 	if ( ! mode ) {
 		return null; // still loading
 	}
 
-	// Native: precision already enabled.
 	if ( mode.native ) {
 		return (
 			<div className="ilb-precision ilb-precision--native">
@@ -42,7 +32,6 @@ export default function PrecisionUpsell( { mode } ) {
 		);
 	}
 
-	// API enabled but other providers are on -> Standard, tell them to disable.
 	if ( mode.apiEnabled && mode.others && mode.others.length ) {
 		return (
 			<div className="ilb-precision ilb-precision--warn">
@@ -61,7 +50,6 @@ export default function PrecisionUpsell( { mode } ) {
 		);
 	}
 
-	// Free user (native API not enabled) -> the comparison + Upgrade CTA.
 	return (
 		<div className="ilb-precision ilb-precision--upsell">
 			<h4 className="ilb-precision__title">
@@ -70,35 +58,15 @@ export default function PrecisionUpsell( { mode } ) {
 			<div className="ilb-precision__compare">
 				<div className="ilb-precision__col">
 					<h5>{ __( 'Standard Mode', 'ip-location-block' ) }</h5>
-					<ul>
-						{ STANDARD.map( ( t ) => (
-							<li key={ t }>{ t }</li>
-						) ) }
-					</ul>
+					<StandardList />
 				</div>
 				<div className="ilb-precision__col ilb-precision__col--native">
 					<h5>{ __( 'Native Mode', 'ip-location-block' ) }</h5>
-					<ul>
-						<li>
-							{ __( 'Country, city & state blocking', 'ip-location-block' ) } +{ ' ' }
-							<a href={ PATTERNS_URL } target="_blank" rel="noreferrer">
-								{ __( 'advanced patterns', 'ip-location-block' ) }
-							</a>
-						</li>
-						<li>{ __( 'Improved data precision', 'ip-location-block' ) }</li>
-						<li>{ __( 'Priority support (1–5 hr response)', 'ip-location-block' ) }</li>
-					</ul>
+					<NativeList />
 				</div>
 			</div>
-			<p className="ilb-precision__note">
-				{ __(
-					'To upgrade to Native Mode, sign up for a key and enable the “IP Location Block” provider below (and disable the others).',
-					'ip-location-block'
-				) }
-			</p>
-			<Button variant="primary" href={ UPGRADE_URL } target="_blank" rel="noreferrer">
-				{ __( 'Upgrade', 'ip-location-block' ) }
-			</Button>
+			<UpgradeNote />
+			<UpgradeButton />
 		</div>
 	);
 }

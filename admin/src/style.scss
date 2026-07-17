@@ -4,7 +4,10 @@
  * to centralize color and dedupe the previously-hardcoded grays. Charts keep
  * their own validated palette.
  * ---------------------------------------------------------------------- */
-.ilb-app {
+// Token scope includes .ilb-mode-panel because the header dropdown renders in
+// a Popover portal outside .ilb-app and would otherwise lose the variables.
+.ilb-app,
+.ilb-mode-panel {
 	--ilb-accent: #1abc9c;
 	--ilb-accent-ink: #0e7c68;
 	--ilb-accent-strong: #16a085;
@@ -18,7 +21,9 @@
 	--ilb-muted: #757575;
 	--ilb-muted-2: #a7aaad;
 	--ilb-danger: #cc1818;
+}
 
+.ilb-app {
 	max-width: 1180px;
 	margin: 16px 0;
 	color: var( --ilb-text );
@@ -547,16 +552,23 @@
 /* -------------------------------------------------------------------------
  * Precision upsell (Standard vs Native)
  * ---------------------------------------------------------------------- */
+.ilb-mode-dd {
+	position: relative;
+	display: inline-flex;
+}
+
 .ilb-mode {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
+	font: inherit;
 	font-size: 12px;
 	font-weight: 600;
-	padding: 5px 12px;
+	line-height: 1.4;
+	padding: 5px 10px 5px 12px;
 	border-radius: 999px;
 	border: 1px solid transparent;
-	cursor: default;
+	cursor: pointer;
 
 	&::before {
 		content: '';
@@ -564,6 +576,13 @@
 		height: 8px;
 		border-radius: 50%;
 		background: currentColor;
+	}
+
+	.dashicons {
+		font-size: 16px;
+		width: 16px;
+		height: 16px;
+		opacity: 0.8;
 	}
 
 	&--native {
@@ -576,6 +595,80 @@
 		color: #a06a12;
 		background: rgba( 237, 161, 0, 0.14 );
 		border-color: #eda100;
+	}
+}
+
+/* Header mode dropdown panel */
+.ilb-mode-panel {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	margin-top: 6px;
+	z-index: 50;
+	width: 300px;
+	max-width: 92vw;
+	padding: 14px 16px;
+	background: var( --ilb-surface );
+	border: 1px solid var( --ilb-border );
+	border-radius: 8px;
+	box-shadow: 0 8px 28px rgba( 0, 0, 0, 0.14 );
+	color: var( --ilb-text );
+	font-size: 13px;
+	text-align: left;
+
+	h5 {
+		margin: 0 0 6px;
+		font-size: 13px;
+		font-weight: 600;
+		color: var( --ilb-navy );
+	}
+
+	ul {
+		margin: 0;
+		padding-left: 18px;
+
+		li {
+			margin-bottom: 4px;
+		}
+	}
+
+	&__section {
+		margin-bottom: 12px;
+
+		&--native h5 {
+			color: var( --ilb-accent-ink );
+		}
+	}
+
+	&__rule {
+		border: 0;
+		border-top: 1px solid var( --ilb-border-soft );
+		margin: 12px 0;
+	}
+
+	&__note {
+		display: flex;
+		gap: 6px;
+		align-items: flex-start;
+		margin: 0 0 12px;
+		color: var( --ilb-muted );
+
+		.dashicons {
+			flex: none;
+		}
+
+		&--ok .dashicons {
+			color: var( --ilb-accent-ink );
+		}
+
+		&--warn .dashicons {
+			color: #a06a12;
+		}
+	}
+
+	&__cta {
+		width: 100%;
+		justify-content: center;
 	}
 }
 
