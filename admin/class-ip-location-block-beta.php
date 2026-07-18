@@ -44,12 +44,13 @@ class IP_Location_Block_Beta {
 		if ( ! self::is_supported() ) {
 			return;
 		}
+		$network = is_network_admin();
 
 		$this->hook = add_submenu_page(
-			'options-general.php',
+			$network ? 'settings.php' : 'options-general.php',
 			__( 'IP Location Block (Beta)', 'ip-location-block' ),
 			__( 'IP Location Block (Beta)', 'ip-location-block' ),
-			'manage_options',
+			$network ? 'manage_network_options' : 'manage_options',
 			self::SLUG,
 			array( $this, 'render' )
 		);
@@ -115,16 +116,6 @@ class IP_Location_Block_Beta {
 			);
 		}
 
-		// The welcome notice can render above this screen, but the classic
-		// bundle that normally persists its dismissal is not loaded here.
-		wp_enqueue_script(
-			self::SLUG . '-welcome-dismiss',
-			plugins_url( 'admin/js/welcome-dismiss.js', IP_LOCATION_BLOCK_BASE ),
-			array( self::SLUG ),
-			IP_LOCATION_BLOCK_VERSION,
-			true
-		);
-
 		wp_localize_script( self::SLUG, 'ipLocationBlockBeta', array(
 			'restNamespace' => 'ip-location-block/v1',
 			'restRoot'      => esc_url_raw( rest_url() ),
@@ -132,17 +123,16 @@ class IP_Location_Block_Beta {
 			'isNetwork'     => is_network_admin(),
 			'version'       => IP_LOCATION_BLOCK_VERSION,
 			'logoUrl'       => plugins_url( 'admin/images/logo.svg', IP_LOCATION_BLOCK_BASE ),
+			'docsUrl'       => 'https://iplocationblock.com/codex/?utm_source=plugin&utm_medium=beta&utm_campaign=admin_topbar',
 		) );
 
 		wp_set_script_translations( self::SLUG, 'ip-location-block' );
 	}
 
 	public function render() {
-		// The `wp-header-end` marker gives WordPress a definite anchor for
-		// relocating admin notices (welcome banner, warnings). Without it, core
-		// injects them after the first heading it finds — which would be the
-		// React app's own <h1>, landing the notices inside our header. With the
-		// marker they render here, above the mounted app.
-		echo '<div class="wrap"><hr class="wp-header-end" /><div id="ip-location-block-app"></div></div>';
+		// Give WordPress a definite notice anchor before the React heading. This
+		// screen's stylesheet suppresses those notices, but the marker prevents
+		// core or third-party code from relocating them inside the product bar.
+		echo '<div class="wrap ilb-beta-wrap"><hr class="wp-header-end" /><div id="ip-location-block-app"></div></div>';
 	}
 }

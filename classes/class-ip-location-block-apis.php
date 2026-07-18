@@ -116,6 +116,8 @@ abstract class IP_Location_Block_API {
 	 * @return array|false|string[]
 	 */
 	protected function fetch_provider( $ip, $args ) {
+		$fresh = ! empty( $args['fresh'] );
+		unset( $args['fresh'] );
 
 		if ( isset( $args['asn'] ) ) {
 			unset( $args['asn'] ); // Make sure we don't pass 'asn' to apis, it should be only used with local providers.
@@ -125,9 +127,11 @@ abstract class IP_Location_Block_API {
 		$cacheKey   = md5( $ip . ( isset( $template['url'] ) ? $template['url'] : '' ) );
 		$cacheGroup = 'ip-location-block';
 
-		$cache = wp_cache_get( $cacheKey, $cacheGroup );
-		if ( false !== $cache ) {
-			return $cache;
+		if ( ! $fresh ) {
+			$cache = wp_cache_get( $cacheKey, $cacheGroup );
+			if ( false !== $cache ) {
+				return $cache;
+			}
 		}
 
 		// check supported type of IP address
@@ -201,7 +205,9 @@ abstract class IP_Location_Block_API {
 		}
 
 		$final = self::post_process( $res, $data );
-		wp_cache_set( $cacheKey, $final, $cacheGroup );
+		if ( ! $fresh ) {
+			wp_cache_set( $cacheKey, $final, $cacheGroup );
+		}
 
 		return $final;
 	}
@@ -921,6 +927,25 @@ class IP_Location_Block_Provider {
 
 
 	/**
+	 * Return a non-reversible identifier for provider credentials.
+	 *
+	 * The fingerprint is safe to use in transient names and verification
+	 * metadata; the credential itself is never persisted outside the option.
+	 *
+	 * @param string $provider
+	 * @param string $credential
+	 *
+	 * @return string
+	 */
+	public static function credential_fingerprint( $provider, $credential ) {
+		return hash_hmac(
+			'sha256',
+			(string) $provider . "\0" . (string) $credential,
+			wp_salt( 'auth' )
+		);
+	}
+
+	/**
 	 * Returns the current key quota
 	 *
 	 * @since 1.3.0
@@ -928,29 +953,162 @@ class IP_Location_Block_Provider {
 	 * @param $key
 	 * @param string $subkey
 	 *
+	 * @param bool $refresh Skip the five-minute persistent cache.
+	 *
 	 * @return WP_Error|array|string|int
 	 */
-	public static function get_native_quota($key, $subkey = '') {
+	public static function get_native_quota( $key, $subkey = '', $refresh = false ) {
 
 		static $quota = [];
+		$key = (string) $key;
 
-		if ( ! empty( $quota[ $subkey ] ) ) {
-			return $quota[ $subkey ];
+		if ( '' === $key || '@' === $key ) {
+			return new WP_Error( 'ip_location_block_missing_api_key', __( 'An API key is required.', 'ip-location-block' ) );
 		}
 
-		$response = wp_remote_get( esc_url( 'https://api.iplocationblock.com/quota/' . $key ) );
-		if ( ! is_wp_error( $response ) ) {
-			$contents = wp_remote_retrieve_body( $response );
-			if ( ! empty( $contents ) && IP_Location_Block_Util::json_validate( $contents ) ) {
-				$contents = json_decode( $contents, true );
+		$fingerprint = self::credential_fingerprint( 'IP Location Block', $key );
+		$cache_key   = 'ip_location_block_quota_' . substr( $fingerprint, 0, 40 );
+
+		if ( ! $refresh && array_key_exists( $fingerprint, $quota ) ) {
+			$contents = $quota[ $fingerprint ];
+			return isset( $contents[ $subkey ] ) && '' !== $subkey ? $contents[ $subkey ] : $contents;
+		}
+
+		if ( ! $refresh ) {
+			$cached = get_transient( $cache_key );
+			if ( false !== $cached ) {
+				$quota[ $fingerprint ] = $cached;
+				return isset( $cached[ $subkey ] ) && '' !== $subkey ? $cached[ $subkey ] : $cached;
 			}
-
-			$quota[ $subkey ] = isset( $contents[ $subkey ] ) ? $contents[ $subkey ] : $contents;
-
-			return $quota[ $subkey ];
 		}
 
-		return $response;
+		$response = wp_remote_get(
+			esc_url( 'https://api.iplocationblock.com/quota/' . rawurlencode( $key ) ),
+			array( 'timeout' => 5 )
+		);
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$contents = wp_remote_retrieve_body( $response );
+		if ( empty( $contents ) || ! IP_Location_Block_Util::json_validate( $contents ) ) {
+			return new WP_Error(
+				'ip_location_block_invalid_quota',
+				__( 'The quota service returned an invalid response.', 'ip-location-block' )
+			);
+		}
+
+		$contents = json_decode( $contents, true );
+		if ( ! is_array( $contents ) ) {
+			return new WP_Error(
+				'ip_location_block_invalid_quota',
+				__( 'The quota service returned an invalid response.', 'ip-location-block' )
+			);
+		}
+		$contents['_ilb_checked_at'] = time();
+
+		$quota[ $fingerprint ] = $contents;
+		set_transient( $cache_key, $contents, 5 * MINUTE_IN_SECONDS );
+
+		return isset( $contents[ $subkey ] ) && '' !== $subkey ? $contents[ $subkey ] : $contents;
+	}
+
+	/**
+	 * Convert every Native quota response into one stable shape shared by the
+	 * classic and React settings screens.
+	 *
+	 * @param mixed $quota Raw get_native_quota() response.
+	 *
+	 * @return array
+	 */
+	public static function normalize_native_quota( $quota ) {
+		$status = array(
+			'provider'   => 'IP Location Block',
+			'status'     => 'unavailable',
+			'planName'   => '',
+			'recurring'  => null,
+			'limit'      => null,
+			'oneTime'    => null,
+			'total'      => null,
+			'unlimited'  => false,
+			'message'    => '',
+			'checkedAt'  => is_array( $quota ) && isset( $quota['_ilb_checked_at'] ) ? (int) $quota['_ilb_checked_at'] : time(),
+			'accountUrl' => 'https://app.iplocationblock.com/login',
+			'upgradeUrl' => 'https://iplocationblock.com/pricing/?utm_source=wordpress&utm_medium=site&utm_campaign=cloud',
+		);
+
+		if ( is_wp_error( $quota ) ) {
+			$status['message'] = $quota->get_error_message();
+			return $status;
+		}
+
+		if ( ! is_array( $quota ) || empty( $quota ) ) {
+			$status['message'] = __( 'Quota information is temporarily unavailable.', 'ip-location-block' );
+			return $status;
+		}
+
+		if ( isset( $quota['subscription']['plan_name'] ) ) {
+			$status['planName'] = (string) $quota['subscription']['plan_name'];
+		} elseif ( isset( $quota['name'] ) && 'requires-api-key-upgrade' !== $quota['name'] ) {
+			$status['planName'] = (string) $quota['name'];
+		}
+
+		if ( isset( $quota['balance'] ) && is_array( $quota['balance'] ) ) {
+			if ( array_key_exists( 'recurring', $quota['balance'] ) ) {
+				$status['recurring'] = (int) $quota['balance']['recurring'];
+			}
+			if ( array_key_exists( 'onetime', $quota['balance'] ) ) {
+				$status['oneTime'] = (int) $quota['balance']['onetime'];
+			}
+			if ( array_key_exists( 'total', $quota['balance'] ) ) {
+				$status['total'] = (int) $quota['balance']['total'];
+			}
+		}
+		if ( isset( $quota['subscription'] ) && is_array( $quota['subscription'] ) && array_key_exists( 'tokens', $quota['subscription'] ) ) {
+			$status['limit'] = (int) $quota['subscription']['tokens'];
+		}
+
+		$status['unlimited'] = -1 === $status['recurring'];
+		if ( isset( $quota['error'] ) && is_scalar( $quota['error'] ) ) {
+			$status['message'] = (string) $quota['error'];
+		}
+
+		if ( isset( $quota['name'] ) && 'requires-api-key-upgrade' === $quota['name'] ) {
+			$status['status'] = 'key_upgrade_required';
+			if ( '' === $status['message'] ) {
+				$status['message'] = __( 'This API key must be upgraded before it can be used.', 'ip-location-block' );
+			}
+		} elseif ( isset( $quota['status'] ) && 'rate_limited' === $quota['status'] ) {
+			$status['status'] = 'rate_limited';
+			if ( '' === $status['message'] ) {
+				$status['message'] = __( 'The API rate limit has been reached.', 'ip-location-block' );
+			}
+		} elseif ( ! empty( $quota['error'] ) ) {
+			$status['status'] = 'unavailable';
+		} elseif ( $status['unlimited'] ) {
+			$status['status'] = 'unlimited';
+		} elseif ( null !== $status['total'] && $status['total'] <= 0 ) {
+			$status['status'] = 'exhausted';
+			if ( '' === $status['message'] ) {
+				$status['message'] = __( 'The account has no remaining requests.', 'ip-location-block' );
+			}
+		} else {
+			$status['status'] = 'ok';
+		}
+
+		return $status;
+	}
+
+	/**
+	 * Fetch and normalize Native quota information.
+	 *
+	 * @param string $key
+	 * @param bool   $refresh
+	 *
+	 * @return array
+	 */
+	public static function get_native_quota_status( $key, $refresh = false ) {
+		return self::normalize_native_quota( self::get_native_quota( $key, '', $refresh ) );
 	}
 
 	/**
@@ -1031,6 +1189,10 @@ class IP_Location_Block_Provider {
 
 		switch ( $meta_key ) {
 			case 'requests':
+				if ( ! empty( $providers[ $provider ]['local'] ) ) {
+					$value = __( 'Local database', 'ip-location-block' );
+					break;
+				}
 				$total = isset( $value['total'] ) ? $value['total'] : '';
 				$term  = isset( $value['term'] ) ? $value['term'] : '';
 				if ( is_numeric( $total ) ) {

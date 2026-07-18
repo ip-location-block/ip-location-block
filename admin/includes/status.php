@@ -5,33 +5,33 @@ $providers = IP_Location_Block_Provider::get_valid_providers($settings);
 $uses_api  = in_array('IP Location Block',  $providers);
 
 $quota = null;
+$quota_status = null;
 $is_rate_limited = false;
 $requires_key_upgrade = false;
 $api_key = !empty($settings['providers']['IP Location Block']) ? $settings['providers']['IP Location Block'] : '';
 
 if($uses_api && !empty($api_key)) {
 	$quota = IP_Location_Block_Provider::get_native_quota($api_key);
-
-	// Check if we got a rate limit response
-	if (isset($quota['error']) && isset($quota['status']) && $quota['status'] === 'rate_limited') {
-		$is_rate_limited = true;
-	}
-
-	// Check if API key needs to be upgraded (rehashed due to encryption changes)
-	if (isset($quota['name']) && $quota['name'] === 'requires-api-key-upgrade') {
-		$requires_key_upgrade = true;
+	$quota_status = IP_Location_Block_Provider::normalize_native_quota($quota);
+	$is_rate_limited = 'rate_limited' === $quota_status['status'];
+	$requires_key_upgrade = 'key_upgrade_required' === $quota_status['status'];
+	if ( is_wp_error( $quota ) ) {
+		$quota = array();
 	}
 }
-$is_unlimited = isset($quota['balance']['recurring']) && $quota['balance']['recurring'] === -1;
-$is_balance_zero = !isset($quota['balance']['total']) || (int) $quota['balance']['total'] === 0;
+$is_unlimited = $quota_status && ! empty($quota_status['unlimited']);
+$is_balance_zero = $quota_status && 'exhausted' === $quota_status['status'];
+$is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status'];
 
 ?>
 <div class="ip-location-block-meta-wrapper">
 	<?php if ( $uses_api ): ?>
         <?php
 		$is_native = IP_Location_Block_Provider::is_native($settings);
-        if($requires_key_upgrade || $is_rate_limited || $is_balance_zero) {
+		if($requires_key_upgrade || $is_rate_limited || $is_balance_zero) {
             $signal_css = 'native-mode-error';
+		} else if($is_quota_unavailable) {
+			$signal_css = 'standard-mode';
         } else if($is_native) {
             $signal_css = 'native-mode-ok';
         } else {
@@ -120,6 +120,16 @@ $is_balance_zero = !isset($quota['balance']['total']) || (int) $quota['balance']
 								   href="https://app.iplocationblock.com/billing/plans?utm_source=wordpress&utm_medium=site&utm_campaign=cloud"><?php _e( 'Upgrade Your Plan', 'ip-location-block' ); ?></a>
 							</p>
 						<?php endif; ?>
+					</div>
+				</div>
+			<?php elseif ( $is_quota_unavailable ): ?>
+				<div class="ip-location-block-provider-meta-row">
+					<div class="ip-location-block-provider-meta-account">
+						<p>
+							<strong><?php _e( 'Quota unavailable', 'ip-location-block' ); ?>:</strong>
+							<?php echo esc_html( ! empty( $quota_status['message'] ) ? $quota_status['message'] : __( 'Quota information is temporarily unavailable.', 'ip-location-block' ) ); ?>
+						</p>
+						<p><a target="_blank" class="button button-primary button-small" href="https://app.iplocationblock.com/login"><?php _e( 'My Account', 'ip-location-block' ); ?></a></p>
 					</div>
 				</div>
 			<?php elseif ( $is_balance_zero ): ?>

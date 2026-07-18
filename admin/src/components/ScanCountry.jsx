@@ -8,7 +8,7 @@ import { __ } from '@wordpress/i18n';
 
 import { scanCountry } from '../api';
 
-export default function ScanCountry() {
+export default function ScanCountry( { source = 'client' } ) {
 	const [ result, setResult ] = useState( null );
 	const [ busy, setBusy ] = useState( false );
 	const [ error, setError ] = useState( null );
@@ -16,7 +16,7 @@ export default function ScanCountry() {
 	const scan = () => {
 		setBusy( true );
 		setError( null );
-		scanCountry()
+		scanCountry( source )
 			.then( ( r ) => setResult( r ) )
 			.catch( ( e ) => setError( e.message || String( e ) ) )
 			.finally( () => setBusy( false ) );
@@ -24,12 +24,24 @@ export default function ScanCountry() {
 
 	return (
 		<div className="ilb-scan">
-			<Button variant="secondary" isBusy={ busy } disabled={ busy } onClick={ scan } icon="search">
-				{ __( 'Scan country code', 'ip-location-block' ) }
+			<Button
+				variant="secondary"
+				isBusy={ busy }
+				disabled={ busy }
+				onClick={ scan }
+				icon="search"
+			>
+				{ source === 'server'
+					? __( 'Scan server country', 'ip-location-block' )
+					: __( 'Scan your country', 'ip-location-block' ) }
 			</Button>
 
 			{ error && (
-				<Notice status="error" onRemove={ () => setError( null ) } className="ilb-scan__notice">
+				<Notice
+					status="error"
+					onRemove={ () => setError( null ) }
+					className="ilb-scan__notice"
+				>
 					{ error }
 				</Notice>
 			) }
@@ -37,13 +49,20 @@ export default function ScanCountry() {
 			{ result && (
 				<div className="ilb-scan__result">
 					<p className="ilb-scan__ip">
-						{ __( 'Your IP:', 'ip-location-block' ) } <code>{ result.ip || '—' }</code>
+						{ source === 'server'
+							? __( 'Server IP:', 'ip-location-block' )
+							: __( 'Your IP:', 'ip-location-block' ) }{ ' ' }
+						<code>{ result.ip || '—' }</code>
 					</p>
 					<ul className="ilb-scan__list">
 						{ ( result.providers || [] ).map( ( p ) => (
 							<li key={ p.name }>
-								<span className="ilb-scan__name">{ p.name }</span>
-								<span className="ilb-scan__code">{ p.code || '—' }</span>
+								<span className="ilb-scan__name">
+									{ p.name }
+								</span>
+								<span className="ilb-scan__code">
+									{ p.code || '—' }
+								</span>
 							</li>
 						) ) }
 					</ul>

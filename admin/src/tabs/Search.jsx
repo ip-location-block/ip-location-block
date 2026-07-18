@@ -6,6 +6,7 @@
 import { useEffect, useState } from '@wordpress/element';
 import {
 	Card,
+	CardHeader,
 	CardBody,
 	TextControl,
 	SelectControl,
@@ -19,6 +20,7 @@ import { __ } from '@wordpress/i18n';
 
 import { searchIp, getProviders } from '../api';
 import MapView from '../components/MapView';
+import { queryParam } from '../navigation';
 
 // Human labels for the common provider keys; anything else falls back to its
 // raw key so nothing the provider returns is hidden (classic parity).
@@ -41,8 +43,14 @@ const LABELS = {
 
 const label = ( key ) => LABELS[ key ] || key;
 
+const presetIp = () =>
+	queryParam( 's' )
+		.replace( /\.\*+$/, '.0' )
+		.replace( /:\w*\*+$/, '::' )
+		.replace( /:{3,}$/, '::' );
+
 export default function Search() {
-	const [ ip, setIp ] = useState( '' );
+	const [ ip, setIp ] = useState( presetIp );
 	const [ provider, setProvider ] = useState( '' );
 	const [ providers, setProviders ] = useState( [] );
 	const [ result, setResult ] = useState( null );
@@ -90,23 +98,36 @@ export default function Search() {
 
 	const entries = result
 		? Object.keys( result ).filter(
-				( k ) => result[ k ] !== '' && result[ k ] !== null && result[ k ] !== undefined
+				( k ) =>
+					result[ k ] !== '' &&
+					result[ k ] !== null &&
+					result[ k ] !== undefined
 		  )
 		: [];
 
 	return (
 		<div className="ilb-search">
-			<Card>
+			<Card className="ilb-panel-shell ilb-search__form-card">
+				<CardHeader className="ilb-panel-shell__header">
+					<h2 className="ilb-panel-shell__title">
+						{ __( 'Search geolocation', 'ip-location-block' ) }
+					</h2>
+				</CardHeader>
 				<CardBody>
 					<Flex align="flex-end" gap={ 3 } wrap>
 						<FlexItem isBlock>
 							<TextControl
 								__nextHasNoMarginBottom
-								label={ __( 'IP address', 'ip-location-block' ) }
+								label={ __(
+									'IP address',
+									'ip-location-block'
+								) }
 								value={ ip }
 								onChange={ setIp }
 								placeholder="8.8.8.8"
-								onKeyDown={ ( e ) => e.key === 'Enter' && runSearch() }
+								onKeyDown={ ( e ) =>
+									e.key === 'Enter' && runSearch()
+								}
 							/>
 						</FlexItem>
 						<FlexItem>
@@ -154,7 +175,12 @@ export default function Search() {
 
 			{ result && (
 				<div className="ilb-search__results">
-					<Card>
+					<Card className="ilb-panel-shell ilb-search__result-card">
+						<CardHeader className="ilb-panel-shell__header">
+							<h2 className="ilb-panel-shell__title">
+								{ __( 'Lookup result', 'ip-location-block' ) }
+							</h2>
+						</CardHeader>
 						<CardBody>
 							<dl className="ilb-search__details">
 								{ entries.map( ( k ) => (
@@ -168,7 +194,15 @@ export default function Search() {
 					</Card>
 
 					{ hasCoords && (
-						<Card className="ilb-search__map-card">
+						<Card className="ilb-panel-shell ilb-search__map-card">
+							<CardHeader className="ilb-panel-shell__header">
+								<h2 className="ilb-panel-shell__title">
+									{ __(
+										'Location map',
+										'ip-location-block'
+									) }
+								</h2>
+							</CardHeader>
 							<CardBody>
 								<MapView lat={ lat } lng={ lng } zoom={ 7 } />
 							</CardBody>

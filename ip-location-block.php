@@ -72,6 +72,7 @@ if ( ! class_exists( 'IP_Location_Block', false ) ):
 	require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-apis.php';
 	require IP_LOCATION_BLOCK_PATH . 'classes/db-providers/ip2location/class-ip2location.php';
 	require IP_LOCATION_BLOCK_PATH . 'classes/db-providers/maxmind/class-maxmind-geolite2.php';
+	require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-diagnostics.php';
 	require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-rest.php';
 
 

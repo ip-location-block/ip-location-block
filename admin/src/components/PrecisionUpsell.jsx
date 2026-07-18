@@ -1,5 +1,5 @@
 /**
- * Standard -> Native precision upsell card for the Geolocation API settings
+ * Standard -> Native precision callout for the Geolocation API settings
  * section. Three states driven by the geolocation "mode":
  *   - native            : precision is on — reassure.
  *   - api on, not native : Standard Mode — tell them which providers to disable.
@@ -8,7 +8,11 @@
  */
 import { __ } from '@wordpress/i18n';
 
-import { NativeCard, StandardStrip, UpgradeNote, UpgradeButton } from './PrecisionContent';
+import {
+	PrecisionBenefits,
+	PrecisionLearnLink,
+	UpgradeButton,
+} from './PrecisionContent';
 
 export default function PrecisionUpsell( { mode } ) {
 	if ( ! mode ) {
@@ -17,13 +21,18 @@ export default function PrecisionUpsell( { mode } ) {
 
 	if ( mode.native ) {
 		return (
-			<div className="ilb-precision ilb-precision--native">
-				<span className="dashicons dashicons-yes-alt" aria-hidden="true" />
+			<div className="ilb-precision-status ilb-precision-status--success">
+				<span
+					className="dashicons dashicons-yes-alt"
+					aria-hidden="true"
+				/>
 				<div>
-					<strong>{ __( 'Native Mode active', 'ip-location-block' ) }</strong>
+					<strong>
+						{ __( 'Native Mode active', 'ip-location-block' ) }
+					</strong>
 					<p>
 						{ __(
-							'Precision blocking by state and city is enabled through the IP Location Block provider.',
+							'City and state rules are available through the IP Location Block provider.',
 							'ip-location-block'
 						) }
 					</p>
@@ -34,13 +43,18 @@ export default function PrecisionUpsell( { mode } ) {
 
 	if ( mode.apiEnabled && mode.others && mode.others.length ) {
 		return (
-			<div className="ilb-precision ilb-precision--warn">
-				<span className="dashicons dashicons-warning" aria-hidden="true" />
+			<div className="ilb-precision-status ilb-precision-status--warning">
+				<span
+					className="dashicons dashicons-warning"
+					aria-hidden="true"
+				/>
 				<div>
-					<strong>{ __( 'Standard Mode', 'ip-location-block' ) }</strong>
+					<strong>
+						{ __( 'Standard Mode', 'ip-location-block' ) }
+					</strong>
 					<p>
 						{ __(
-							'Precision blocking by state/city will not work while other providers are enabled. To switch to Native Mode, disable:',
+							'To use Native Mode, disable these other geolocation providers:',
 							'ip-location-block'
 						) }{ ' ' }
 						<em>{ mode.others.join( ', ' ) }</em>
@@ -51,14 +65,26 @@ export default function PrecisionUpsell( { mode } ) {
 	}
 
 	return (
-		<div className="ilb-precision ilb-precision--upsell">
-			<h4 className="ilb-precision__title">
-				{ __( 'Unlock precision blocking', 'ip-location-block' ) }
-			</h4>
-			<NativeCard />
-			<StandardStrip />
-			<UpgradeNote />
-			<UpgradeButton />
+		<div className="ilb-precision-callout">
+			<div className="ilb-precision-callout__content">
+				<h4>
+					{ __(
+						'Need city or state blocking?',
+						'ip-location-block'
+					) }
+				</h4>
+				<p>
+					{ __(
+						'Native Mode adds precise city and state rules. Add an IP Location Block API key and turn off other geolocation providers to use it.',
+						'ip-location-block'
+					) }
+				</p>
+				<PrecisionBenefits />
+			</div>
+			<div className="ilb-precision-callout__actions">
+				<UpgradeButton />
+				<PrecisionLearnLink />
+			</div>
 		</div>
 	);
 }

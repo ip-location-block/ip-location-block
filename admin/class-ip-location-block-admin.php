@@ -56,11 +56,24 @@ class IP_Location_Block_Admin {
 	}
 
 	/**
+	 * Whether the current request is for the React admin screen.
+	 *
+	 * @return bool
+	 */
+	private function is_beta_screen() {
+		return isset( $_GET['page'] ) &&
+			'ip-location-block-beta' === sanitize_key( wp_unslash( $_GET['page'] ) );
+	}
+
+	/**
 	 * Whether the welcome/intro notice should render for this request.
 	 * @return bool
 	 */
 	private function should_show_intro_notice() {
 		if ( ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+		if ( $this->is_beta_screen() ) {
 			return false;
 		}
 		$settings = IP_Location_Block::get_option();
@@ -71,11 +84,9 @@ class IP_Location_Block_Admin {
 	/**
 	 * Enqueue the welcome notice stylesheet.
 	 *
-	 * The notice is hooked to `admin_notices`, so it can render on any admin
-	 * screen — including the React Beta page, which deliberately does not load
-	 * the classic admin stylesheet. Keeping these styles in their own small
-	 * file lets them load wherever the notice actually appears, and nowhere
-	 * else (it is skipped once the notice has been dismissed).
+	 * The notice is hooked to `admin_notices`, so it can render across classic
+	 * admin screens until dismissed. The React Beta screen owns its full page
+	 * shell and opts out in should_show_intro_notice().
 	 *
 	 * @return void
 	 */
@@ -111,7 +122,7 @@ class IP_Location_Block_Admin {
 	 * @return void
 	 */
 	public function show_api_key_upgrade_notice() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( $this->is_beta_screen() || ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
@@ -174,7 +185,7 @@ class IP_Location_Block_Admin {
 	 * Show admin notice when server-level caching conflicts with public page validation.
 	 */
 	public function show_cache_compat_notice() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( $this->is_beta_screen() || ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 		$settings = IP_Location_Block::get_option();
@@ -559,6 +570,12 @@ class IP_Location_Block_Admin {
 	 *
 	 */
 	public function show_admin_notices() {
+		// The React screen reads structured diagnostics over REST. Do not consume
+		// the classic transient queue behind CSS-hidden notices on that screen.
+		if ( $this->is_beta_screen() ) {
+			return;
+		}
+
 		$key = IP_Location_Block::PLUGIN_NAME . '-notice';
 
 		if ( false !== ( $notices = get_transient( $key ) ) ) {
@@ -693,6 +710,27 @@ class IP_Location_Block_Admin {
 	 * @param $settings
 	 */
 	private function diagnose_admin_screen( $settings ) {
+		$updating = get_transient( IP_Location_Block::CRON_NAME );
+		if ( 'done' === $updating ) {
+			delete_transient( IP_Location_Block::CRON_NAME );
+			self::add_admin_notice( 'updated', __( 'Local database and matching rule have been updated.', 'ip-location-block' ) );
+		}
+
+		$report = IP_Location_Block_Diagnostics::run( $settings );
+		foreach ( $report['checks'] as $check ) {
+			if ( 'pass' === $check['status'] || ! empty( $check['acknowledged'] ) ) {
+				continue;
+			}
+			$type = 'critical' === $check['status']
+				? 'error'
+				: ( 'warning' === $check['status'] ? 'notice-warning' : 'notice-info' );
+			self::add_admin_notice( $type, $this->render_diagnostic_notice( $check ) );
+		}
+
+		return;
+
+		/* Legacy implementation retained below as a short-term fallback reference.
+		 * All active diagnosis now comes from IP_Location_Block_Diagnostics above. */
 		$updating = get_transient( IP_Location_Block::CRON_NAME );
 		$adminurl = $this->dashboard_url( false );
 		$network  = $this->dashboard_url( $settings['network_wide'] );
@@ -931,6 +969,35 @@ class IP_Location_Block_Admin {
 	}
 
 	/**
+	 * Adapt one structured diagnostic for the classic WordPress notice area.
+	 *
+	 * @param array $check Diagnostic check.
+	 *
+	 * @return string
+	 */
+	private function render_diagnostic_notice( $check ) {
+		$message = '<strong>' . esc_html( $check['title'] ) . ':</strong> ' . esc_html( $check['message'] );
+		if ( ! empty( $check['details'] ) ) {
+			$message .= '<br />' . esc_html( implode( '; ', $check['details'] ) );
+		}
+		if ( ! empty( $check['actions'] ) ) {
+			$links = array();
+			foreach ( $check['actions'] as $action ) {
+				if ( empty( $action['url'] ) || empty( $action['label'] ) ) {
+					continue;
+				}
+				$external = isset( $action['type'] ) && 'external' === $action['type'];
+				$links[]  = '<a href="' . esc_url( $action['url'] ) . '"' . ( $external ? ' target="_blank" rel="noopener noreferrer"' : '' ) . '>' . esc_html( $action['label'] ) . '</a>';
+			}
+			if ( $links ) {
+				$message .= ' ' . implode( ' &middot; ', $links );
+			}
+		}
+
+		return $message;
+	}
+
+	/**
 	 * Setup menu and option page for this plugin
 	 *
 	 */
@@ -941,7 +1008,7 @@ class IP_Location_Block_Admin {
 		$this->add_plugin_admin_menu( $settings );
 
 		// Avoid multiple validation.
-		if ( 'GET' === IP_Location_Block_Util::get_request_method() ) {
+		if ( 'GET' === IP_Location_Block_Util::get_request_method() && ! $this->is_beta_screen() ) {
 			$this->diagnose_admin_screen( $settings );
 		}
 
@@ -1903,8 +1970,10 @@ class IP_Location_Block_Admin {
 
 		foreach ( $blog_ids as $id ) {
 			switch_to_blog( $id );
-			$map = IP_Location_Block::get_option( false );
-			$ret &= IP_Location_Block::update_option( $settings, false );
+			$current = IP_Location_Block::get_option( false );
+			if ( $current !== $settings ) {
+				$ret = IP_Location_Block::update_option( $settings, false ) && $ret;
+			}
 			restore_current_blog();
 		}
 

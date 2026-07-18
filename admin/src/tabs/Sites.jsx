@@ -51,7 +51,10 @@ export default function Sites() {
 		getNetworkStats( duration )
 			.then( ( data ) =>
 				setRows(
-					( Array.isArray( data ) ? data : [] ).map( ( r, i ) => ( { id: i, ...r } ) )
+					( Array.isArray( data ) ? data : [] ).map( ( r, i ) => ( {
+						id: i,
+						...r,
+					} ) )
 				)
 			)
 			.catch( ( e ) => setError( e.message || String( e ) ) )
@@ -66,7 +69,7 @@ export default function Sites() {
 				</Notice>
 			) }
 
-			<Flex justify="flex-start" gap={ 3 } style={ { marginBottom: '12px' } }>
+			<Flex justify="flex-start" gap={ 3 } wrap className="ilb-toolbar">
 				<SelectControl
 					__nextHasNoMarginBottom
 					label={ __( 'Duration', 'ip-location-block' ) }
@@ -75,7 +78,10 @@ export default function Sites() {
 					options={ DURATIONS }
 					onChange={ setDuration }
 				/>
-				<Button variant="secondary" onClick={ () => setTick( ( t ) => t + 1 ) }>
+				<Button
+					variant="secondary"
+					onClick={ () => setTick( ( t ) => t + 1 ) }
+				>
 					{ __( 'Refresh', 'ip-location-block' ) }
 				</Button>
 			</Flex>

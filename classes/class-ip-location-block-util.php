@@ -1524,7 +1524,7 @@ class IP_Location_Block_Util {
 	}
 
 	// used at `admin_ajax_callback()` in class-ip-location-block-admin.php
-	public static function generate_link( $context ) {
+	public static function generate_link( $context, $network = null ) {
 		$link = self::random_bytes();
 		$hash = bin2hex( self::hash_link( $link ) );
 
@@ -1539,7 +1539,10 @@ class IP_Location_Block_Util {
 			'hash' => bin2hex( self::hash_link( $hash ) ),
 		);
 
-		if ( $context->is_network_admin() && $settings['network_wide'] ) {
+		$network = null === $network
+			? ( $context->is_network_admin() && $settings['network_wide'] )
+			: (bool) $network;
+		if ( $network ) {
 			$context->update_multisite_settings( $settings );
 		} else {
 			IP_Location_Block::update_option( $settings );
@@ -1549,11 +1552,14 @@ class IP_Location_Block_Util {
 	}
 
 	// used at `admin_ajax_callback()` in class-ip-location-block-admin.php
-	public static function delete_link( $context ) {
+	public static function delete_link( $context, $network = null ) {
 		$settings               = IP_Location_Block::get_option();
 		$settings['login_link'] = array( 'link' => null, 'hash' => null );
 
-		if ( $context->is_network_admin() && $settings['network_wide'] ) {
+		$network = null === $network
+			? ( $context->is_network_admin() && $settings['network_wide'] )
+			: (bool) $network;
+		if ( $network ) {
 			$context->update_multisite_settings( $settings );
 		} else {
 			IP_Location_Block::update_option( $settings );

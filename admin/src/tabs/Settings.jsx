@@ -12,8 +12,6 @@ import {
 	Button,
 	Notice,
 	Spinner,
-	__experimentalToggleGroupControl as ToggleGroupControl,
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
@@ -23,14 +21,17 @@ import {
 	getContent,
 	getExceptions,
 	getProviders,
+	getProviderStatus,
 	getDatabaseStatus,
 	getMode,
+	getSettingsContext,
 } from '../api';
 import { SECTIONS } from './settingsSchema';
 import { setPath } from './paths';
 import SettingsField from './SettingsField';
-import SettingsActions from './SettingsActions';
 import SimpleBlocking from './SimpleBlocking';
+import ScanCountry from '../components/ScanCountry';
+import { queryParam } from '../navigation';
 
 const STORAGE_KEY = 'ilbBetaSettingsMode';
 
@@ -38,7 +39,7 @@ const readStoredMode = () => {
 	try {
 		const v = window.localStorage.getItem( STORAGE_KEY );
 		return v === 'simple' || v === 'advanced' ? v : null;
-	} catch ( e ) {
+	} catch {
 		return null;
 	}
 };
@@ -46,7 +47,7 @@ const readStoredMode = () => {
 const storeMode = ( mode ) => {
 	try {
 		window.localStorage.setItem( STORAGE_KEY, mode );
-	} catch ( e ) {
+	} catch {
 		// storage unavailable — the choice just won't persist
 	}
 };
@@ -54,15 +55,75 @@ const storeMode = ( mode ) => {
 // An install with no country rule and no front-end blocking has never been
 // configured; start those on the guided view.
 const looksUnconfigured = ( s ) =>
-	Number( s.matching_rule ) === -1 && ( Number( s?.validation?.public ) & 1 ) !== 1;
+	Number( s.matching_rule ) === -1 &&
+	Number( s?.validation?.public ) % 2 !== 1;
+
+function SettingsGroup( {
+	group,
+	settings,
+	sources,
+	onChange,
+	onReplace,
+	onRefreshSources,
+} ) {
+	const hasHeader = group.title || group.action;
+
+	return (
+		<section
+			className={ `ilb-settings-group${
+				hasHeader ? '' : ' ilb-settings-group--plain'
+			}` }
+			aria-labelledby={
+				group.title ? `ilb-settings-group-${ group.key }` : undefined
+			}
+		>
+			{ hasHeader && (
+				<div className="ilb-settings-group__header">
+					{ group.title && (
+						<h3 id={ `ilb-settings-group-${ group.key }` }>
+							{ group.title }
+						</h3>
+					) }
+					{ group.action === 'scan-country' && (
+						<div className="ilb-scan-actions">
+							<ScanCountry />
+							{ sources.context?.features
+								?.serverScanAvailable && (
+								<ScanCountry source="server" />
+							) }
+						</div>
+					) }
+				</div>
+			) }
+
+			<div className="ilb-settings-group__fields">
+				{ group.fields.map( ( field ) => (
+					<SettingsField
+						key={ field.path }
+						field={ field }
+						settings={ settings }
+						sources={ sources }
+						onChange={ onChange }
+						onReplace={ onReplace }
+						onRefreshSources={ onRefreshSources }
+					/>
+				) ) }
+			</div>
+		</section>
+	);
+}
 
 export default function Settings() {
+	const requestedView = queryParam( 'view' );
+	const requestedSection = queryParam( 'section' );
 	const [ settings, setSettings ] = useState( null );
 	const [ sources, setSources ] = useState( {
 		content: {},
 		exceptions: {},
 		providers: [],
+		providerStatus: null,
 		dbStatus: [],
+		context: null,
 	} );
 	const [ mode, setMode ] = useState( null ); // resolved once settings load
 	const [ loading, setLoading ] = useState( true );
@@ -75,17 +136,42 @@ export default function Settings() {
 			getContent(),
 			getExceptions(),
 			getProviders(),
+			getProviderStatus().catch( () => null ),
 			getDatabaseStatus(),
 			getMode().catch( () => null ),
+			getSettingsContext(),
 		] )
-			.then( ( [ s, content, exceptions, providers, dbStatus, geoMode ] ) => {
-				setSettings( s );
-				setSources( { content, exceptions, providers, dbStatus, mode: geoMode } );
-				setMode( readStoredMode() || ( looksUnconfigured( s ) ? 'simple' : 'advanced' ) );
-			} )
+			.then(
+				( [
+					s,
+					content,
+					exceptions,
+					providers,
+					providerStatus,
+					dbStatus,
+					geoMode,
+					context,
+				] ) => {
+					setSettings( s );
+					setSources( {
+						content,
+						exceptions,
+						providers,
+						providerStatus,
+						dbStatus,
+						mode: geoMode,
+						context,
+					} );
+					setMode(
+						( requestedView === 'advanced' ? 'advanced' : null ) ||
+							readStoredMode() ||
+							( looksUnconfigured( s ) ? 'simple' : 'advanced' )
+					);
+				}
+			)
 			.catch( ( e ) => setNotice( { status: 'error', msg: e.message } ) )
 			.finally( () => setLoading( false ) );
-	}, [] );
+	}, [ requestedView ] );
 
 	if ( loading ) {
 		return <Spinner />;
@@ -98,20 +184,53 @@ export default function Settings() {
 		);
 	}
 
-	const onChange = ( path, value ) => setSettings( ( s ) => setPath( s, path, value ) );
+	const onChange = ( path, value ) =>
+		setSettings( ( s ) => setPath( s, path, value ) );
 
 	const onModeChange = ( next ) => {
 		setMode( next );
 		storeMode( next );
 	};
 
+	const refreshRuntimeSources = () =>
+		Promise.all( [
+			getProviders(),
+			getProviderStatus().catch( () => null ),
+			getDatabaseStatus(),
+			getMode().catch( () => null ),
+			getSettingsContext(),
+		] ).then(
+			( [ providers, providerStatus, dbStatus, geoMode, context ] ) => {
+				setSources( ( current ) => ( {
+					...current,
+					providers,
+					providerStatus,
+					dbStatus,
+					mode: geoMode,
+					context,
+				} ) );
+			}
+		);
+
 	const onSave = () => {
 		setSaving( true );
 		setNotice( null );
-		saveSettings( settings )
+		saveSettings( settings, sources.context?.scope?.current || 'site' )
 			.then( ( saved ) => {
 				setSettings( saved );
-				setNotice( { status: 'success', msg: __( 'Settings saved.', 'ip-location-block' ) } );
+				setNotice( {
+					status: 'success',
+					msg: __( 'Settings saved.', 'ip-location-block' ),
+				} );
+				window.dispatchEvent(
+					new CustomEvent( 'ip-location-block-settings-saved', {
+						detail: { settings: saved },
+					} )
+				);
+
+				refreshRuntimeSources().catch( () => {
+					// Saved successfully; provider status will refresh next load.
+				} );
 			} )
 			.catch( ( e ) => setNotice( { status: 'error', msg: e.message } ) )
 			.finally( () => setSaving( false ) );
@@ -122,60 +241,86 @@ export default function Settings() {
 	return (
 		<div className="ilb-settings">
 			{ notice && (
-				<Notice status={ notice.status } onRemove={ () => setNotice( null ) }>
+				<Notice
+					status={ notice.status }
+					onRemove={ () => setNotice( null ) }
+				>
 					{ notice.msg }
 				</Notice>
 			) }
 
 			<div className="ilb-settings__modebar">
-				<ToggleGroupControl
-					__nextHasNoMarginBottom
-					hideLabelFromVision
-					label={ __( 'Settings view', 'ip-location-block' ) }
-					value={ mode }
-					onChange={ onModeChange }
+				<div
+					className="ilb-view-switch"
+					role="group"
+					aria-label={ __( 'Settings view', 'ip-location-block' ) }
 				>
-					<ToggleGroupControlOption
-						value="simple"
-						label={ __( 'Simple', 'ip-location-block' ) }
-					/>
-					<ToggleGroupControlOption
-						value="advanced"
-						label={ __( 'Advanced', 'ip-location-block' ) }
-					/>
-				</ToggleGroupControl>
+					<button
+						type="button"
+						className="ilb-view-switch__option"
+						aria-pressed={ mode === 'simple' }
+						onClick={ () => onModeChange( 'simple' ) }
+					>
+						{ __( 'Simple', 'ip-location-block' ) }
+					</button>
+					<button
+						type="button"
+						className="ilb-view-switch__option"
+						aria-pressed={ mode === 'advanced' }
+						onClick={ () => onModeChange( 'advanced' ) }
+					>
+						{ __( 'Advanced', 'ip-location-block' ) }
+					</button>
+				</div>
 			</div>
 
 			{ isSimple ? (
 				<SimpleBlocking
 					settings={ settings }
 					providers={ sources.providers }
+					providerStatus={ sources.providerStatus }
 					onChange={ onChange }
 				/>
 			) : (
 				<>
-					<Panel>
+					<Panel className="ilb-panel-shell ilb-settings__advanced-panel">
 						{ SECTIONS.map( ( section, i ) => (
-							<PanelBody key={ section.key } title={ section.title } initialOpen={ i === 0 }>
-								{ section.fields.map( ( field ) => (
-									<SettingsField
-										key={ field.path }
-										field={ field }
+							<PanelBody
+								key={ section.key }
+								title={ section.title }
+								initialOpen={
+									requestedSection
+										? requestedSection === section.key
+										: i === 0
+								}
+								className={ `ilb-panel-section ilb-settings-section ilb-settings-section--${ section.key }` }
+							>
+								{ section.groups.map( ( group ) => (
+									<SettingsGroup
+										key={ group.key }
+										group={ group }
 										settings={ settings }
 										sources={ sources }
 										onChange={ onChange }
+										onReplace={ setSettings }
+										onRefreshSources={
+											refreshRuntimeSources
+										}
 									/>
 								) ) }
 							</PanelBody>
 						) ) }
 					</Panel>
-
-					<SettingsActions settings={ settings } onReplace={ setSettings } />
 				</>
 			) }
 
 			<div className="ilb-settings__save">
-				<Button variant="primary" isBusy={ saving } disabled={ saving } onClick={ onSave }>
+				<Button
+					variant="primary"
+					isBusy={ saving }
+					disabled={ saving }
+					onClick={ onSave }
+				>
 					{ __( 'Save Changes', 'ip-location-block' ) }
 				</Button>
 			</div>

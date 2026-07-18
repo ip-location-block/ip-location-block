@@ -1,36 +1,152 @@
 /**
  * Read-only status of the local geolocation database files.
  */
-import { __ } from '@wordpress/i18n';
+/* eslint-disable no-nested-ternary */
+import { useState } from '@wordpress/element';
+import { Button, Notice } from '@wordpress/components';
+import { __, sprintf } from '@wordpress/i18n';
 
-export default function DatabaseStatus( { rows } ) {
+import { updateDatabase } from '../api';
+
+export default function DatabaseStatus( { rows, schedule, onRefresh } ) {
+	const [ busy, setBusy ] = useState( false );
+	const [ message, setMessage ] = useState( null );
 	if ( ! rows || ! rows.length ) {
 		return null;
 	}
 	return (
-		<table className="wp-list-table widefat striped ilb-db-status">
-			<thead>
-				<tr>
-					<th scope="col">{ __( 'Database', 'ip-location-block' ) }</th>
-					<th scope="col">{ __( 'File', 'ip-location-block' ) }</th>
-					<th scope="col">{ __( 'Last update', 'ip-location-block' ) }</th>
-				</tr>
-			</thead>
-			<tbody>
-				{ rows.map( ( r ) => (
-					<tr key={ r.label }>
-						<td>{ r.label }</td>
-						<td>
-							{ r.path
-								? r.exists
-									? <code>{ r.path }</code>
-									: <em>{ __( 'File does not exist.', 'ip-location-block' ) }</em>
-								: <em>{ __( 'Not configured.', 'ip-location-block' ) }</em> }
-						</td>
-						<td>{ r.last || '—' }</td>
+		<div className="ilb-database-status">
+			<div className="ilb-database-status__toolbar">
+				<div>
+					<strong>
+						{ __(
+							'Database update schedule',
+							'ip-location-block'
+						) }
+					</strong>
+					<p
+						className={
+							schedule?.status === 'missing' ? 'is-warning' : ''
+						}
+					>
+						{ schedule?.status === 'scheduled'
+							? sprintf(
+									/* translators: %s: localized schedule date. */
+									__( 'Next run: %s', 'ip-location-block' ),
+									schedule.formatted
+							  )
+							: schedule?.status === 'disabled'
+							? __(
+									'Automatic updates are disabled.',
+									'ip-location-block'
+							  )
+							: __(
+									'The expected WP-Cron event is missing.',
+									'ip-location-block'
+							  ) }
+					</p>
+				</div>
+				<Button
+					variant="secondary"
+					isBusy={ busy }
+					disabled={ busy }
+					onClick={ () => {
+						setBusy( true );
+						setMessage( null );
+						updateDatabase()
+							.then( () => {
+								setMessage( {
+									status: 'success',
+									text: __(
+										'Database update completed.',
+										'ip-location-block'
+									),
+								} );
+								return onRefresh?.();
+							} )
+							.catch( ( error ) =>
+								setMessage( {
+									status: 'error',
+									text: error.message,
+								} )
+							)
+							.finally( () => setBusy( false ) );
+					} }
+				>
+					{ __( 'Download database now', 'ip-location-block' ) }
+				</Button>
+			</div>
+			{ message && (
+				<Notice
+					status={ message.status }
+					onRemove={ () => setMessage( null ) }
+				>
+					{ message.text }
+				</Notice>
+			) }
+			<table className="wp-list-table widefat striped ilb-db-status">
+				<thead>
+					<tr>
+						<th scope="col">
+							{ __( 'Database', 'ip-location-block' ) }
+						</th>
+						<th scope="col">
+							{ __( 'File', 'ip-location-block' ) }
+						</th>
+						<th scope="col">
+							{ __( 'Last update', 'ip-location-block' ) }
+						</th>
 					</tr>
-				) ) }
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					{ rows.map( ( r ) => (
+						<tr key={ r.label }>
+							<td
+								data-colname={ __(
+									'Database',
+									'ip-location-block'
+								) }
+							>
+								{ r.label }
+							</td>
+							<td
+								data-colname={ __(
+									'File',
+									'ip-location-block'
+								) }
+							>
+								{ r.path ? (
+									r.exists ? (
+										<code>{ r.path }</code>
+									) : (
+										<em>
+											{ __(
+												'File does not exist.',
+												'ip-location-block'
+											) }
+										</em>
+									)
+								) : (
+									<em>
+										{ __(
+											'Not configured.',
+											'ip-location-block'
+										) }
+									</em>
+								) }
+							</td>
+							<td
+								data-colname={ __(
+									'Last update',
+									'ip-location-block'
+								) }
+							>
+								{ r.last || '—' }
+							</td>
+						</tr>
+					) ) }
+				</tbody>
+			</table>
+		</div>
 	);
 }

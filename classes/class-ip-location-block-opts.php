@@ -335,7 +335,7 @@ class IP_Location_Block_Opts {
 	/**
 	 * Convert old options from IP Location Block to IP Location Block
 	 */
-	public static function get_legacy_settings() {
+	public static function get_legacy_settings( $mutate = true ) {
 
 		$settings = get_option( 'ip_geo_block_settings' );
 		if ( empty( $settings ) ) {
@@ -376,9 +376,11 @@ class IP_Location_Block_Opts {
 
 		if ( version_compare( $version, '2.2.2' ) < 0 ) {
 			$tmp             = get_option( 'ip_geo_block_statistics' );
-			$tmp['daystats'] = array();
-			IP_Location_Block_Logs::record_stat( $tmp );
-			delete_option( 'ip_geo_block_statistics' ); // @since 1.2.0
+			if ( $mutate && is_array( $tmp ) ) {
+				$tmp['daystats'] = array();
+				IP_Location_Block_Logs::record_stat( $tmp );
+				delete_option( 'ip_geo_block_statistics' ); // @since 1.2.0
+			}
 
 			foreach ( array( 'maxmind', 'ip2location' ) as $tmp ) {
 				unset( $settings[ $tmp ] );
@@ -450,7 +452,9 @@ class IP_Location_Block_Opts {
 		}
 
 		if ( version_compare( $version, '3.0.1' ) < 0 ) {
-			delete_transient( 'ip_geo_block_cache' );
+			if ( $mutate ) {
+				delete_transient( 'ip_geo_block_cache' );
+			}
 		} // @since  0.2.8
 
 		if ( version_compare( $version, '3.0.3' ) < 0 ) {
@@ -488,7 +492,7 @@ class IP_Location_Block_Opts {
 
 		if ( version_compare( $version, '3.0.8' ) < 0 ) {
 			$settings['timeout']             = $default['timeout'];
-			$settings['GeoLite2']            = $default['Geolite2'];
+			$settings['GeoLite2']            = $default['GeoLite2'];
 			$settings['GeoLite2']['use_asn'] = $settings['Maxmind']['use_asn'];
 		}
 
@@ -500,7 +504,9 @@ class IP_Location_Block_Opts {
 		if ( version_compare( $version, '3.0.11' ) < 0 ) {
 			// change the size of some database columns
 			$settings['cache_hold'] = $default['cache_hold'];
-			IP_Location_Block_Logs::delete_tables( 'ip_geo_block_cache' );
+			if ( $mutate ) {
+				IP_Location_Block_Logs::delete_tables( 'ip_geo_block_cache' );
+			}
 		}
 
 		if ( version_compare( $version, '3.0.13' ) < 0 ) {
@@ -514,7 +520,9 @@ class IP_Location_Block_Opts {
 		}
 
 		if ( version_compare( $version, '3.0.16' ) < 0 ) {
-			$settings['simulate'] = $settings['public']['simulate'];
+			$settings['simulate'] = isset( $settings['public']['simulate'] )
+				? $settings['public']['simulate']
+				: ( isset( $settings['simulate'] ) ? $settings['simulate'] : $default['simulate'] );
 			unset( $settings['public']['simulate'] );
 		}
 
@@ -526,9 +534,10 @@ class IP_Location_Block_Opts {
 			$settings['validation']['metadata'] = $default['validation']['metadata'];
 			$settings['monitor']                = $default['monitor'];
 			$settings['metadata']               = $default['metadata'];
-			IP_Location_Block::update_metadata( null );
-
-			self::setup_validation_timing( $settings );
+			if ( $mutate ) {
+				IP_Location_Block::update_metadata( null );
+				self::setup_validation_timing( $settings );
+			}
 		}
 
 		// IP Location Block.

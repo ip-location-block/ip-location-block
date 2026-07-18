@@ -626,7 +626,9 @@ class IP_Location_Block_Admin_Ajax {
 			'[anonymize]',
 			'[restrict_api]',  // 3.0.13
 			'[simulate]',      // 3.0.14
+			'[use_asn]',
 			'[signature]',
+			'[timeout]',
 			'[login_fails]',
 			'[response_code]',
 			'[response_msg]',       // 3.0.0
@@ -653,6 +655,7 @@ class IP_Location_Block_Admin_Ajax {
 			'[validation][public]',      // 3.0.0
 			'[validation][restapi]',     // 3.0.3
 			'[validation][mimetype]',    // 3.0.3
+			'[validation][metadata]',    // 3.0.18
 			'[exception][plugins][*]',   // 2.2.5
 			'[exception][themes][*]',    // 2.2.5
 			'[exception][admin][$]',     // 3.0.0
@@ -675,6 +678,7 @@ class IP_Location_Block_Admin_Ajax {
 			'[public][response_msg]',    // 3.0.3
 			'[public][redirect_uri]',    // 3.0.3
 			'[public][behavior]',        // 3.0.10
+			'[public][cache_bypass]',    // 1.3.9
 			'[behavior][time]',          // 3.0.10
 			'[behavior][view]',          // 3.0.10
 			'[save_statistics]',
