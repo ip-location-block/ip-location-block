@@ -1151,25 +1151,20 @@ class IP_Location_Block {
 	 */
 	public static function check_ips( $validate, $ips ) {
 		if ( filter_var( $ip = $validate['ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'includes/IP/IPv4.php';
-
 			foreach ( IP_Location_Block_Util::multiexplode( array( ",", "\n" ), $ips ) as $i ) {
 				$j    = explode( '/', $i, 2 );
 				$j[1] = isset( $j[1] ) ? min( 32, max( 0, (int) $j[1] ) ) : 32;
 				if ( ( ! empty( $validate['asn'] ) && $validate['asn'] === $j[0] ) ||
-				     ( filter_var( $j[0], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) && Net_IPv4::ipInNetwork( $ip, $j[0] . '/' . $j[1] ) ) ) {
+				     ( filter_var( $j[0], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) && \IPLocationBlock\Support\Ip::matches( $ip, $j[0] . '/' . $j[1] ) ) ) {
 					return true;
 				}
 			}
 		} elseif ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
-			if ( ! class_exists( 'Net_IPv6' ) ) {
-				require_once IP_LOCATION_BLOCK_PATH . 'includes/IP/IPv6.php';
-			}
 			foreach ( IP_Location_Block_Util::multiexplode( array( ",", "\n" ), $ips ) as $i ) {
 				$j    = explode( '/', $i, 2 );
 				$j[1] = isset( $j[1] ) ? min( 128, max( 0, (int) $j[1] ) ) : 128;
 				if ( ( ! empty( $validate['asn'] ) && $validate['asn'] === $j[0] ) ||
-				     ( filter_var( $j[0], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) && Net_IPv6::isInNetmask( $ip, $j[0] . '/' . $j[1] ) ) ) {
+				     ( filter_var( $j[0], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) && \IPLocationBlock\Support\Ip::matches( $ip, $j[0] . '/' . $j[1] ) ) ) {
 					return true;
 				}
 			}

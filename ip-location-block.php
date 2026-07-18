@@ -69,6 +69,13 @@ if ( ! class_exists( 'IP_Location_Block', false ) ):
 	}
 
 	/*----------------------------------------------------------------------------*
+	 * Backward-compatibility layer.
+	 * Registers the legacy class aliases (compat/legacy-aliases.php) BEFORE any
+	 * legacy code — or the deployed mu-plugin copies — references the old names.
+	 *----------------------------------------------------------------------------*/
+	require_once IP_LOCATION_BLOCK_PATH . 'compat/bootstrap.php';
+
+	/*----------------------------------------------------------------------------*
 	 * Public-Facing Functionality
 	 *----------------------------------------------------------------------------*/
 
