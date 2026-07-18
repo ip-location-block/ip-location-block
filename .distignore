@@ -20,6 +20,7 @@
 /scripts
 /tests
 /bin
+/scoper.inc.php
 /node_modules
 /package.json
 /package-lock.json

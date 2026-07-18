@@ -57,6 +57,18 @@ if ( ! class_exists( 'IP_Location_Block', false ) ):
 	define( 'IP_LOCATION_BLOCK_BASE', plugin_basename( __FILE__ ) ); // @since 1.5
 
 	/*----------------------------------------------------------------------------*
+	 * Composer autoloaders (scoped vendor first, then the main autoloader).
+	 * Guarded so the plugin keeps working unchanged when composer has not been
+	 * run (e.g. a dev checkout without vendor/). Populated by later phases.
+	 *----------------------------------------------------------------------------*/
+	if ( file_exists( IP_LOCATION_BLOCK_PATH . 'vendor_prefixed/vendor/autoload.php' ) ) {
+		require_once IP_LOCATION_BLOCK_PATH . 'vendor_prefixed/vendor/autoload.php';
+	}
+	if ( file_exists( IP_LOCATION_BLOCK_PATH . 'vendor/autoload.php' ) ) {
+		require_once IP_LOCATION_BLOCK_PATH . 'vendor/autoload.php';
+	}
+
+	/*----------------------------------------------------------------------------*
 	 * Public-Facing Functionality
 	 *----------------------------------------------------------------------------*/
 

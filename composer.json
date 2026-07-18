@@ -1,0 +1,47 @@
+{
+    "name": "iplocationblock/ip-location-block",
+    "description": "IP Location Block - blocks undesired access based on geolocation of IP address.",
+    "type": "wordpress-plugin",
+    "license": "GPL-3.0-or-later",
+    "require": {
+        "php": ">=8.1",
+        "pear/net_dns2": "^1.5"
+    },
+    "require-dev": {
+        "humbug/php-scoper": "^0.18",
+        "sniccowp/php-scoper-wordpress-excludes": "^6.0",
+        "ip2location/ip2location-php": "8.3.0",
+        "phpseclib/bcmath_compat": "^2.0",
+        "geoip2/geoip2": "^3.0",
+        "phpunit/phpunit": "^9.6",
+        "brain/monkey": "^2.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "IPLocationBlock\\": "src/"
+        },
+        "classmap": [
+            "compat/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "IPLocationBlock\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.1"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "scope": [
+            "@php -d error_reporting=8191 vendor/bin/php-scoper add-prefix --output-dir=vendor_prefixed --force",
+            "@php bin/build-scoped.php",
+            "@composer dump-autoload --working-dir=vendor_prefixed --classmap-authoritative --no-scripts"
+        ],
+        "post-autoload-dump": "@scope"
+    }
+}
