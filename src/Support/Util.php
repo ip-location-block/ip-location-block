@@ -12,6 +12,8 @@
 
 namespace IPLocationBlock\Support {
 
+use IPLocationBlock\Core\Validator;
+
 /**
  * Class Util
  *
@@ -985,7 +987,7 @@ class Util {
 		if ( function_exists( 'is_user_logged_in' ) || did_action( 'init' ) ) {
 			$logged_in = is_user_logged_in();
 		} else {
-			$settings   = \IP_Location_Block::get_option();
+			$settings   = Validator::get_option();
 			$timing_off = isset( $settings['validation']['timing'] ) ? ( 0 === ( (int) $settings['validation']['timing'] ) ) : 0;
 			if ( $timing_off ) {
 				$logged_in = function_exists( 'is_user_logged_in' ) && is_user_logged_in(); // @since  0.2.0.0
@@ -1539,7 +1541,7 @@ class Util {
 		 *   key from external: self::verify_link( $link )
 		 *   key from internal: self::verify_link( 'link', 'hash' )
 		 */
-		$settings               = \IP_Location_Block::get_option();
+		$settings               = Validator::get_option();
 		$settings['login_link'] = array(
 			'link' => $hash,
 			'hash' => bin2hex( self::hash_link( $hash ) ),
@@ -1551,7 +1553,7 @@ class Util {
 		if ( $network ) {
 			$context->update_multisite_settings( $settings );
 		} else {
-			\IP_Location_Block::update_option( $settings );
+			Validator::update_option( $settings );
 		}
 
 		return add_query_arg( 'ip-location-block-key', $link, wp_login_url() );
@@ -1559,7 +1561,7 @@ class Util {
 
 	// used at `admin_ajax_callback()` in class-ip-location-block-admin.php
 	public static function delete_link( $context, $network = null ) {
-		$settings               = \IP_Location_Block::get_option();
+		$settings               = Validator::get_option();
 		$settings['login_link'] = array( 'link' => null, 'hash' => null );
 
 		$network = null === $network
@@ -1568,13 +1570,13 @@ class Util {
 		if ( $network ) {
 			$context->update_multisite_settings( $settings );
 		} else {
-			\IP_Location_Block::update_option( $settings );
+			Validator::update_option( $settings );
 		}
 	}
 
 	// used at `tab_setup()` in tab-settings.php
 	public static function get_link() {
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 
 		return $settings['login_link']['link'] ? $settings['login_link']['link'] : false;
 	}

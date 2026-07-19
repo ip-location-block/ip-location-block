@@ -12,6 +12,14 @@
 
 namespace IPLocationBlock\Core;
 
+use IPLocationBlock\Cron\Scheduler;
+use IPLocationBlock\Geolocation\IpCacheRepository;
+use IPLocationBlock\Logging\Logs;
+use IPLocationBlock\Providers\LegacyMeta;
+use IPLocationBlock\Settings\Options;
+use IPLocationBlock\Support\Dns;
+use IPLocationBlock\Support\Util;
+
 class Validator {
 
 	const VERSION = '1.1.2'; // Deprecated.
@@ -46,7 +54,7 @@ class Validator {
 	 */
 	private function __construct() {
 		// Run the loader to execute all of the hooks with WordPress.
-		$loader = new \IP_Location_Block_Loader();
+		$loader = new HookLoader();
 		$this->register_hooks( $loader );
 		$loader->run();
 		unset( $loader );
@@ -64,7 +72,7 @@ class Validator {
 
 
 		// include drop in if it exists
-		$dropin_path = \IP_Location_Block_Util::get_dropins_storage_dir( 'drop-in.php' );
+		$dropin_path = Util::get_dropins_storage_dir( 'drop-in.php' );
 		if ( \file_exists( $dropin_path ) ) {
 			include_once $dropin_path;
 		}
@@ -79,7 +87,7 @@ class Validator {
 		$this->pagenow = ! empty( $GLOBALS['pagenow'] ) ? $GLOBALS['pagenow'] : \basename( $_SERVER['SCRIPT_NAME'] );
 
 		// setup the content folders
-		self::$wp_path = array( 'home' => \IP_Location_Block_Util::unslashit( \parse_url( \site_url(), PHP_URL_PATH ) ) ); // @since  0.2.6.0
+		self::$wp_path = array( 'home' => Util::unslashit( \parse_url( \site_url(), PHP_URL_PATH ) ) ); // @since  0.2.6.0
 		$len           = \is_string( self::$wp_path['home'] ) ? \strlen( self::$wp_path['home'] ) : 0;
 		$list          = array(
 			'admin'   => 'admin_url',          // @since  0.2.6.0 /wp-admin/
@@ -89,7 +97,7 @@ class Validator {
 
 		// analize the validation target (admin|plugins|themes|includes)
 		foreach ( $list as $key => $val ) {
-			self::$wp_path[ $key ] = \IP_Location_Block_Util::slashit( \substr( \parse_url( \call_user_func( $val ), PHP_URL_PATH ), $len ) );
+			self::$wp_path[ $key ] = Util::slashit( \substr( \parse_url( \call_user_func( $val ), PHP_URL_PATH ), $len ) );
 			if ( ! $this->target_type && false !== \strpos( $this->request_uri, self::$wp_path[ $key ] ) ) {
 				$this->target_type = $key;
 			}
@@ -118,7 +126,7 @@ class Validator {
 				$loader->add_action( 'init', array( $this, 'validate_' . $list[ $this->pagenow ] ), $priority[0] );
 			}
 		} // register target: alternative of trackback
-		elseif ( 'POST' === \IP_Location_Block_Util::get_request_method() && 'trackback' === \basename( $this->request_uri ) ) {
+		elseif ( 'POST' === Util::get_request_method() && 'trackback' === \basename( $this->request_uri ) ) {
 			if ( $validate['comment'] || self::$live_log ) {
 				$loader->add_action( 'init', array( $this, 'validate_comment' ), $priority[0] );
 			}
@@ -242,7 +250,7 @@ class Validator {
 	public static function get_default() {
 		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-opts.php';
 
-		return \IP_Location_Block_Opts::get_default();
+		return Options::get_default();
 	}
 
 	/**
@@ -308,7 +316,7 @@ class Validator {
 			return;
 		}
 
-		if ( ! \IP_Location_Block_Util::is_user_logged_in() ) {
+		if ( ! Util::is_user_logged_in() ) {
 			return;
 		}
 
@@ -316,8 +324,8 @@ class Validator {
 		// still consumed by the classic admin.js, so it is registered as a
 		// data-only script. No auth key is injected into requests (key = false).
 		$args = array(
-			'sites' => \IP_Location_Block_Util::get_sites_of_user(),
-			'nonce' => \IP_Location_Block_Util::create_nonce( self::$auth_key ),
+			'sites' => Util::get_sites_of_user(),
+			'nonce' => Util::create_nonce( self::$auth_key ),
 			'key'   => false,
 		);
 
@@ -352,7 +360,7 @@ class Validator {
 	 */
 	public static function get_ip_address( $settings = null ) {
 		$settings or $settings = self::get_option();
-		self::$remote_addr or self::$remote_addr = \IP_Location_Block_Util::get_client_ip( $settings['validation']['proxy'] );
+		self::$remote_addr or self::$remote_addr = Util::get_client_ip( $settings['validation']['proxy'] );
 
 		return \has_filter( 'ip-location-block-ip-addr' ) ? \apply_filters( 'ip-location-block-ip-addr', self::$remote_addr ) : self::$remote_addr;
 	}
@@ -363,7 +371,7 @@ class Validator {
 	 */
 	public function comment_form_message() {
 		$settings = self::get_option();
-		echo '<p id="', self::PLUGIN_NAME, '-msg">', \IP_Location_Block_Util::kses( $settings['comment']['msg'] ), '</p>', "\n";
+		echo '<p id="', self::PLUGIN_NAME, '-msg">', Util::kses( $settings['comment']['msg'] ), '</p>', "\n";
 	}
 
 	/**
@@ -407,7 +415,7 @@ class Validator {
 			'state' => null, // @since 1.2.0
 		), $result );
 
-		$data['auth'] = \IP_Location_Block_Util::get_current_user_id();
+		$data['auth'] = Util::get_current_user_id();
 
 		return $data;
 	}
@@ -426,7 +434,7 @@ class Validator {
 
 		if ( empty( $providers ) ) // make valid providers list
 		{
-			$providers = \IP_Location_Block_Provider::get_valid_providers( $settings );
+			$providers = LegacyMeta::get_valid_providers( $settings );
 		}
 
 		$result = self::_get_geolocation( $ip ? $ip : self::get_ip_address( $settings ), $settings, $providers, array() );
@@ -592,7 +600,7 @@ class Validator {
 		// @url https://developers.google.com/webmasters/control-crawl-index/docs/robots_meta_tag
 		'public' === $hook and \header( 'X-Robots-Tag: noindex, nofollow', false );
 
-		if ( \defined( 'XMLRPC_REQUEST' ) && 'POST' !== \IP_Location_Block_Util::get_request_method() ) {
+		if ( \defined( 'XMLRPC_REQUEST' ) && 'POST' !== Util::get_request_method() ) {
 			\status_header( 405 );
 			\header( 'Content-Type: text/plain' );
 			die( 'XML-RPC server accepts POST requests only.' );
@@ -604,9 +612,9 @@ class Validator {
 				exit;
 
 			case 3: // 3xx Redirection (HTTP header injection should be avoided)
-				$method = \IP_Location_Block_Util::get_request_method();
+				$method = Util::get_request_method();
 				if ( 'GET' === $method || 'HEAD' === $method ) {
-					\IP_Location_Block_Util::safe_redirect( \esc_url_raw( $settings['redirect_uri'] ? $settings['redirect_uri'] : \home_url( '/' ) ), $code ); // @since  0.2.8
+					Util::safe_redirect( \esc_url_raw( $settings['redirect_uri'] ? $settings['redirect_uri'] : \home_url( '/' ) ), $code ); // @since  0.2.8
 					exit;
 				} else {
 					$code = 403; // avoid redirection loop
@@ -616,11 +624,11 @@ class Validator {
 				\status_header( $code ); // @since  0.2.0.0
 
 				if ( \function_exists( 'trackback_response' ) ) {
-					\trackback_response( $code, \IP_Location_Block_Util::kses( $mesg ) );
+					\trackback_response( $code, Util::kses( $mesg ) );
 				} // @since 0.71
 
 				elseif ( ! \defined( 'DOING_AJAX' ) && ! \defined( 'XMLRPC_REQUEST' ) ) {
-					$hook = ( \IP_Location_Block_Util::is_user_logged_in() && 'admin' === $hook );
+					$hook = ( Util::is_user_logged_in() && 'admin' === $hook );
 					if ( ! $hook && true === $this->show_theme_template( $code, $settings ) ) {
 						return;
 					}
@@ -630,7 +638,7 @@ class Validator {
 					isset( $wp_query->is_404 ) and $wp_query->is_404 = true;
 
 					\wp_die( // get_dashboard_url() @since 3.1.0
-						\IP_Location_Block_Util::kses( $mesg ) . ( $hook ? "\n<p>&laquo; <a href='javascript:history.back()'>" . \__( 'Back' ) . "</a> / <a rel='nofollow' href='" . \esc_url( \get_dashboard_url( \IP_Location_Block_Util::get_current_user_id() ) ) . "'>" . \__( 'Dashboard' ) . "</a></p>" : '' ),
+						Util::kses( $mesg ) . ( $hook ? "\n<p>&laquo; <a href='javascript:history.back()'>" . \__( 'Back' ) . "</a> / <a rel='nofollow' href='" . \esc_url( \get_dashboard_url( Util::get_current_user_id() ) ) . "'>" . \__( 'Dashboard' ) . "</a></p>" : '' ),
 						\get_status_header_desc( $code ), array( 'response' => $code, 'back_link' => ! $hook )
 					);
 				}
@@ -682,7 +690,7 @@ class Validator {
 		\add_filter( 'document_title_parts', array( $this, 'change_title' ) ); // @since 4.4.0
 
 		// avoid loading template for HEAD requests because of performance bump. See #14348.
-		if ( 'HEAD' !== \IP_Location_Block_Util::get_request_method() && isset( $this->theme_template['file'] ) ) {
+		if ( 'HEAD' !== Util::get_request_method() && isset( $this->theme_template['file'] ) ) {
 			include $this->theme_template['file'];
 		}
 		exit;
@@ -713,12 +721,12 @@ class Validator {
 	 */
 	private function endof_validate( $hook, $validate, $settings, $block = true, $die = true, $countup = true ) {
 		// update cache and record logs
-		\IP_Location_Block_API_Cache::update_cache( $hook, $validate, $settings, $countup );
-		\IP_Location_Block_Logs::record_logs( $hook, $validate, $settings, self::is_blocked( $validate['result'] ) );
+		( new IpCacheRepository() )->update( $hook, $validate, $settings, $countup );
+		Logs::record_logs( $hook, $validate, $settings, self::is_blocked( $validate['result'] ) );
 
 		if ( $block ) {
 			if ( $settings['save_statistics'] && ! $validate['auth'] ) {
-				\IP_Location_Block_Logs::update_stat( $hook, $validate, $settings );
+				Logs::update_stat( $hook, $validate, $settings );
 			}
 
 			if ( ! $settings['simulate'] && $die ) {
@@ -756,7 +764,7 @@ class Validator {
 		$settings['login_fails'] >= 0 && $block and \add_filter( $var, array( $this, 'check_fail' ), 8, 2 );
 
 		// make valid provider name list
-		$providers = \IP_Location_Block_Provider::get_valid_providers( $settings );
+		$providers = LegacyMeta::get_valid_providers( $settings );
 
 		// apply custom filter for validation
 		// @example add_filter( 'ip-location-block-$hook', 'my_validation', 10, 2 );
@@ -766,7 +774,7 @@ class Validator {
 		//     'code'     => $code,     /* country code or reason of rejection */
 		//     'result'   => $result,   /* 'passed', 'blocked'                 */
 		// );
-		$ips = \IP_Location_Block_Util::retrieve_ips( array( self::get_ip_address( $settings ) ), $settings['validation']['proxy'] );
+		$ips = Util::retrieve_ips( array( self::get_ip_address( $settings ) ), $settings['validation']['proxy'] );
 
 		$validate = null;
 
@@ -895,7 +903,7 @@ class Validator {
 
 		// verify emergency login key
 		if ( 'login' === $action && ! empty( $_REQUEST[ self::PLUGIN_NAME . '-key' ] ) &&
-		     \IP_Location_Block_Util::verify_link( $_REQUEST[ self::PLUGIN_NAME . '-key' ] ) ) {
+		     Util::verify_link( $_REQUEST[ self::PLUGIN_NAME . '-key' ] ) ) {
 			$this->login_key = \sanitize_key( $_REQUEST[ self::PLUGIN_NAME . '-key' ] );
 
 			// add the verified key to the url in login form
@@ -918,8 +926,8 @@ class Validator {
 	 * @return bool
 	 */
 	private function check_exceptions( $action, $page, $exceptions = array() ) {
-		$in_action = \IP_Location_Block_Util::wildcard_in_array( $action, $exceptions );
-		$in_page   = \IP_Location_Block_Util::wildcard_in_array( $page, $exceptions );
+		$in_action = Util::wildcard_in_array( $action, $exceptions );
+		$in_page   = Util::wildcard_in_array( $page, $exceptions );
 
 		return ( ( $action xor $page ) && ( ! $in_action and ! $in_page ) ) ||
 		       ( ( $action and $page ) && ( ! $in_action or ! $in_page ) ) ? false : true;
@@ -955,7 +963,7 @@ class Validator {
 		} // 1: Block by country (bad-signature validation is still in effect)
 
 		// register validation of malicious signature (except in the comment and post)
-		if ( ! \IP_Location_Block_Util::is_user_logged_in() && ! \in_array( $this->pagenow, array(
+		if ( ! Util::is_user_logged_in() && ! \in_array( $this->pagenow, array(
 				'comment.php',
 				'post.php'
 			), true ) ) {
@@ -990,7 +998,7 @@ class Validator {
 		}
 
 		// register validation of malicious signature
-		if ( ! \IP_Location_Block_Util::is_user_logged_in() ) {
+		if ( ! Util::is_user_logged_in() ) {
 			\add_filter( 'ip-location-block-admin', array( $this, 'check_signature' ), 5, 2 );
 		}
 
@@ -998,6 +1006,8 @@ class Validator {
 		$validate = $this->validate_ip( 'admin', $settings, 1 & $rule );
 
 		// if the validation is successful, execute the requested uri via rewrite.php
+		// Contract-bound legacy identity — do not namespace: IP_Location_Block_Rewrite
+		// is an external add-on that only ever exists under this legacy name.
 		if ( \class_exists( 'IP_Location_Block_Rewrite', false ) ) {
 			\IP_Location_Block_Rewrite::exec( $this, $validate, $settings );
 		}
@@ -1014,7 +1024,7 @@ class Validator {
 		// Count up a number of fails when authentication is failed
 		$time     = \microtime( true );
 		$settings = self::get_option();
-		if ( $cache = \IP_Location_Block_API_Cache::get_cache( self::$remote_addr, $settings['cache_hold'] ) ) {
+		if ( $cache = ( new IpCacheRepository() )->find( self::$remote_addr, $settings['cache_hold'] ) ) {
 			$cache['fail'] ++;
 			$validate = self::make_validation( self::$remote_addr, array(
 				                                                       'result'   => 'failed',
@@ -1051,7 +1061,7 @@ class Validator {
 	 * @return mixed|string[]
 	 */
 	public function check_fail( $validate, $settings ) {
-		$cache = \IP_Location_Block_API_Cache::get_cache( $validate['ip'], $settings['cache_hold'] );
+		$cache = ( new IpCacheRepository() )->find( $validate['ip'], $settings['cache_hold'] );
 
 		return $cache && $cache['fail'] > \max( 0, (int) $settings['login_fails'] ) ? $validate + array( 'result' => 'limited' ) : $validate;
 	}
@@ -1080,7 +1090,7 @@ class Validator {
 		$score = 0.0;
 		$query = \strtolower( \urldecode( \serialize( \array_values( $_GET + $_POST ) ) ) );
 
-		foreach ( \IP_Location_Block_Util::multiexplode( array( ",", "\n" ), $settings['signature'] ) as $sig ) {
+		foreach ( Util::multiexplode( array( ",", "\n" ), $settings['signature'] ) as $sig ) {
 			$val = \explode( ':', $sig, 2 );
 			$sig = \trim( $val[0] );
 
@@ -1111,7 +1121,7 @@ class Validator {
 			// check capability
 			$files = empty( $settings['mimetype']['capability'] ); // skip if empty
 			foreach ( $settings['mimetype']['capability'] as $file ) {
-				if ( empty( $file ) || \IP_Location_Block_Util::current_user_can( $file ) ) {
+				if ( empty( $file ) || Util::current_user_can( $file ) ) {
 					$files = true;
 					break;
 				}
@@ -1126,10 +1136,10 @@ class Validator {
 			}
 
 			foreach ( $_FILES as $files ) {
-				foreach ( \IP_Location_Block_Util::arrange_files( $files ) as $file ) {
+				foreach ( Util::arrange_files( $files ) as $file ) {
 					// check $_FILES corruption attack or mime type and extension
 					if ( ! empty( $file['name'] ) && UPLOAD_ERR_OK !== $file['error'] ||
-					     ! \IP_Location_Block_Util::check_filetype_and_ext( $file, $settings['validation']['mimetype'], $settings['mimetype'] ) ) {
+					     ! Util::check_filetype_and_ext( $file, $settings['validation']['mimetype'], $settings['mimetype'] ) ) {
 						return \apply_filters( 'ip-location-block-upload-forbidden', $validate + array(
 								'upload' => true,
 								'result' => 'upload'
@@ -1152,7 +1162,7 @@ class Validator {
 	 */
 	public static function check_ips( $validate, $ips ) {
 		if ( \filter_var( $ip = $validate['ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
-			foreach ( \IP_Location_Block_Util::multiexplode( array( ",", "\n" ), $ips ) as $i ) {
+			foreach ( Util::multiexplode( array( ",", "\n" ), $ips ) as $i ) {
 				$j    = \explode( '/', $i, 2 );
 				$j[1] = isset( $j[1] ) ? \min( 32, \max( 0, (int) $j[1] ) ) : 32;
 				if ( ( ! empty( $validate['asn'] ) && $validate['asn'] === $j[0] ) ||
@@ -1161,7 +1171,7 @@ class Validator {
 				}
 			}
 		} elseif ( \filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
-			foreach ( \IP_Location_Block_Util::multiexplode( array( ",", "\n" ), $ips ) as $i ) {
+			foreach ( Util::multiexplode( array( ",", "\n" ), $ips ) as $i ) {
 				$j    = \explode( '/', $i, 2 );
 				$j[1] = isset( $j[1] ) ? \min( 128, \max( 0, (int) $j[1] ) ) : 128;
 				if ( ( ! empty( $validate['asn'] ) && $validate['asn'] === $j[0] ) ||
@@ -1234,7 +1244,7 @@ class Validator {
 				$metadata[ $action ][ $option ] = array( 0, 0 );
 			}
 
-			$which = \IP_Location_Block_Util::current_user_has_caps( array(
+			$which = Util::current_user_has_caps( array(
 				'manage_options',
 				'manage_network_options'
 			) ) ? 1 : 0;
@@ -1254,10 +1264,10 @@ class Validator {
 	 */
 	public function check_capability( $value, $old_value, $option = null ) {
 		// allow only admin and super admin
-		if ( ! \IP_Location_Block_Util::current_user_has_caps( array( 'manage_options', 'manage_network_options' ) ) ) {
+		if ( ! Util::current_user_has_caps( array( 'manage_options', 'manage_network_options' ) ) ) {
 			$time     = \microtime( true );
 			$ip       = self::get_ip_address( $settings = self::get_option() );
-			$cache    = \IP_Location_Block_API_Cache::get_cache( $ip, $settings['cache_hold'] );
+			$cache    = ( new IpCacheRepository() )->find( $ip, $settings['cache_hold'] );
 			$validate = self::make_validation( $ip, array(
 				                                        'result'   => 'badcap',
 				                                        'provider' => 'Cache',
@@ -1276,7 +1286,7 @@ class Validator {
 	 */
 	public function validate_public() {
 
-		if ( \IP_Location_Block_Util::is_user_logged_in() ) {
+		if ( Util::is_user_logged_in() ) {
 			return; // skip validation for logged in users
 		}
 		$settings = self::get_option();
@@ -1299,7 +1309,7 @@ class Validator {
 		}
 
 		// avoid redirection loop
-		if ( $settings['response_code'] < 400 && \IP_Location_Block_Util::compare_url( $_SERVER['REQUEST_URI'], $settings['redirect_uri'] ? $settings['redirect_uri'] : \home_url( '/' ) ) ) {
+		if ( $settings['response_code'] < 400 && Util::compare_url( $_SERVER['REQUEST_URI'], $settings['redirect_uri'] ? $settings['redirect_uri'] : \home_url( '/' ) ) ) {
 			return;
 		} // do not block
 
@@ -1321,6 +1331,8 @@ class Validator {
 		$public['behavior'] and \add_filter( 'ip-location-block-public', array( $this, 'check_behavior' ), 9, 2 );
 
 		// retrieve IP address of visitor via proxy services
+		// Contract-bound legacy identity — do not namespace: third parties remove
+		// this filter by the literal callable ID array('IP_Location_Block_Util','get_proxy_ip').
 		\add_filter( 'ip-location-block-ip-addr', array( 'IP_Location_Block_Util', 'get_proxy_ip' ), 20, 1 );
 
 		// validate country by IP address (block: true, die: false)
@@ -1344,7 +1356,7 @@ class Validator {
 	 */
 	public function check_behavior( $validate, $settings ) {
 		// check if page view with a short period time is under the threshold
-		$cache = \IP_Location_Block_API_Cache::get_cache( self::$remote_addr, $settings['cache_hold'] );
+		$cache = ( new IpCacheRepository() )->find( self::$remote_addr, $settings['cache_hold'] );
 
 		if ( $cache && $cache['view'] >= $settings['behavior']['view'] && $_SERVER['REQUEST_TIME'] - $cache['last'] <= $settings['behavior']['time'] ) {
 			return $validate + array( 'result' => 'badbot' );
@@ -1404,22 +1416,22 @@ class Validator {
 	public function check_ua( $validate, $settings ) {
 		// mask HOST if DNS lookup is false
 		if ( empty( $settings['public']['dnslkup'] ) ) {
-			$settings['public']['ua_list'] = \IP_Location_Block_Util::mask_qualification( $settings['public']['ua_list'] );
+			$settings['public']['ua_list'] = Util::mask_qualification( $settings['public']['ua_list'] );
 		}
 
 		// get the name of host (from the cache if exists)
 		if ( ! isset( $validate['host'] ) && false !== \strpos( $settings['public']['ua_list'], 'HOST' ) ) {
 			require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-lkup.php';
-			$validate['host'] = \IP_Location_Block_Lkup::gethostbyaddr( $validate['ip'] );
+			$validate['host'] = Dns::gethostbyaddr( $validate['ip'] );
 		}
 
 		// check requested url
-		$is_feed = \IP_Location_Block_Util::is_feed( $this->request_uri );
+		$is_feed = Util::is_feed( $this->request_uri );
 		$u_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? $_SERVER['HTTP_USER_AGENT'] : '';
 		$referer = isset( $_SERVER['HTTP_REFERER'] ) ? $_SERVER['HTTP_REFERER'] : '';
 
-		foreach ( \IP_Location_Block_Util::multiexplode( array( ",", "\n" ), $settings['public']['ua_list'] ) as $pat ) {
-			list( $name, $code ) = \array_pad( \IP_Location_Block_Util::multiexplode( array( ':', '#' ), $pat ), 2, '' );
+		foreach ( Util::multiexplode( array( ",", "\n" ), $settings['public']['ua_list'] ) as $pat ) {
+			list( $name, $code ) = \array_pad( Util::multiexplode( array( ':', '#' ), $pat ), 2, '' );
 
 			if ( $name && ( '*' === $name || false !== \strpos( $u_agent, $name ) ) ) {
 				$which = ( false !== \strpos( $pat, '#' ) );     // 0: pass (':'), 1: block ('#')
@@ -1471,7 +1483,7 @@ class Validator {
 	public function exec_update_db( $immediate = false ) {
 		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-cron.php';
 
-		return \IP_Location_Block_Cron::exec_update_db( $immediate );
+		return Scheduler::exec_update_db( $immediate );
 	}
 
 	/**
@@ -1479,7 +1491,7 @@ class Validator {
 	 */
 	public function exec_cache_gc() {
 		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-cron.php';
-		\IP_Location_Block_Cron::exec_cache_gc( self::get_option() );
+		Scheduler::exec_cache_gc( self::get_option() );
 	}
 
 }

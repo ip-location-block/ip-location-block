@@ -14,6 +14,7 @@ namespace IPLocationBlock\Logging;
 
 use IPLocationBlock\Support\FileSystem;
 use IPLocationBlock\Support\Util;
+use IPLocationBlock\Core\Validator;
 
 // varchar can not be exceeded over 255 before MySQL-5.0.3.
 define( 'IP_LOCATION_BLOCK_MAX_STR_LEN', 255 );
@@ -108,7 +109,7 @@ class Logs {
 		) and $wpdb->query( $sql );
 
 		// for IP address cache
-		$table = $wpdb->prefix . \IP_Location_Block::CACHE_NAME;
+		$table = $wpdb->prefix . Validator::CACHE_NAME;
 		$sql   = "CREATE TABLE IF NOT EXISTS `$table` (
 			`No` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			`time` int(10) unsigned NOT NULL DEFAULT '0',
@@ -214,7 +215,7 @@ class Logs {
 	 */
 	public static function delete_tables( $which = 'all' ) {
 		global $wpdb;
-		$tables = array( self::TABLE_LOGS, self::TABLE_STAT, \IP_Location_Block::CACHE_NAME );
+		$tables = array( self::TABLE_LOGS, self::TABLE_STAT, Validator::CACHE_NAME );
 
 		foreach ( $tables as $table ) {
 			if ( 'all' === $which || $table === $which ) {
@@ -229,7 +230,7 @@ class Logs {
 	 */
 	public static function diag_tables() {
 		global $wpdb;
-		$tables = array( self::TABLE_LOGS, self::TABLE_STAT, \IP_Location_Block::CACHE_NAME );
+		$tables = array( self::TABLE_LOGS, self::TABLE_STAT, Validator::CACHE_NAME );
 
 		foreach ( $tables as $table ) {
 			$table = $wpdb->prefix . $table;
@@ -488,7 +489,7 @@ class Logs {
 	 */
 	private static function get_post_data( $hook, $validate, $settings ) {
 		// condition of masking password
-		$mask_pwd = ( \IP_Location_Block::is_passed( $validate['result'] ) || \IP_Location_Block::is_failed( $validate['result'] ) );
+		$mask_pwd = ( Validator::is_passed( $validate['result'] ) || Validator::is_failed( $validate['result'] ) );
 
 		// XML-RPC
 		if ( 'xmlrpc' === $hook ) {
@@ -563,7 +564,7 @@ class Logs {
 	private static function backup_logs( $hook, $validate, $method, $agent, $heads, $posts, $path ) {
 		if ( validate_file( $path ) === 0 ) {
 			file_put_contents(
-				Util::slashit( $path ) . \IP_Location_Block::PLUGIN_NAME . date( '-Y-m' ) . '.log',
+				Util::slashit( $path ) . Validator::PLUGIN_NAME . date( '-Y-m' ) . '.log',
 				sprintf( "%d,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%s,%s\n",
 					$_SERVER['REQUEST_TIME'],
 					$validate['ip'],
@@ -601,7 +602,7 @@ class Logs {
 	private static function open_sqlite_db( $id, $dsn = false ) {
 		// For the sake of emergency, register the shutdown function
 		self::$pdo = self::$stm = null;
-		register_shutdown_function( 'IP_Location_Block_Logs::close_sqlite_db' );
+		register_shutdown_function( array( self::class, 'close_sqlite_db' ) );
 
 		// The temporary dir name
 		$tmp_d = Util::get_temp_dir();
@@ -610,7 +611,7 @@ class Logs {
 		}
 
 		// Set data source name
-		$db_path = $dsn ? ':memory:' : ( $tmp_d . \IP_Location_Block::PLUGIN_NAME . "-" . $id . ".sqlite" );
+		$db_path = $dsn ? ':memory:' : ( $tmp_d . Validator::PLUGIN_NAME . "-" . $id . ".sqlite" );
 		$id      = apply_filters( 'ip-location-block-live-log', $db_path );
 
 		try {
@@ -675,7 +676,7 @@ class Logs {
 
 		if ( false !== ( $files = $fs->dirlist( $dir ) ) ) {
 			foreach ( array_keys( $files ) as $file ) {
-				if ( false !== strpos( $file, \IP_Location_Block::PLUGIN_NAME ) ) {
+				if ( false !== strpos( $file, Validator::PLUGIN_NAME ) ) {
 					$fs->delete( $dir . $file );
 				}
 			}
@@ -702,7 +703,7 @@ class Logs {
 	public static function record_logs( $hook, $validate, $settings, $block = true ) {
 		$record = $settings['validation'][ $hook ] ? apply_filters( 'ip-location-block-record-logs', (int) $settings['validation']['reclogs'], $hook, $validate ) : 0;
 		$record = ( 1 === $record && $block ) || // blocked
-		          ( 6 === $record && ( $block || \IP_Location_Block::is_blocked( \IP_Location_Block::validate_lookup_result( null, $validate, $settings ) ) ) ) || // blocked or qualified
+		          ( 6 === $record && ( $block || Validator::is_blocked( Validator::validate_lookup_result( null, $validate, $settings ) ) ) ) || // blocked or qualified
 		          ( 2 === $record && ! $block ) || // passed
 		          ( 3 === $record && ! $validate['auth'] ) || // unauthenticated
 		          ( 4 === $record && $validate['auth'] ) || // authenticated
@@ -800,7 +801,7 @@ class Logs {
 			}
 		}
 
-		if ( \IP_Location_Block::get_live_log() ) {
+		if ( Validator::get_live_log() ) {
 			// skip self command
 			global $pagenow;
 
@@ -1137,7 +1138,7 @@ class Logs {
 		$stat['providers'][ $provider ]['time'] += (float) ( isset( $validate['time'] ) ? $validate['time'] : 0 );
 
 		// Blocked by type of IP address
-		if ( \IP_Location_Block::is_blocked( $validate['result'] ) ) {
+		if ( Validator::is_blocked( $validate['result'] ) ) {
 			if ( filter_var( $validate['ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
 				++ $stat['IPv4'];
 			} elseif ( filter_var( $validate['ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
@@ -1175,7 +1176,7 @@ class Logs {
 	 */
 	public static function clear_cache() {
 		global $wpdb;
-		$table = $wpdb->prefix . \IP_Location_Block::CACHE_NAME;
+		$table = $wpdb->prefix . Validator::CACHE_NAME;
 
 		if ( ! $wpdb->get_var( "SHOW TABLES LIKE '$table'" ) ) {
 			return;
@@ -1190,7 +1191,7 @@ class Logs {
 	 */
 	public static function restore_cache() {
 		global $wpdb;
-		$table = $wpdb->prefix . \IP_Location_Block::CACHE_NAME;
+		$table = $wpdb->prefix . Validator::CACHE_NAME;
 
 		if ( ! $wpdb->get_var( "SHOW TABLES LIKE '$table'" ) ) {
 			return null;
@@ -1261,7 +1262,7 @@ class Logs {
 	 */
 	public static function search_cache( $ip ) {
 		global $wpdb;
-		$table = $wpdb->prefix . \IP_Location_Block::CACHE_NAME;
+		$table = $wpdb->prefix . Validator::CACHE_NAME;
 
 		$mode = self::cipher_mode_key();
 
@@ -1311,7 +1312,7 @@ class Logs {
 	 */
 	public static function update_cache( $cache ) {
 		global $wpdb;
-		$table = $wpdb->prefix . \IP_Location_Block::CACHE_NAME;
+		$table = $wpdb->prefix . Validator::CACHE_NAME;
 
 		if ( 2 === self::cipher_mode_key() ) {
 			$sql = $wpdb->prepare(
@@ -1388,7 +1389,7 @@ class Logs {
 	 */
 	public static function delete_cache_entry( $entry = array() ) {
 		global $wpdb;
-		$table = $wpdb->prefix . \IP_Location_Block::CACHE_NAME;
+		$table = $wpdb->prefix . Validator::CACHE_NAME;
 
 		if ( ! $wpdb->get_var( "SHOW TABLES LIKE '$table'" ) ) {
 			return;
@@ -1396,7 +1397,7 @@ class Logs {
 
 		$mode = self::cipher_mode_key();
 
-		foreach ( empty( $entry ) ? array( \IP_Location_Block::get_ip_address() ) : $entry as $ip ) {
+		foreach ( empty( $entry ) ? array( Validator::get_ip_address() ) : $entry as $ip ) {
 			// if specified ip address is anonymized, then extract the encripted value
 			$ip = explode( ',', $ip );
 			if ( empty( $ip[1] ) ) {
@@ -1421,7 +1422,7 @@ class Logs {
 	public static function delete_expired( $expired ) {
 		global $wpdb;
 
-		foreach ( array( self::TABLE_LOGS, \IP_Location_Block::CACHE_NAME ) as $key => $table ) {
+		foreach ( array( self::TABLE_LOGS, Validator::CACHE_NAME ) as $key => $table ) {
 			$table = $wpdb->prefix . $table;
 			$sql = $wpdb->prepare( "DELETE FROM `$table` WHERE `time` < %d", $_SERVER['REQUEST_TIME'] - $expired[ $key ] )
 			and false !== $wpdb->query( $sql ) or self::error( __LINE__ );
@@ -1442,6 +1443,8 @@ class Logs {
 
 		if ( $msg ) {
 			error_log( $msg = __FILE__ . ' (' . $line . ') ' . $msg );
+			// Contract-bound legacy identity — do not namespace: the frozen classic
+			// admin (IP_Location_Block_Admin) exists only under its legacy name.
 			if ( class_exists( 'IP_Location_Block_Admin', false ) ) {
 				\IP_Location_Block_Admin::add_admin_notice( 'error', $msg );
 			}

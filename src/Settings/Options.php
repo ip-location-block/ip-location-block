@@ -15,6 +15,7 @@ namespace IPLocationBlock\Settings;
 use IPLocationBlock\Support\FileSystem;
 use IPLocationBlock\Support\Util;
 use IPLocationBlock\Logging\Logs;
+use IPLocationBlock\Core\Validator;
 
 /**
  * Class Options
@@ -265,7 +266,7 @@ class Options {
 	 */
 	public static function upgrade() {
 
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		$version  = isset( $settings['version'] ) ? $settings['version'] : '';
 
 		// Upgrade settings to 1.0.4 (Drop use_asn from provider array in favor of use_asn global setting)
@@ -287,7 +288,7 @@ class Options {
 		// Upgrade cache table
 		if ( version_compare( $version, '1.2.0' ) < 0 ) {
 			global $wpdb;
-			$table = $wpdb->prefix . \IP_Location_Block::CACHE_NAME;
+			$table = $wpdb->prefix . Validator::CACHE_NAME;
 			$wpdb->query( "ALTER TABLE $table ADD `state` VARCHAR(100) DEFAULT NULL AFTER `code`" );
 			$wpdb->query( "ALTER TABLE $table ADD `city` VARCHAR(100) DEFAULT NULL AFTER `code`" );
 			$table = $wpdb->prefix . Logs::TABLE_LOGS;
@@ -371,7 +372,7 @@ class Options {
 		$settings['version']    = IP_LOCATION_BLOCK_VERSION;
 		$settings['request_ua'] = trim( str_replace( array( 'InfiniteWP' ), '', isset( $_SERVER['HTTP_USER_AGENT'] ) ? $_SERVER['HTTP_USER_AGENT'] : '' ) );
 
-		\IP_Location_Block::update_option( $settings );
+		Validator::update_option( $settings );
 
 	}
 
@@ -385,7 +386,7 @@ class Options {
 			return null;
 		}
 
-		$default = \IP_Location_Block::get_default();
+		$default = Validator::get_default();
 		$version = $settings['version'];
 
 		// refresh if it's too old
@@ -578,7 +579,7 @@ class Options {
 			$settings['monitor']                = $default['monitor'];
 			$settings['metadata']               = $default['metadata'];
 			if ( $mutate ) {
-				\IP_Location_Block::update_metadata( null );
+				Validator::update_metadata( null );
 				self::setup_validation_timing( $settings );
 			}
 		}

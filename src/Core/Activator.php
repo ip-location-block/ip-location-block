@@ -12,6 +12,10 @@
 
 namespace IPLocationBlock\Core;
 
+use IPLocationBlock\Cron\Scheduler;
+use IPLocationBlock\Logging\Logs;
+use IPLocationBlock\Settings\Options;
+
 /**
  * Plugin (de)activation — 1:1 port of IP_Location_Block_Activate.
  *
@@ -22,26 +26,26 @@ class Activator {
 
 	// Activate and deactivate main blog
 	private static function activate_main_blog( $settings ) {
-		\IP_Location_Block_Cron::start_update_db( $settings );
-		\IP_Location_Block_Opts::setup_validation_timing( $settings );
+		Scheduler::start_update_db( $settings );
+		Options::setup_validation_timing( $settings );
 	}
 
 	private static function deactivate_main_blog() {
-		\IP_Location_Block_Cron::stop_update_db();
-		\IP_Location_Block_Opts::setup_validation_timing();
+		Scheduler::stop_update_db();
+		Options::setup_validation_timing();
 	}
 
 	// Activate and deactivate each blog
 	public static function activate_blog() {
-		\IP_Location_Block_Opts::upgrade();
-		\IP_Location_Block_Logs::create_tables();
-		\IP_Location_Block_Logs::delete_cache_entry();
-		\IP_Location_Block_Cron::start_cache_gc();
+		Options::upgrade();
+		Logs::create_tables();
+		Logs::delete_cache_entry();
+		Scheduler::start_cache_gc();
 	}
 
 	private static function deactivate_blog() {
-		\IP_Location_Block_Cron::stop_cache_gc();
-		\IP_Location_Block_Logs::delete_cache_entry();
+		Scheduler::stop_cache_gc();
+		Logs::delete_cache_entry();
 	}
 
 	/**
@@ -56,7 +60,7 @@ class Activator {
 		self::activate_blog();
 
 		// Get option of main blog.
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 
 		if ( \is_multisite() && $network_wide ) {
 			global $wpdb;

@@ -8,6 +8,10 @@
 
 namespace IPLocationBlock\Diagnostics;
 
+use IPLocationBlock\Core\Validator;
+use IPLocationBlock\Providers\LegacyMeta;
+use IPLocationBlock\Support\Util;
+
 class Diagnostics {
 
 	const ACK_OPTION = 'ip_location_block_diagnostic_acknowledgements';
@@ -20,10 +24,10 @@ class Diagnostics {
 	 * @return array
 	 */
 	public static function run( $settings = null ) {
-		$settings = is_array( $settings ) ? $settings : \IP_Location_Block::get_option();
+		$settings = is_array( $settings ) ? $settings : Validator::get_option();
 		$checks   = array();
 		$provider = \IPLocationBlock\Rest\RestApi::get_provider_status_data( $settings );
-		$updating = get_transient( \IP_Location_Block::CRON_NAME );
+		$updating = get_transient( Validator::CRON_NAME );
 
 		self::add_check(
 			$checks,
@@ -80,9 +84,9 @@ class Diagnostics {
 
 		// Keep the classic cache-host notice dismissal in sync.
 		if ( 'full-page-cache-conflict' === $id ) {
-			$settings                           = \IP_Location_Block::get_option();
+			$settings                           = Validator::get_option();
 			$settings['cache_compat_dismissed'] = (bool) $acknowledged;
-			\IP_Location_Block::update_option( $settings );
+			Validator::update_option( $settings );
 		}
 
 		return true;
@@ -169,11 +173,11 @@ class Diagnostics {
 	 * @return array
 	 */
 	public static function attributions() {
-		$settings = \IP_Location_Block::get_option();
-		$active   = \IP_Location_Block_Provider::get_valid_providers( $settings, false, false, false );
+		$settings = Validator::get_option();
+		$active   = LegacyMeta::get_valid_providers( $settings, false, false, false );
 		$result   = array();
 
-		foreach ( \IP_Location_Block_Provider::all() as $name => $meta ) {
+		foreach ( LegacyMeta::all() as $name => $meta ) {
 			if ( 'Cache' === $name ) {
 				continue;
 			}
@@ -339,7 +343,7 @@ class Diagnostics {
 		$unsupported = array();
 		if ( $feature ) {
 			foreach ( $provider['active'] as $name ) {
-				if ( ! \IP_Location_Block_Provider::supports( $name, 'asn' === $feature ? array( 'asn', 'asn_database' ) : $feature ) ) {
+				if ( ! LegacyMeta::supports( $name, 'asn' === $feature ? array( 'asn', 'asn_database' ) : $feature ) ) {
 					$unsupported[] = $name;
 				}
 			}
@@ -365,7 +369,7 @@ class Diagnostics {
 			'black_list' => __( 'Blacklist of extra IPs', 'ip-location-block' ),
 		);
 		foreach ( $list_labels as $key => $label ) {
-			$values = empty( $extra[ $key ] ) ? array() : \IP_Location_Block_Util::multiexplode( array( ',', "\n" ), $extra[ $key ] );
+			$values = empty( $extra[ $key ] ) ? array() : Util::multiexplode( array( ',', "\n" ), $extra[ $key ] );
 			foreach ( $values as $raw ) {
 				$value = trim( $raw );
 				if ( '' === $value ) {
@@ -404,7 +408,7 @@ class Diagnostics {
 		$asn_unsupported = array();
 		if ( ! empty( $asn_lists ) ) {
 			foreach ( $provider['active'] as $name ) {
-				if ( ! \IP_Location_Block_Provider::supports( $name, array( 'asn', 'asn_database' ) ) ) {
+				if ( ! LegacyMeta::supports( $name, array( 'asn', 'asn_database' ) ) ) {
 					$asn_unsupported[] = $name;
 				}
 			}
@@ -430,7 +434,7 @@ class Diagnostics {
 		$details = array();
 
 		if ( false === $updating && ! empty( $settings['validation']['login'] ) ) {
-			$validate = \IP_Location_Block::get_instance()->validate_ip( 'login', $settings, true, false );
+			$validate = Validator::get_instance()->validate_ip( 'login', $settings, true, false );
 			$result   = is_array( $validate ) && isset( $validate['result'] ) ? $validate['result'] : '';
 			if ( 'limited' === $result ) {
 				$status  = 'critical';
@@ -471,7 +475,7 @@ class Diagnostics {
 	private static function add_compatibility_checks( &$checks, $settings ) {
 		$login_link = isset( $settings['login_link'] ) && is_array( $settings['login_link'] ) ? $settings['login_link'] : array();
 		$configured = ! empty( $login_link['link'] );
-		$outdated = $configured && ! \IP_Location_Block_Util::verify_link(
+		$outdated = $configured && ! Util::verify_link(
 			$login_link['link'],
 			isset( $login_link['hash'] ) ? $login_link['hash'] : ''
 		);
@@ -490,7 +494,7 @@ class Diagnostics {
 			$outdated ? array( self::settings_action( __( 'Manage emergency login link', 'ip-location-block' ), 'others', 7 ) ) : array()
 		);
 
-		$database_schedule = wp_next_scheduled( \IP_Location_Block::CRON_NAME, array( false ) );
+		$database_schedule = wp_next_scheduled( Validator::CRON_NAME, array( false ) );
 		$database_missing  = ! empty( $settings['update']['auto'] ) && ! $database_schedule;
 		self::add_check(
 			$checks,
@@ -505,7 +509,7 @@ class Diagnostics {
 			array( self::settings_action( __( 'Review local databases', 'ip-location-block' ), 'database', 5 ) )
 		);
 
-		$cleanup_missing = ! wp_next_scheduled( \IP_Location_Block::CACHE_NAME );
+		$cleanup_missing = ! wp_next_scheduled( Validator::CACHE_NAME );
 		self::add_check(
 			$checks,
 			'cache-cleanup-schedule',
@@ -562,7 +566,7 @@ class Diagnostics {
 	private static function emergency_access_status( $settings ) {
 		$link       = isset( $settings['login_link'] ) && is_array( $settings['login_link'] ) ? $settings['login_link'] : array();
 		$configured = ! empty( $link['link'] );
-		$valid      = $configured && ! empty( $link['hash'] ) && \IP_Location_Block_Util::verify_link( $link['link'], $link['hash'] );
+		$valid      = $configured && ! empty( $link['hash'] ) && Util::verify_link( $link['link'], $link['hash'] );
 		$state      = ! $configured ? 'not_configured' : ( $valid ? 'ready' : 'outdated' );
 
 		return array(
@@ -622,7 +626,7 @@ class Diagnostics {
 	private static function acknowledgements() {
 		$stored = get_option( self::ACK_OPTION, array() );
 		$stored = is_array( $stored ) ? $stored : array();
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		if ( ! empty( $settings['cache_compat_dismissed'] ) ) {
 			$stored['full-page-cache-conflict'] = true;
 		}
@@ -657,7 +661,7 @@ class Diagnostics {
 			'label'  => $label,
 			'target' => array(
 				'tab' => 'statistics',
-				's'   => \IP_Location_Block::get_ip_address(),
+				's'   => Validator::get_ip_address(),
 			),
 			'url'    => self::classic_url( 1, 2 ),
 		);
@@ -680,18 +684,18 @@ class Diagnostics {
 	}
 
 	private static function classic_url( $tab, $section ) {
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		$network  = is_multisite() && ! empty( $settings['network_wide'] );
 		$base     = $network ? network_admin_url( 'admin.php' ) : admin_url( 'options-general.php' );
 		$url      = add_query_arg(
 			array(
-				'page' => \IP_Location_Block::PLUGIN_NAME,
+				'page' => Validator::PLUGIN_NAME,
 				'tab'  => (int) $tab,
 				'sec'  => (int) $section,
 			),
 			$base
 		);
 
-		return esc_url_raw( $url . '#' . \IP_Location_Block::PLUGIN_NAME . '-section-' . (int) $section );
+		return esc_url_raw( $url . '#' . Validator::PLUGIN_NAME . '-section-' . (int) $section );
 	}
 }

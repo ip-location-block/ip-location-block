@@ -12,7 +12,11 @@
 
 namespace IPLocationBlock\Cron;
 
+use IPLocationBlock\Core\Validator;
 use IPLocationBlock\Logging\Logs;
+use IPLocationBlock\Providers\DownloadableProviderInterface;
+use IPLocationBlock\Providers\ProviderRegistry;
+use IPLocationBlock\Settings\Options;
 
 /**
  * Class Scheduler
@@ -30,7 +34,7 @@ class Scheduler {
 	 * @param bool $immediate
 	 */
 	private static function schedule_cron_job( &$update, $db, $immediate = false ) {
-		wp_clear_scheduled_hook( \IP_Location_Block::CRON_NAME, array( $immediate ) );
+		wp_clear_scheduled_hook( Validator::CRON_NAME, array( $immediate ) );
 
 		if ( $update['auto'] || $immediate ) {
 			$now  = time();
@@ -58,7 +62,7 @@ class Scheduler {
 				}
 			}
 
-			wp_schedule_single_event( $next, \IP_Location_Block::CRON_NAME, array( $immediate ) );
+			wp_schedule_single_event( $next, Validator::CRON_NAME, array( $immediate ) );
 		}
 	}
 
@@ -78,42 +82,42 @@ class Scheduler {
 	 */
 	public static function exec_update_db( $immediate = false ) {
 
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 
 		// extract ip address from transient API to confirm the request source
 		if ( $immediate ) {
-			set_transient( \IP_Location_Block::CRON_NAME, \IP_Location_Block::get_ip_address( $settings ), MINUTE_IN_SECONDS );
+			set_transient( Validator::CRON_NAME, Validator::get_ip_address( $settings ), MINUTE_IN_SECONDS );
 			add_filter( 'ip-location-block-ip-addr', array( __CLASS__, 'extract_ip' ) );
 		}
 
-		$context = \IP_Location_Block::get_instance();
-		$args    = \IP_Location_Block::get_request_headers( $settings );
+		$context = Validator::get_instance();
+		$args    = Validator::get_request_headers( $settings );
 
-		// download database files (higher priority order)
-		$providers = \IP_Location_Block_Provider::get_addons( $settings['providers'] );
+		// download database files (higher priority order). ProviderRegistry +
+		// DownloadableProviderInterface replace the legacy
+		// IP_Location_Block_Provider::get_addons() + IP_Location_Block_API::get_instance()
+		// ->download() pair (the compat local-provider adapter wrapped exactly this).
+		$registry  = ProviderRegistry::instance();
+		$providers = $registry->localProviderIds( is_array( $settings['providers'] ) ? $settings['providers'] : array() );
 		foreach ( $providers as $provider ) {
 
-			if ( $geo = \IP_Location_Block_API::get_instance( $provider, $settings ) ) {
+			$geo = $registry->get( $provider );
+			if ( $geo instanceof DownloadableProviderInterface ) {
 
-				if ( ! method_exists( $geo, 'download' ) ) {
-					continue;
-				}
-
-				$res[ $provider ] = $geo->download( $args );
+				$report           = $geo->download( $args, $settings );
+				$res[ $provider ] = $report->files();
 
 				// Persist the fresh *_path / *_last values computed during the
 				// download. The legacy providers updated a local copy of
 				// $options[$provider] that was never saved, so cron rescheduling
-				// and the option both kept stale timestamps. The compat adapter
-				// exposes them via settings_fragment().
-				if ( method_exists( $geo, 'settings_fragment' ) ) {
-					$fragment = $geo->settings_fragment();
-					if ( is_array( $fragment ) && ! empty( $fragment ) ) {
-						$settings[ $provider ] = array_merge(
-							isset( $settings[ $provider ] ) && is_array( $settings[ $provider ] ) ? $settings[ $provider ] : array(),
-							$fragment
-						);
-					}
+				// and the option both kept stale timestamps. DownloadReport
+				// exposes them via settingsFragment().
+				$fragment = $report->settingsFragment();
+				if ( is_array( $fragment ) && ! empty( $fragment ) ) {
+					$settings[ $provider ] = array_merge(
+						isset( $settings[ $provider ] ) && is_array( $settings[ $provider ] ) ? $settings[ $provider ] : array(),
+						$fragment
+					);
 				}
 
 				// re-schedule cron job
@@ -128,7 +132,7 @@ class Scheduler {
 				}
 
 				// update matching rule immediately
-				if ( $immediate && 'done' !== get_transient( \IP_Location_Block::CRON_NAME ) ) {
+				if ( $immediate && 'done' !== get_transient( Validator::CRON_NAME ) ) {
 					$validate = $context->validate_ip( 'admin', $settings );
 
 					if ( 'ZZ' === $validate['code'] ) {
@@ -154,7 +158,7 @@ class Scheduler {
 					self::update_settings( $settings, array( 'matching_rule', 'white_list' ) );
 
 					// finished to update matching rule
-					set_transient( \IP_Location_Block::CRON_NAME, 'done', 5 * MINUTE_IN_SECONDS );
+					set_transient( Validator::CRON_NAME, 'done', 5 * MINUTE_IN_SECONDS );
 
 					// trigger update action
 					do_action( 'ip-location-block-db-updated', $settings, $validate['code'] );
@@ -179,18 +183,18 @@ class Scheduler {
 
 			foreach ( $blog_ids as $id ) {
 				switch_to_blog( $id );
-				$dst = \IP_Location_Block::get_option( false );
+				$dst = Validator::get_option( false );
 
 				foreach ( $keys as $key ) {
 					$dst[ $key ] = $src[ $key ];
 				}
 
-				\IP_Location_Block::update_option( $dst, false );
+				Validator::update_option( $dst, false );
 				restore_current_blog();
 			}
 		} // for single site
 		else {
-			\IP_Location_Block::update_option( $src );
+			Validator::update_option( $src );
 		}
 	}
 
@@ -203,7 +207,7 @@ class Scheduler {
 	 */
 	public static function extract_ip( $ip ) {
 		return filter_var(
-			$ip_self = get_transient( \IP_Location_Block::CRON_NAME ), FILTER_VALIDATE_IP
+			$ip_self = get_transient( Validator::CRON_NAME ), FILTER_VALIDATE_IP
 		) ? $ip_self : $ip;
 	}
 
@@ -224,11 +228,11 @@ class Scheduler {
 	 * Stop update db
 	 */
 	public static function stop_update_db() {
-		wp_clear_scheduled_hook( \IP_Location_Block::CRON_NAME, array( false ) ); // @since  0.2.1.0
+		wp_clear_scheduled_hook( Validator::CRON_NAME, array( false ) ); // @since  0.2.1.0
 
 		// wait until updating has finished to avoid race condition with IP_Location_Block_Opts::install_api()
 		$time = 0;
-		while ( ( $stat = get_transient( \IP_Location_Block::CRON_NAME ) ) && 'done' !== $stat ) {
+		while ( ( $stat = get_transient( Validator::CRON_NAME ) ) && 'done' !== $stat ) {
 			sleep( 1 );
 
 			if ( ++ $time > 5 * MINUTE_IN_SECONDS ) {
@@ -259,9 +263,9 @@ class Scheduler {
 	 * @param false $settings
 	 */
 	public static function start_cache_gc( $settings = false ) {
-		if ( ! wp_next_scheduled( \IP_Location_Block::CACHE_NAME ) ) {
-			$settings or $settings = \IP_Location_Block::get_option();
-			wp_schedule_single_event( time() + max( $settings['cache_time_gc'], MINUTE_IN_SECONDS ), \IP_Location_Block::CACHE_NAME );
+		if ( ! wp_next_scheduled( Validator::CACHE_NAME ) ) {
+			$settings or $settings = Validator::get_option();
+			wp_schedule_single_event( time() + max( $settings['cache_time_gc'], MINUTE_IN_SECONDS ), Validator::CACHE_NAME );
 		}
 	}
 
@@ -269,7 +273,7 @@ class Scheduler {
 	 * Stop garbage collection
 	 */
 	public static function stop_cache_gc() {
-		wp_clear_scheduled_hook( \IP_Location_Block::CACHE_NAME ); // @since  0.2.1.0
+		wp_clear_scheduled_hook( Validator::CACHE_NAME ); // @since  0.2.1.0
 	}
 
 }

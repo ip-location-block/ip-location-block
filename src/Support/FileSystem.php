@@ -57,6 +57,8 @@ class FileSystem {
 
 					// initialize the API @since  0.2.5.0
 					WP_Filesystem( $creds );
+				// Contract-bound legacy identity — do not namespace: the frozen classic
+				// admin (IP_Location_Block_Admin) exists only under its legacy name.
 				} elseif ( class_exists( 'IP_Location_Block_Admin', false ) ) {
 					\IP_Location_Block_Admin::add_admin_notice(
 						'error',

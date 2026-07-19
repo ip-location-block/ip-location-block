@@ -13,16 +13,22 @@
 
 namespace IPLocationBlock\Diagnostics;
 
+use IPLocationBlock\Core\Validator;
+use IPLocationBlock\Logging\Logs;
+use IPLocationBlock\Support\Dns;
+use IPLocationBlock\Support\FileSystem;
+use IPLocationBlock\Support\Util;
+
 class SystemInfo {
 
 	public static function collect() {
 		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-lkup.php';
 		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-file.php';
-		$fs = \IP_Location_Block_FS::init( __FUNCTION__ );
+		$fs = FileSystem::init( __FUNCTION__ );
 
 		// DNS reverse lookup
 		$key = microtime( true );
-		$val = \IP_Location_Block_Lkup::gethostbyaddr( '8.8.8.8' );
+		$val = Dns::gethostbyaddr( '8.8.8.8' );
 		$key = microtime( true ) - $key;
 
 		// MySQL (supress WordPress error: Unknown system variable 'block_encryption_mode')
@@ -37,7 +43,7 @@ class SystemInfo {
 		$usr = function_exists( 'posix_getpwuid' ) ? posix_getpwuid( posix_geteuid() ) : array( 'name' => getenv( 'USERNAME' ) );
 
 		// Server, PHP, WordPress
-		$tmp_d = \IP_Location_Block_Util::get_temp_dir();
+		$tmp_d = Util::get_temp_dir();
 		$res   = array_map( 'esc_html', array(
 			'Server:'        => $_SERVER['SERVER_SOFTWARE'],
 			'MySQL:'         => $ver . ( defined( 'IP_LOCATION_BLOCK_DEBUG' ) && IP_LOCATION_BLOCK_DEBUG && $bem ? ' (' . $bem . ')' : '' ),
@@ -85,12 +91,12 @@ class SystemInfo {
 		}
 
 		// Blocked self requests
-		$installed = array_reverse( \IP_Location_Block_Logs::search_logs( \IP_Location_Block::get_ip_address(), \IP_Location_Block::get_option() ) );
+		$installed = array_reverse( Logs::search_logs( Validator::get_ip_address(), Validator::get_option() ) );
 		foreach ( $installed as $val ) {
-			if ( \IP_Location_Block::is_blocked( $val['result'] ) ) {
+			if ( Validator::is_blocked( $val['result'] ) ) {
 				// hide port and nonce
 				$method = preg_replace( '/\[\d+\]/', '', $val['method'] );
-				$method = preg_replace( '/(' . \IP_Location_Block::get_auth_key() . ')(?:=|%3D)([\w]+)/', '$1=...', $method );
+				$method = preg_replace( '/(' . Validator::get_auth_key() . ')(?:=|%3D)([\w]+)/', '$1=...', $method );
 
 				// add post data
 				$query = array();
@@ -103,7 +109,7 @@ class SystemInfo {
 				}
 
 				$res += array(
-					esc_html( \IP_Location_Block_Util::localdate( $val['time'], 'Y-m-d H:i:s' ) ) =>
+					esc_html( Util::localdate( $val['time'], 'Y-m-d H:i:s' ) ) =>
 						esc_html( str_pad( $val['result'], 8 ) . $method )
 				);
 			}

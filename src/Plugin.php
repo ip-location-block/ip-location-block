@@ -52,9 +52,12 @@ final class Plugin
         \add_action('plugins_loaded', array('IP_Location_Block', 'get_instance'));
 
         // Register the REST API (ip-location-block/v1) used by the React admin.
+        // Contract-bound legacy identity — do not namespace (see header note).
         \add_action('rest_api_init', array('IP_Location_Block_Rest', 'register_routes'));
 
         // Dashboard / administrative functionality (classic + React admin).
+        // Contract-bound legacy identities — the admin/beta classes exist ONLY
+        // under their legacy names (frozen admin layer); do not namespace.
         if (\is_admin()) {
             require IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
             \add_action('plugins_loaded', array('IP_Location_Block_Admin', 'get_instance'));

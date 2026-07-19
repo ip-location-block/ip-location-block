@@ -14,6 +14,18 @@
 
 namespace IPLocationBlock\Rest;
 
+use IPLocationBlock\Core\Validator;
+use IPLocationBlock\Diagnostics\Diagnostics;
+use IPLocationBlock\Geolocation\IpCacheRepository;
+use IPLocationBlock\Logging\Logs;
+use IPLocationBlock\Providers\LegacyMeta;
+use IPLocationBlock\Providers\LookupContext;
+use IPLocationBlock\Providers\NativeQuotaService;
+use IPLocationBlock\Providers\ProviderRegistry;
+use IPLocationBlock\Providers\ProviderTester;
+use IPLocationBlock\Settings\Options;
+use IPLocationBlock\Support\Util;
+
 class RestApi {
 
 	const NS = 'ip-location-block/v1';
@@ -323,9 +335,9 @@ class RestApi {
 			);
 		}
 
-		$settings            = \IP_Location_Block::get_option();
+		$settings            = Validator::get_option();
 		$settings['welcome'] = true;
-		\IP_Location_Block::update_option( $settings );
+		Validator::update_option( $settings );
 
 		return rest_ensure_response( array( 'dismissed' => true ) );
 	}
@@ -334,14 +346,14 @@ class RestApi {
 	 * Current site and current-IP health report.
 	 */
 	public static function get_diagnostics() {
-		return rest_ensure_response( \IP_Location_Block_Diagnostics::run() );
+		return rest_ensure_response( Diagnostics::run() );
 	}
 
 	/**
 	 * Acknowledge or restore one non-critical advisory.
 	 */
 	public static function set_diagnostic_acknowledgement( \WP_REST_Request $request ) {
-		$result = \IP_Location_Block_Diagnostics::set_acknowledgement(
+		$result = Diagnostics::set_acknowledgement(
 			(string) $request->get_param( 'id' ),
 			rest_sanitize_boolean( $request->get_param( 'acknowledged' ) )
 		);
@@ -350,7 +362,7 @@ class RestApi {
 			return $result;
 		}
 
-		return rest_ensure_response( \IP_Location_Block_Diagnostics::run() );
+		return rest_ensure_response( Diagnostics::run() );
 	}
 
 	/**
@@ -358,14 +370,14 @@ class RestApi {
 	 * diagnostics summary so it is only generated when requested.
 	 */
 	public static function get_diagnostic_environment() {
-		return rest_ensure_response( \IP_Location_Block_Diagnostics::environment() );
+		return rest_ensure_response( Diagnostics::environment() );
 	}
 
 	/**
 	 * Complete registered provider attribution catalog.
 	 */
 	public static function get_attributions() {
-		return rest_ensure_response( \IP_Location_Block_Diagnostics::attributions() );
+		return rest_ensure_response( Diagnostics::attributions() );
 	}
 
 	/**
@@ -376,10 +388,10 @@ class RestApi {
 	public static function scan_country( \WP_REST_Request $request ) {
 		$source = sanitize_key( (string) $request->get_param( 'source' ) );
 		$source = 'server' === $source ? 'server' : 'client';
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		$ip = 'server' === $source
-			? \IP_Location_Block_Util::get_server_ip()
-			: \IP_Location_Block::get_ip_address( $settings );
+			? Util::get_server_ip()
+			: Validator::get_ip_address( $settings );
 
 		if ( empty( $ip ) || false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
 			return new \WP_Error(
@@ -389,17 +401,19 @@ class RestApi {
 			);
 		}
 
-		$args       = \IP_Location_Block::get_request_headers( $settings );
-		$types      = \IP_Location_Block_Provider::get_providers( 'type', false, false );
-		$enabled    = \IP_Location_Block_Provider::get_valid_providers( $settings, false, false );
+		$args       = Validator::get_request_headers( $settings );
+		$types      = LegacyMeta::get_providers( 'type', false, false );
+		$enabled    = LegacyMeta::get_valid_providers( $settings, false, false );
 		$providers  = array();
+		$context    = LookupContext::fromLegacyArgs( $settings, $args );
 		foreach ( $enabled as $name ) {
-			$geo = \IP_Location_Block_API::get_instance( $name, $settings );
+			$geo = ProviderRegistry::instance()->get( $name );
 			if ( ! $geo ) {
 				continue;
 			}
 			try {
-				$result = $geo->get_location( $ip, $args );
+				$lookup = $geo->lookup( (string) $ip, $context );
+				$result = $lookup->isRejected() ? false : $lookup->toLegacyArray();
 			} catch ( \Exception $exception ) {
 				$result = array( 'errorMessage' => $exception->getMessage() );
 			}
@@ -426,8 +440,8 @@ class RestApi {
 	 * Native = the IP Location Block provider is the only valid one.
 	 */
 	public static function get_mode() {
-		$settings = \IP_Location_Block::get_option();
-		$valid    = array_values( \IP_Location_Block_Provider::get_valid_providers( $settings, false, false, false ) );
+		$settings = Validator::get_option();
+		$valid    = array_values( LegacyMeta::get_valid_providers( $settings, false, false, false ) );
 		$stored   = isset( $settings['providers'] ) && is_array( $settings['providers'] ) ? $settings['providers'] : array();
 		$key      = isset( $stored['IP Location Block'] ) ? $stored['IP Location Block'] : '';
 
@@ -436,7 +450,7 @@ class RestApi {
 		} ) );
 
 		return rest_ensure_response( array(
-			'native'     => (bool) \IP_Location_Block_Provider::is_native( $settings ),
+			'native'     => (bool) ProviderRegistry::instance()->isNativeOnly( $settings ),
 			'apiEnabled' => in_array( 'IP Location Block', $valid, true ),
 			'apiKey'     => ( '' !== $key && '@' !== $key ),
 			'others'     => $others,
@@ -453,15 +467,19 @@ class RestApi {
 		$preset = sanitize_key( (string) $request->get_param( 'preset' ) );
 
 		if ( 'default' === $preset ) {
-			return rest_ensure_response( self::public_settings( \IP_Location_Block::get_default() ) );
+			return rest_ensure_response( self::public_settings( Validator::get_default() ) );
 		}
 
 		if ( 'preferred' === $preset ) {
+			// Contract-bound legacy identity — do not namespace. The frozen classic
+			// admin classes (IP_Location_Block_Admin / IP_Location_Block_Admin_Ajax)
+			// exist only under their legacy names and are require_once'd on demand;
+			// every such reference in this file is intentionally left legacy.
 			if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
 				require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
 			}
 			$merged = array_replace_recursive(
-				\IP_Location_Block::get_option(),
+				Validator::get_option(),
 				\IP_Location_Block_Admin_Ajax::preferred_overrides()
 			);
 
@@ -485,7 +503,7 @@ class RestApi {
 			return $scope;
 		}
 
-		return rest_ensure_response( self::public_settings( \IP_Location_Block::get_option() ) );
+		return rest_ensure_response( self::public_settings( Validator::get_option() ) );
 	}
 
 	/**
@@ -497,13 +515,13 @@ class RestApi {
 		if ( is_wp_error( $scope ) ) {
 			return $scope;
 		}
-		$settings   = \IP_Location_Block::get_option();
+		$settings   = Validator::get_option();
 		$login      = self::emergency_login_status( $settings );
-		$server_ip  = \IP_Location_Block_Util::get_server_ip();
-		$client_ip  = \IP_Location_Block::get_ip_address( $settings );
+		$server_ip  = Util::get_server_ip();
+		$client_ip  = Validator::get_ip_address( $settings );
 		$mime_types = array();
 
-		foreach ( \IP_Location_Block_Util::get_allowed_mime_types() as $extension => $mime ) {
+		foreach ( Util::get_allowed_mime_types() as $extension => $mime ) {
 			$mime_types[] = array(
 				'extension' => (string) $extension,
 				'mime'      => (string) $mime,
@@ -511,8 +529,8 @@ class RestApi {
 		}
 
 		$legacy = get_option( 'ip_geo_block_settings' );
-		$database_schedule = wp_next_scheduled( \IP_Location_Block::CRON_NAME, array( false ) );
-		$cleanup_schedule  = wp_next_scheduled( \IP_Location_Block::CACHE_NAME );
+		$database_schedule = wp_next_scheduled( Validator::CRON_NAME, array( false ) );
+		$cleanup_schedule  = wp_next_scheduled( Validator::CACHE_NAME );
 
 		return rest_ensure_response( array(
 			'emergencyLogin' => $login,
@@ -525,7 +543,7 @@ class RestApi {
 				'serverScanAvailable' => ! empty( $server_ip ) &&
 					false !== filter_var( $server_ip, FILTER_VALIDATE_IP ) &&
 					$server_ip !== $client_ip &&
-					! \IP_Location_Block_Util::is_private_ip( $server_ip ),
+					! Util::is_private_ip( $server_ip ),
 			),
 			'schedules' => array(
 				'database' => self::schedule_status( $database_schedule, ! empty( $settings['update']['auto'] ) ),
@@ -565,12 +583,12 @@ class RestApi {
 		$options = self::sanitize_settings_payload( $input );
 
 		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-opts.php';
-		$file = \IP_Location_Block_Opts::setup_validation_timing( $options );
+		$file = Options::setup_validation_timing( $options );
 		if ( is_wp_error( $file ) ) {
 			$options['validation']['timing'] = 0;
 		}
 
-		delete_transient( \IP_Location_Block::CRON_NAME );
+		delete_transient( Validator::CRON_NAME );
 		do_action( 'ip-location-block-settings-updated', $options, true );
 
 		$result = self::persist_settings( $options, $scope );
@@ -578,7 +596,7 @@ class RestApi {
 			return $result;
 		}
 
-		return rest_ensure_response( self::public_settings( \IP_Location_Block::get_option( false ) ) );
+		return rest_ensure_response( self::public_settings( Validator::get_option( false ) ) );
 	}
 
 	/**
@@ -588,7 +606,7 @@ class RestApi {
 		$payload = $request->get_json_params();
 		$draft   = isset( $payload['settings'] ) && is_array( $payload['settings'] )
 			? $payload['settings']
-			: \IP_Location_Block::get_option();
+			: Validator::get_option();
 		$options = self::sanitize_settings_payload( $draft );
 
 		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
@@ -596,7 +614,7 @@ class RestApi {
 		}
 
 		return rest_ensure_response( array(
-			'filename' => \IP_Location_Block::PLUGIN_NAME . '-settings.json',
+			'filename' => Validator::PLUGIN_NAME . '-settings.json',
 			'data'     => \IP_Location_Block_Admin_Ajax::settings_to_json( $options ),
 		) );
 	}
@@ -617,7 +635,7 @@ class RestApi {
 		}
 
 		$input  = $data;
-		$prefix = \IP_Location_Block::OPTION_NAME . '[';
+		$prefix = Validator::OPTION_NAME . '[';
 		$flat   = false;
 		foreach ( array_keys( $data ) as $key ) {
 			if ( 0 === strpos( (string) $key, $prefix ) ) {
@@ -629,8 +647,8 @@ class RestApi {
 		if ( $flat ) {
 			$parsed = array();
 			parse_str( http_build_query( $data ), $parsed );
-			$input = isset( $parsed[ \IP_Location_Block::OPTION_NAME ] )
-				? $parsed[ \IP_Location_Block::OPTION_NAME ]
+			$input = isset( $parsed[ Validator::OPTION_NAME ] )
+				? $parsed[ Validator::OPTION_NAME ]
 				: array();
 		}
 
@@ -652,7 +670,7 @@ class RestApi {
 	 * Preview converted IP Geo Block settings without saving them.
 	 */
 	public static function get_legacy_settings() {
-		$current = \IP_Location_Block::get_option();
+		$current = Validator::get_option();
 		if ( ! empty( $current['migrated_from_legacy'] ) || empty( get_option( 'ip_geo_block_settings' ) ) ) {
 			return new \WP_Error(
 				'ilb_legacy_settings_unavailable',
@@ -662,7 +680,7 @@ class RestApi {
 		}
 
 		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-opts.php';
-		$legacy = \IP_Location_Block_Opts::get_legacy_settings( false );
+		$legacy = Options::get_legacy_settings( false );
 		if ( empty( $legacy ) ) {
 			return new \WP_Error(
 				'ilb_legacy_settings_unavailable',
@@ -671,7 +689,7 @@ class RestApi {
 			);
 		}
 
-		$legacy = array_replace_recursive( \IP_Location_Block::get_default(), $legacy );
+		$legacy = array_replace_recursive( Validator::get_default(), $legacy );
 		$legacy['version']              = IP_LOCATION_BLOCK_VERSION;
 		$legacy['migrated_from_legacy'] = true;
 		$legacy['login_link']           = isset( $current['login_link'] ) ? $current['login_link'] : array( 'link' => null, 'hash' => null );
@@ -688,14 +706,14 @@ class RestApi {
 			require_once IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
 		}
 
-		$url = \IP_Location_Block_Util::generate_link(
+		$url = Util::generate_link(
 			\IP_Location_Block_Admin::get_instance(),
 			'network' === $scope
 		);
 
 		return rest_ensure_response( array(
 			'url'    => $url,
-			'status' => self::emergency_login_status( \IP_Location_Block::get_option( false ) ),
+			'status' => self::emergency_login_status( Validator::get_option( false ) ),
 		) );
 	}
 
@@ -708,13 +726,13 @@ class RestApi {
 			require_once IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
 		}
 
-		\IP_Location_Block_Util::delete_link(
+		Util::delete_link(
 			\IP_Location_Block_Admin::get_instance(),
 			'network' === $scope
 		);
 
 		return rest_ensure_response( array(
-			'status' => self::emergency_login_status( \IP_Location_Block::get_option( false ) ),
+			'status' => self::emergency_login_status( Validator::get_option( false ) ),
 		) );
 	}
 
@@ -731,7 +749,7 @@ class RestApi {
 			require_once IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
 		}
 
-		$current = \IP_Location_Block::get_option();
+		$current = Validator::get_option();
 		if ( isset( $current['login_link'] ) ) {
 			$input['login_link'] = $current['login_link'];
 		}
@@ -749,7 +767,7 @@ class RestApi {
 		// partial form POST. React sends the complete provider map instead.
 		if ( isset( $input['providers'] ) && is_array( $input['providers'] ) ) {
 			$providers = array();
-			$catalog   = \IP_Location_Block_Provider::get_providers( 'key', false, false, true );
+			$catalog   = LegacyMeta::get_providers( 'key', false, false, true );
 			foreach ( $input['providers'] as $name => $value ) {
 				$name = sanitize_text_field( (string) $name );
 				if ( ! array_key_exists( $name, $catalog ) ) {
@@ -780,7 +798,7 @@ class RestApi {
 	private static function emergency_login_status( $settings ) {
 		$link       = isset( $settings['login_link'] ) && is_array( $settings['login_link'] ) ? $settings['login_link'] : array();
 		$configured = ! empty( $link['link'] );
-		$valid      = $configured && ! empty( $link['hash'] ) && \IP_Location_Block_Util::verify_link( $link['link'], $link['hash'] );
+		$valid      = $configured && ! empty( $link['hash'] ) && Util::verify_link( $link['link'], $link['hash'] );
 
 		return array(
 			'configured' => (bool) $configured,
@@ -794,7 +812,7 @@ class RestApi {
 
 		return array(
 			'timestamp' => $timestamp,
-			'formatted' => $timestamp ? \IP_Location_Block_Util::localdate( $timestamp ) : '',
+			'formatted' => $timestamp ? Util::localdate( $timestamp ) : '',
 			'status'    => $timestamp ? 'scheduled' : ( $expected ? 'missing' : 'disabled' ),
 		);
 	}
@@ -848,11 +866,11 @@ class RestApi {
 				);
 			}
 			// Keep the request-local cache synchronized with the main site.
-			\IP_Location_Block::update_option( $settings );
+			Validator::update_option( $settings );
 			return true;
 		}
 
-		\IP_Location_Block::update_option( $settings );
+		Validator::update_option( $settings );
 		return true;
 	}
 
@@ -861,17 +879,17 @@ class RestApi {
 	 * keyless providers are first-class choices in both settings modes.
 	 */
 	public static function get_providers() {
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		$stored = isset( $settings['providers'] ) ? (array) $settings['providers'] : array();
-		$all = \IP_Location_Block_Provider::all();
+		$all = LegacyMeta::all();
 
 		$out = array();
-		foreach ( \IP_Location_Block_Provider::get_providers( 'key', false, false, true ) as $name => $keyfield ) {
+		foreach ( LegacyMeta::get_providers( 'key', false, false, true ) as $name => $keyfield ) {
 			$meta = isset( $all[ $name ] ) ? $all[ $name ] : array();
 			$auth = 'optional';
-			if ( isset( $meta['api_auth'] ) && \IP_Location_Block_Provider::API_AUTH_REQUIRED === $meta['api_auth'] ) {
+			if ( isset( $meta['api_auth'] ) && ProviderRegistry::AUTH_REQUIRED === $meta['api_auth'] ) {
 				$auth = 'required';
-			} elseif ( isset( $meta['api_auth'] ) && \IP_Location_Block_Provider::API_AUTH_NOT_REQUIRED === $meta['api_auth'] ) {
+			} elseif ( isset( $meta['api_auth'] ) && ProviderRegistry::AUTH_NOT_REQUIRED === $meta['api_auth'] ) {
 				$auth = 'none';
 			}
 			$out[] = array(
@@ -889,11 +907,11 @@ class RestApi {
 				'databaseReady' => ! empty( $meta['local'] ) ? self::local_provider_ready( $name, $settings ) : null,
 				'auth'        => $auth,
 				'supports'    => array(
-					'ipv4'  => (bool) \IP_Location_Block_Provider::supports( $name, 'ipv4' ),
-					'ipv6'  => (bool) \IP_Location_Block_Provider::supports( $name, 'ipv6' ),
-					'asn'   => (bool) \IP_Location_Block_Provider::supports( $name, array( 'asn', 'asn_database' ) ),
-					'city'  => (bool) \IP_Location_Block_Provider::supports( $name, array( 'city' ) ),
-					'state' => (bool) \IP_Location_Block_Provider::supports( $name, array( 'state' ) ),
+					'ipv4'  => (bool) LegacyMeta::supports( $name, 'ipv4' ),
+					'ipv6'  => (bool) LegacyMeta::supports( $name, 'ipv6' ),
+					'asn'   => (bool) LegacyMeta::supports( $name, array( 'asn', 'asn_database' ) ),
+					'city'  => (bool) LegacyMeta::supports( $name, array( 'city' ) ),
+					'state' => (bool) LegacyMeta::supports( $name, array( 'state' ) ),
 				),
 			);
 		}
@@ -932,7 +950,7 @@ class RestApi {
 		if ( 'IP2Location' === $name ) {
 			$path = isset( $settings['IP2Location']['ipv4_path'] ) ? $settings['IP2Location']['ipv4_path'] : '';
 			if ( empty( $path ) && defined( 'IP_LOCATION_BLOCK_IP2LOC_IPV4_DAT' ) ) {
-				$path = trailingslashit( \IP_Location_Block_Util::get_databases_storage_dir( 'IP2Location' ) ) . IP_LOCATION_BLOCK_IP2LOC_IPV4_DAT;
+				$path = trailingslashit( Util::get_databases_storage_dir( 'IP2Location' ) ) . IP_LOCATION_BLOCK_IP2LOC_IPV4_DAT;
 			}
 			$path = apply_filters( 'ip-location-block-ip2location-path', $path );
 			return ! empty( $path ) && @file_exists( $path );
@@ -941,7 +959,7 @@ class RestApi {
 		if ( 'GeoLite2' === $name ) {
 			$path = isset( $settings['GeoLite2']['ip_path'] ) ? $settings['GeoLite2']['ip_path'] : '';
 			if ( empty( $path ) && defined( 'IP_LOCATION_BLOCK_GEOLITE2_DB_IP' ) ) {
-				$path = trailingslashit( \IP_Location_Block_Util::get_databases_storage_dir( 'GeoLite2' ) ) . IP_LOCATION_BLOCK_GEOLITE2_DB_IP;
+				$path = trailingslashit( Util::get_databases_storage_dir( 'GeoLite2' ) ) . IP_LOCATION_BLOCK_GEOLITE2_DB_IP;
 			}
 			$path = apply_filters( 'ip-location-block-geolite2-path', $path );
 			return ! empty( $path ) && @file_exists( $path );
@@ -959,44 +977,16 @@ class RestApi {
 	 * @return array|false
 	 */
 	public static function get_provider_verification( $provider, $credential ) {
-		if ( '' === $credential || '@' === $credential ) {
-			return false;
-		}
-
-		$fingerprint = \IP_Location_Block_Provider::credential_fingerprint( $provider, $credential );
-		$verified    = get_transient( 'ip_location_block_verify_' . substr( $fingerprint, 0, 40 ) );
-
-		return is_array( $verified ) ? $verified : false;
-	}
-
-	/**
-	 * Persist only successful verification metadata; credentials are represented
-	 * by an HMAC fingerprint in the transient name.
-	 *
-	 * @param string $provider
-	 * @param string $credential
-	 *
-	 * @return array
-	 */
-	private static function remember_provider_verification( $provider, $credential ) {
-		$fingerprint = \IP_Location_Block_Provider::credential_fingerprint( $provider, $credential );
-		$verified    = array(
-			'provider'   => $provider,
-			'verifiedAt' => time(),
-		);
-
-		set_transient( 'ip_location_block_verify_' . substr( $fingerprint, 0, 40 ), $verified, DAY_IN_SECONDS );
-
-		return $verified;
+		return ProviderTester::getVerification( (string) $provider, (string) $credential );
 	}
 
 	/**
 	 * Provider readiness, verification and quota for the guided settings view.
 	 */
 	public static function get_provider_status_data( $settings = null ) {
-		$settings  = is_array( $settings ) ? $settings : \IP_Location_Block::get_option();
+		$settings  = is_array( $settings ) ? $settings : Validator::get_option();
 		$stored    = isset( $settings['providers'] ) && is_array( $settings['providers'] ) ? $settings['providers'] : array();
-		$catalog   = \IP_Location_Block_Provider::all();
+		$catalog   = LegacyMeta::all();
 		$protected = (int) ( isset( $settings['matching_rule'] ) ? $settings['matching_rule'] : -1 ) !== -1 ||
 			( isset( $settings['validation']['public'] ) && ( (int) $settings['validation']['public'] & 1 ) === 1 );
 
@@ -1004,7 +994,7 @@ class RestApi {
 		$native_selected = isset( $catalog['IP Location Block'] ) && self::provider_is_selected( 'IP Location Block', $catalog['IP Location Block'], $stored );
 		$quota           = null;
 		if ( $native_selected && empty( $settings['restrict_api'] ) && '' !== $native_key && '@' !== $native_key ) {
-			$quota = \IP_Location_Block_Provider::get_native_quota_status( $native_key );
+			$quota = ( new NativeQuotaService() )->status( $native_key );
 		}
 
 		$quota_blocking = $quota && in_array( $quota['status'], array( 'exhausted', 'rate_limited', 'key_upgrade_required' ), true );
@@ -1021,8 +1011,8 @@ class RestApi {
 			$local      = ! empty( $meta['local'] );
 			$is_active  = $selected && ( $local || empty( $settings['restrict_api'] ) );
 			$credential = isset( $stored[ $name ] ) ? (string) $stored[ $name ] : '';
-			$auth       = isset( $meta['api_auth'] ) ? (int) $meta['api_auth'] : \IP_Location_Block_Provider::API_AUTH_OPTIONAL;
-			$key_ready  = \IP_Location_Block_Provider::API_AUTH_REQUIRED !== $auth || ( '' !== $credential && '@' !== $credential );
+			$auth       = isset( $meta['api_auth'] ) ? (int) $meta['api_auth'] : ProviderRegistry::AUTH_OPTIONAL;
+			$key_ready  = ProviderRegistry::AUTH_REQUIRED !== $auth || ( '' !== $credential && '@' !== $credential );
 			$verified   = self::get_provider_verification( $name, $credential );
 			$usable     = $local ? self::local_provider_ready( $name, $settings ) : $key_ready;
 			$is_ready   = $is_active && $usable && ( $local || $verified || $protected );
@@ -1066,7 +1056,7 @@ class RestApi {
 			'active'    => $active,
 			'providers' => $providers,
 			'ready'     => (bool) $ready,
-			'native'    => (bool) \IP_Location_Block_Provider::is_native( $settings ),
+			'native'    => (bool) ProviderRegistry::instance()->isNativeOnly( $settings ),
 			'protected' => (bool) $protected,
 			'quota'     => $quota,
 		);
@@ -1090,85 +1080,22 @@ class RestApi {
 	public static function test_provider( \WP_REST_Request $request ) {
 		$provider   = sanitize_text_field( (string) $request->get_param( 'provider' ) );
 		$credential = sanitize_text_field( (string) $request->get_param( 'credential' ) );
-		$catalog    = \IP_Location_Block_Provider::all();
+		$settings   = Validator::get_option();
 
-		if ( 'Cache' === $provider || ! isset( $catalog[ $provider ] ) ) {
-			return new \WP_Error(
-				'ip_location_block_unknown_provider',
-				__( 'Unknown geolocation provider.', 'ip-location-block' ),
-				array( 'status' => 400 )
-			);
+		// ProviderTester owns the whole credential-inject / fresh 8.8.8.8 lookup /
+		// two-letter-country / native-quota-gate / remember-verification flow.
+		$result = ( new ProviderTester() )->test(
+			$provider,
+			$credential,
+			$settings,
+			Validator::get_request_headers( $settings )
+		);
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
 		}
 
-		$meta = $catalog[ $provider ];
-		$auth = isset( $meta['api_auth'] ) ? (int) $meta['api_auth'] : \IP_Location_Block_Provider::API_AUTH_OPTIONAL;
-		if ( ( 'IP Location Block' === $provider || \IP_Location_Block_Provider::API_AUTH_REQUIRED === $auth ) && '' === $credential ) {
-			return new \WP_Error(
-				'ip_location_block_missing_provider_key',
-				__( 'Enter an API key before testing this provider.', 'ip-location-block' ),
-				array( 'status' => 400 )
-			);
-		}
-
-		$options = \IP_Location_Block::get_option();
-		if ( ! isset( $options['providers'] ) || ! is_array( $options['providers'] ) ) {
-			$options['providers'] = array();
-		}
-		$options['providers'][ $provider ] = '' !== $credential ? $credential : '@';
-
-		$geo = \IP_Location_Block_API::get_instance( $provider, $options );
-		if ( ! $geo ) {
-			return new \WP_Error(
-				'ip_location_block_provider_unavailable',
-				__( 'This provider is not available in the current installation.', 'ip-location-block' ),
-				array( 'status' => 400 )
-			);
-		}
-
-		$args          = \IP_Location_Block::get_request_headers( $options );
-		$args['fresh'] = true;
-		try {
-			$result = $geo->get_location( '8.8.8.8', $args );
-		} catch ( \Exception $exception ) {
-			$result = array( 'errorMessage' => $exception->getMessage() );
-		}
-
-		$country = is_array( $result ) && isset( $result['countryCode'] ) ? strtoupper( (string) $result['countryCode'] ) : '';
-		if ( ! preg_match( '/^[A-Z]{2}$/', $country ) ) {
-			$message = is_array( $result ) && ! empty( $result['errorMessage'] )
-				? (string) $result['errorMessage']
-				: __( 'The provider did not return a valid country result.', 'ip-location-block' );
-
-			return rest_ensure_response( array(
-				'provider' => $provider,
-				'ok'       => false,
-				'message'  => $message,
-			) );
-		}
-
-		$quota = null;
-		if ( 'IP Location Block' === $provider ) {
-			$quota = \IP_Location_Block_Provider::get_native_quota_status( $credential, true );
-			if ( in_array( $quota['status'], array( 'exhausted', 'rate_limited', 'key_upgrade_required' ), true ) ) {
-				return rest_ensure_response( array(
-					'provider'    => $provider,
-					'ok'          => false,
-					'countryCode' => $country,
-					'message'     => $quota['message'],
-					'quota'       => $quota,
-				) );
-			}
-		}
-
-		$verified = self::remember_provider_verification( $provider, '' !== $credential ? $credential : '@' );
-
-		return rest_ensure_response( array(
-			'provider'    => $provider,
-			'ok'          => true,
-			'countryCode' => $country,
-			'verifiedAt'  => (int) $verified['verifiedAt'],
-			'quota'       => $quota,
-		) );
+		return rest_ensure_response( $result );
 	}
 
 	/**
@@ -1176,7 +1103,7 @@ class RestApi {
 	 * last-update timestamp, per configured provider.
 	 */
 	public static function get_database_status() {
-		$s = \IP_Location_Block::get_option();
+		$s = Validator::get_option();
 		$rows = array();
 
 		$entries = array(
@@ -1190,17 +1117,17 @@ class RestApi {
 			$path = isset( $s[ $prov ][ $pathKey ] ) ? $s[ $prov ][ $pathKey ] : '';
 			if ( empty( $path ) && 'IP2Location' === $prov ) {
 				if ( 'ipv4_path' === $pathKey && defined( 'IP_LOCATION_BLOCK_IP2LOC_IPV4_DAT' ) ) {
-					$path = trailingslashit( \IP_Location_Block_Util::get_databases_storage_dir( 'IP2Location' ) ) . IP_LOCATION_BLOCK_IP2LOC_IPV4_DAT;
+					$path = trailingslashit( Util::get_databases_storage_dir( 'IP2Location' ) ) . IP_LOCATION_BLOCK_IP2LOC_IPV4_DAT;
 					$path = apply_filters( 'ip-location-block-ip2location-path', $path );
 				} elseif ( 'ipv6_path' === $pathKey && defined( 'IP_LOCATION_BLOCK_IP2LOC_IPV6_DAT' ) ) {
-					$path = trailingslashit( \IP_Location_Block_Util::get_databases_storage_dir( 'IP2Location' ) ) . IP_LOCATION_BLOCK_IP2LOC_IPV6_DAT;
+					$path = trailingslashit( Util::get_databases_storage_dir( 'IP2Location' ) ) . IP_LOCATION_BLOCK_IP2LOC_IPV6_DAT;
 				}
 			} elseif ( empty( $path ) && 'GeoLite2' === $prov ) {
 				if ( 'ip_path' === $pathKey && defined( 'IP_LOCATION_BLOCK_GEOLITE2_DB_IP' ) ) {
-					$path = trailingslashit( \IP_Location_Block_Util::get_databases_storage_dir( 'GeoLite2' ) ) . IP_LOCATION_BLOCK_GEOLITE2_DB_IP;
+					$path = trailingslashit( Util::get_databases_storage_dir( 'GeoLite2' ) ) . IP_LOCATION_BLOCK_GEOLITE2_DB_IP;
 					$path = apply_filters( 'ip-location-block-geolite2-path', $path );
 				} elseif ( 'asn_path' === $pathKey && defined( 'IP_LOCATION_BLOCK_GEOLITE2_DB_ASN' ) ) {
-					$path = trailingslashit( \IP_Location_Block_Util::get_databases_storage_dir( 'GeoLite2' ) ) . IP_LOCATION_BLOCK_GEOLITE2_DB_ASN;
+					$path = trailingslashit( Util::get_databases_storage_dir( 'GeoLite2' ) ) . IP_LOCATION_BLOCK_GEOLITE2_DB_ASN;
 				}
 			}
 			$last = isset( $s[ $prov ][ $lastKey ] ) ? (int) $s[ $prov ][ $lastKey ] : 0;
@@ -1276,7 +1203,7 @@ class RestApi {
 		}
 
 		$admin = array();
-		foreach ( \IP_Location_Block_Util::get_registered_actions( false, \IP_Location_Block::get_option() ) as $action => $access ) {
+		foreach ( Util::get_registered_actions( false, Validator::get_option() ) as $action => $access ) {
 			$admin[] = array(
 				'value'  => (string) $action,
 				'label'  => (string) $action,
@@ -1319,7 +1246,7 @@ class RestApi {
 	}
 
 	public static function get_defaults() {
-		return rest_ensure_response( self::public_settings( \IP_Location_Block::get_default() ) );
+		return rest_ensure_response( self::public_settings( Validator::get_default() ) );
 	}
 
 	/**
@@ -1380,7 +1307,7 @@ class RestApi {
 	 * Trigger a local-database download/update.
 	 */
 	public static function update_database() {
-		return rest_ensure_response( \IP_Location_Block::get_instance()->exec_update_db() );
+		return rest_ensure_response( Validator::get_instance()->exec_update_db() );
 	}
 
 	/**
@@ -1395,10 +1322,10 @@ class RestApi {
 			);
 		}
 
-		$healthy = \IP_Location_Block_Logs::diag_tables();
+		$healthy = Logs::diag_tables();
 		if ( ! $healthy ) {
-			\IP_Location_Block_Logs::create_tables();
-			$healthy = \IP_Location_Block_Logs::diag_tables();
+			Logs::create_tables();
+			$healthy = Logs::diag_tables();
 		}
 
 		return rest_ensure_response( array( 'healthy' => (bool) $healthy ) );
@@ -1429,8 +1356,8 @@ class RestApi {
 	}
 
 	public static function get_statistics() {
-		$s = \IP_Location_Block_Logs::restore_stat();
-		$settings = \IP_Location_Block::get_option();
+		$s = Logs::restore_stat();
+		$settings = Validator::get_option();
 
 		// countries: { code: count } -> [ {code, count} ] desc
 		$countries = array();
@@ -1514,7 +1441,7 @@ class RestApi {
 			'slugs'     => array(),
 		);
 
-		foreach ( \IP_Location_Block_Logs::get_recent_logs( YEAR_IN_SECONDS ) as $log ) {
+		foreach ( Logs::get_recent_logs( YEAR_IN_SECONDS ) as $log ) {
 			$code = isset( $log['code'] ) ? (string) $log['code'] : '';
 			$asn  = isset( $log['asn'] ) ? (string) $log['asn'] : '';
 			$ip   = isset( $log['ip'] ) ? (string) $log['ip'] : '';
@@ -1528,14 +1455,14 @@ class RestApi {
 			self::increment_count( $counts['slugs'], self::log_slug( $method . ' ' . $data ) );
 		}
 
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		$ips = array();
 		foreach ( self::rank_counts( $counts['ips'], 10 ) as $row ) {
 			$parts = explode( "\n", $row['value'], 2 );
 			$code  = isset( $parts[0] ) ? $parts[0] : '';
 			$ip    = isset( $parts[1] ) ? $parts[1] : '';
 			if ( ! empty( $settings['anonymize'] ) ) {
-				$ip = \IP_Location_Block_Util::anonymize_ip( $ip );
+				$ip = Util::anonymize_ip( $ip );
 			}
 			$ips[] = array(
 				'value'  => '[' . $code . '] ' . $ip,
@@ -1621,15 +1548,15 @@ class RestApi {
 	 * the displayed IP and host respect the plugin anonymization setting.
 	 */
 	public static function get_cache() {
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		$now      = isset( $_SERVER['REQUEST_TIME'] ) ? (int) $_SERVER['REQUEST_TIME'] : time();
 		$rows     = array();
 
-		foreach ( (array) \IP_Location_Block_Logs::restore_cache() as $ip => $cache ) {
+		foreach ( (array) Logs::restore_cache() as $ip => $cache ) {
 			$host = isset( $cache['host'] ) ? (string) $cache['host'] : '';
 			if ( ! empty( $settings['anonymize'] ) ) {
-				$ip   = \IP_Location_Block_Util::anonymize_ip( $ip, true );
-				$host = \IP_Location_Block_Util::anonymize_ip( $host, false );
+				$ip   = Util::anonymize_ip( $ip, true );
+				$host = Util::anonymize_ip( $host, false );
 			}
 
 			$rows[] = array(
@@ -1651,7 +1578,7 @@ class RestApi {
 	}
 
 	public static function clear_cache() {
-		\IP_Location_Block_API_Cache::clear_cache();
+		( new IpCacheRepository() )->clear();
 
 		return rest_ensure_response( array( 'success' => true ) );
 	}
@@ -1673,13 +1600,13 @@ class RestApi {
 			);
 		}
 
-		\IP_Location_Block_Logs::delete_cache_entry( array_unique( $entries ) );
+		Logs::delete_cache_entry( array_unique( $entries ) );
 
 		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	public static function clear_statistics() {
-		\IP_Location_Block_Logs::clear_stat();
+		Logs::clear_stat();
 
 		return rest_ensure_response( array( 'success' => true ) );
 	}
@@ -1690,10 +1617,10 @@ class RestApi {
 			return $hook;
 		}
 
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		$rows     = apply_filters(
 			'ip-location-block-logs',
-			\IP_Location_Block_Logs::restore_logs( $hook ? $hook : null )
+			Logs::restore_logs( $hook ? $hook : null )
 		);
 
 		return rest_ensure_response( array(
@@ -1723,7 +1650,7 @@ class RestApi {
 			);
 		}
 
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		$features = self::log_features( $settings );
 		if ( ! $features['recording'] || ! $features['live'] ) {
 			return new \WP_Error(
@@ -1755,7 +1682,7 @@ class RestApi {
 			return rest_ensure_response( array( 'rows' => array() ) );
 		}
 
-		$rows = \IP_Location_Block_Logs::restore_live_log( $hook ? $hook : null, $settings );
+		$rows = Logs::restore_live_log( $hook ? $hook : null, $settings );
 		if ( is_wp_error( $rows ) ) {
 			return new \WP_Error( 'ilb_live_log_error', $rows->get_error_message(), array( 'status' => 500 ) );
 		}
@@ -1807,19 +1734,19 @@ class RestApi {
 			$post_data  = (string) $row[12];
 
 			if ( ! empty( $settings['anonymize'] ) ) {
-				$ip         = \IP_Location_Block_Util::anonymize_ip( $ip, true );
-				$method     = \IP_Location_Block_Util::anonymize_ip( $method, false );
-				$user_agent = \IP_Location_Block_Util::anonymize_ip( $user_agent, false );
-				$headers    = \IP_Location_Block_Util::anonymize_ip( $headers, false );
-				$post_data  = \IP_Location_Block_Util::anonymize_ip( $post_data, false );
+				$ip         = Util::anonymize_ip( $ip, true );
+				$method     = Util::anonymize_ip( $method, false );
+				$user_agent = Util::anonymize_ip( $user_agent, false );
+				$headers    = Util::anonymize_ip( $headers, false );
+				$post_data  = Util::anonymize_ip( $post_data, false );
 			}
 
 			$target  = preg_replace( '/&sup[123];/', '', (string) $row[1] );
 			$result  = (string) $row[7];
 			$code    = (string) $row[4];
 			$lists   = self::log_lists_for_target( $target, $settings );
-			$context = \IP_Location_Block::is_listed( $code, $lists['white'] ) ? 'whitelist' : (
-				\IP_Location_Block::is_listed( $code, $lists['black'] ) ? 'blacklist' : 'none'
+			$context = Validator::is_listed( $code, $lists['white'] ) ? 'whitelist' : (
+				Validator::is_listed( $code, $lists['black'] ) ? 'blacklist' : 'none'
 			);
 
 			$out[] = array(
@@ -1831,7 +1758,7 @@ class RestApi {
 				'city'        => (string) $row[5],
 				'state'       => (string) $row[6],
 				'result'      => $result,
-				'verdict'     => \IP_Location_Block::is_passed( $result ) ? 'passed' : 'blocked',
+				'verdict'     => Validator::is_passed( $result ) ? 'passed' : 'blocked',
 				'listContext' => $context,
 				'asn'         => (string) $row[8],
 				'method'      => $method,
@@ -1876,7 +1803,7 @@ class RestApi {
 		$key = 'white' === $list ? 'white_list' : 'black_list';
 		$values = (array) $request->get_param( 'values' );
 
-		$settings = \IP_Location_Block::get_option();
+		$settings = Validator::get_option();
 		$current = isset( $settings['extra_ips'][ $key ] ) ? $settings['extra_ips'][ $key ] : '';
 		$entries = array_filter( array_map( 'trim', preg_split( '/[,\r\n]+/', (string) $current ) ) );
 
@@ -1891,7 +1818,7 @@ class RestApi {
 			$settings['extra_ips'] = array();
 		}
 		$settings['extra_ips'][ $key ] = implode( ',', $entries );
-		\IP_Location_Block::update_option( $settings );
+		Validator::update_option( $settings );
 
 		return rest_ensure_response( array( 'success' => true, 'list' => $settings['extra_ips'][ $key ] ) );
 	}
@@ -1933,14 +1860,14 @@ class RestApi {
 	 */
 	public static function delete_log_entries( \WP_REST_Request $request ) {
 		$ips = array_map( 'sanitize_text_field', (array) $request->get_param( 'ips' ) );
-		\IP_Location_Block_Logs::delete_logs_entry( $ips );
+		Logs::delete_logs_entry( $ips );
 
 		return rest_ensure_response( array( 'success' => true ) );
 	}
 
 	public static function clear_logs( \WP_REST_Request $request ) {
 		$hook = $request->get_param( 'hook' );
-		\IP_Location_Block_Logs::clear_logs( $hook ? $hook : null );
+		Logs::clear_logs( $hook ? $hook : null );
 
 		return rest_ensure_response( array( 'success' => true ) );
 	}
