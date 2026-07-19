@@ -138,6 +138,20 @@ Names are matched case-insensitively but otherwise **exactly** (whole name), usi
 
 Please view [City/State Level Matching](https://iplocationblock.com/codex/city-state-level-matching/) for more details.
 
+= How do the bot / User-Agent rules work? =
+
+Under **Bot protection**, the *User-Agent (bot) rules* let you allow or block requests by their User-Agent string. The redesigned interface gives you one-click presets (allow verified search engines & feeds, allow social / link-preview bots, block AI-training crawlers, block aggressive SEO scrapers, and opt-in toggles to block AI agents or allow AI-search crawlers), a per-rule editor, a "Test a User-Agent" box, and a raw-list mode for hand-tuning. The rules are stored as a flat list you can also edit directly:
+
+* Entries are separated by a comma or a newline (they are equivalent). Each entry is `UA<sep>qualifier`.
+* The separator sets the action: `:` **allows** (passes) the request, `#` **blocks** it. An entry that contains a `#` anywhere is a block.
+* `UA` is matched as a **case-sensitive substring** of the request's User-Agent header, so `Googlebot` also matches `Googlebot-Image`. Use `*` to match any User-Agent.
+* The `qualifier` is one of: `*` (any country), a 2-letter **country code** (e.g. `US`), `HOST` or `HOST=name` (**verified reverse DNS**), `FEED` (a feed request), `AS12345` (an **ASN**), `REF=text` (the referer contains *text*), or an **IP address / CIDR**.
+* A leading `!` **negates** the qualifier, e.g. `GPTBot#!US` blocks GPTBot everywhere except the US.
+
+Examples: `GPTBot#*` blocks any request whose UA contains `GPTBot`; `Googlebot:HOST` allows Googlebot **only** after verifying its reverse DNS; `*:FEED` allows any feed request; `Twitterbot:*` allows Twitter's card fetcher from any country.
+
+**Important:** an **allow-rule with `HOST` only verifies when "Reverse DNS lookup" is turned on.** With it off (the default), `HOST` is treated as "any", so a `Name:HOST` allow-rule passes *any* request whose User-Agent contains *Name*, from any country &mdash; a spoofed User-Agent can bypass country blocking. **Block**-rules (`#`) need no verification and are unaffected. New installs ship a modern default (verified search engines, feeds, social previews allowed; AI-training and aggressive SEO crawlers blocked); existing sites keep their rules and are offered a one-click update.
+
 = Does this plugin works well with caching? =
 
 The short answer is **YES**, especially for the purpose of security e.g. blocking malicious access both on the back-end and on the front-end.
@@ -260,6 +274,8 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 
 * Fix: "Add a precise rule" in the Simple blocking view now works; blank, in-progress rule rows are no longer discarded before you can fill them in, and clearing a rule's name no longer deletes the row.
 * Fix: IP-address cache rows created before a city/state rule existed are refreshed by a live lookup instead of replaying empty city/state forever; saving a change to any precision rule also clears the IP cache.
+* New: A redesigned bot-rule builder for the *User-Agent (bot) rules* (Bot protection). One-click purpose presets compiled from a bundled catalog of ~36 known crawlers &mdash; allow verified search engines & feeds, allow social / link-preview bots, block AI-training crawlers (GPTBot, ClaudeBot, CCBot, Bytespider, Meta AI), block aggressive SEO scrapers, plus opt-in toggles to block AI agents or allow AI-search crawlers &mdash; alongside a per-rule editor, a "Test a User-Agent" checker, a "scan recent logs for bots" helper, and a raw-list mode. The rule grammar (`:` allow / `#` block, `HOST`/`FEED`/country/ASN/IP/`REF=` qualifiers, `!` negation) is now documented in the FAQ.
+* Change: New installs get a modern default bot ruleset (verified major search engines and feeds allowed, social/link-preview bots allowed, AI-training and aggressive SEO crawlers blocked), replacing the stale 2016 list (which advertised dead tokens like `slurp`/`Facebot` and over-broad substrings). Existing sites keep their current rules untouched and are offered a one-click "modernize" update when their list is still the old default.
 * New: `Region` is a working alias of `State` in city/state rules, and the documented `~` OR syntax is now implemented (`US:City:Seattle~Tacoma` matches either city).
 * New: The Simple blocking view offers a searchable State/Region dropdown pre-filled with the exact provider names for the United States, Spain, Australia, Japan and Israel (with a "Custom value" escape hatch); city stays free text, verifiable on the Search tab.
 * New: An "EU (European Union)" shortcut in the country picker expands to all 27 member states.

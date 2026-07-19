@@ -783,15 +783,23 @@ export const SECTIONS = [
 					{
 						path: 'public.ua_list',
 						label: __(
-							'UA string and qualification',
+							'User-Agent (bot) rules',
 							'ip-location-block'
 						),
-						type: 'textarea',
+						type: 'ua-rules',
+						help: __(
+							'Each rule is “UA<sep>qualifier”: “:” allows, “#” blocks; the UA is a case-sensitive substring (or “*”). Qualifiers: “*” any country, a 2-letter country code, HOST / HOST=name (verified reverse DNS), FEED, AS12345 (ASN), REF=text, or an IP/CIDR. A leading “!” negates. Allow-rules with HOST verify only when Reverse DNS lookup is on; otherwise they pass any matching UA from any country. Block-rules need no verification.',
+							'ip-location-block'
+						),
 					},
 					{
 						path: 'public.dnslkup',
 						label: __( 'Reverse DNS lookup', 'ip-location-block' ),
 						type: 'toggle',
+						help: __(
+							'Required for HOST allow-rules to actually verify a bot (e.g. Googlebot). Off (default): HOST rules are masked to “any”, so they pass on the User-Agent alone. Adds a reverse-DNS query per checked visitor.',
+							'ip-location-block'
+						),
 					},
 				],
 			},

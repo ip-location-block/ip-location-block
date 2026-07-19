@@ -27,6 +27,7 @@ import CidrCalculator from '../components/CidrCalculator';
 import PrecisionUpsell from '../components/PrecisionUpsell';
 import MimeTypeList from '../components/MimeTypeList';
 import ExceptionEditor from '../components/ExceptionEditor';
+import BotRuleEditor from '../components/BotRuleEditor';
 import SettingsActions from './SettingsActions';
 import { decodeLegacySignature } from '../settingsLogic';
 
@@ -163,6 +164,27 @@ export default function SettingsField( {
 						items={ getPath( sources, field.source ) || [] }
 						value={ value }
 						onChange={ set }
+					/>
+				</div>
+			</div>
+		);
+	}
+	if ( field.type === 'ua-rules' ) {
+		return (
+			<div
+				className="ilb-form-row ilb-form-row--custom ilb-form-row--ua-rules"
+				role="group"
+				aria-labelledby={ labelId }
+			>
+				<strong id={ labelId } className="ilb-form-row__label">
+					{ field.label }
+				</strong>
+				<div className="ilb-form-row__control">
+					<BotRuleEditor
+						value={ value }
+						settings={ settings }
+						onChange={ onChange }
+						help={ field.help }
 					/>
 				</div>
 			</div>

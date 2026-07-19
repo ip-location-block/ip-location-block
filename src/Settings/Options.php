@@ -161,7 +161,12 @@ class Options {
 			'target_posts'  => array(), // blocking target of post types
 			'target_cates'  => array(), // blocking target of categories
 			'target_tags'   => array(), // blocking target of tags
-			'ua_list'       => "Google:HOST,bot:HOST,slurp:HOST\nspider:HOST,archive:HOST,*:FEED\nembed.ly:HOST,Twitterbot:US,Facebot:US",
+			// @since 1.4.0 modern bot ruleset (new installs only; existing sites
+			// keep their stored value and get a one-time migration offer). Mirror
+			// of MODERN_DEFAULT in admin/app/src/lib/uaPresets.js — verified allow
+			// for major search engines + feeds, UA-only allow for social/link
+			// previews, and blocks for AI-training + aggressive SEO crawlers.
+			'ua_list'       => 'Googlebot:HOST,bingbot:HOST,DuckDuckBot:HOST,Applebot:HOST,*:FEED,facebookexternalhit:*,Twitterbot:*,LinkedInBot:*,Slackbot:*,Discordbot:*,GPTBot#*,ClaudeBot#*,CCBot#*,Bytespider#*,meta-externalagent#*,AhrefsBot#*,SemrushBot#*,MJ12bot#*',
 			// since version 3.0.3
 			'dnslkup'       => false,   // use DNS reverse lookup
 			'response_code' => 307,     // better for AdSense
@@ -209,6 +214,11 @@ class Options {
 		'use_asn'              => 0,
 		'migrated_from_legacy' => false,
 		'cache_compat_dismissed' => false,
+		// @since 1.4.0 one-time "modernize your bot rules" offer. Set true by the
+		// 1.4.0 upgrade gate ONLY when the stored ua_list is still a recognized
+		// stale default; the React builder shows the offer and clears the flag on
+		// apply or dismiss. New installs get the modern default, so it stays false.
+		'ua_legacy_offer'      => false,
 	);
 
 	/**
@@ -337,6 +347,14 @@ class Options {
 			// any stored value so it can never gate the paid native provider again.
 			unset( $settings['restrict_api'] );
 
+			// Offer the modern bot ruleset — but only when the stored ua_list is
+			// still a recognized stale default (never nag a customized list). The
+			// React builder shows the offer once and clears this flag on apply or
+			// dismiss. The stored ua_list itself is left untouched here.
+			if ( isset( $settings['public']['ua_list'] ) && self::is_legacy_ua_list( $settings['public']['ua_list'] ) ) {
+				$settings['ua_legacy_offer'] = true;
+			}
+
 			// Refresh the deployed mu-plugin copy — ONLY when one already exists
 			// (the user opted into mu-plugins validation timing). Ships the 1.4.0
 			// template over the old copy; a no-op when timing is `init`.
@@ -378,6 +396,37 @@ class Options {
 
 		Validator::update_option( $settings );
 
+	}
+
+	/**
+	 * Recognized stale `ua_list` defaults from the ~2016 IP Geo Block era. Used
+	 * by the 1.4.0 upgrade to offer the modern ruleset ONLY when the stored list
+	 * was never customized. Compared as a normalized token string (newlines are
+	 * equivalent to commas, surrounding whitespace ignored). Kept in sync with
+	 * LEGACY_DEFAULTS in admin/app/src/lib/uaPresets.js.
+	 *
+	 * @param  string $ua_list
+	 *
+	 * @return bool
+	 */
+	public static function is_legacy_ua_list( $ua_list ) {
+		$legacy = array(
+			// 3.0.3+ default (embed.ly qualification rewritten).
+			'Google:HOST,bot:HOST,slurp:HOST,spider:HOST,archive:HOST,*:FEED,embed.ly:HOST,Twitterbot:US,Facebot:US',
+			// Pre-3.0.3 form (before embed.ly was rewritten).
+			'Google:HOST,bot:HOST,slurp:HOST,spider:HOST,archive:HOST,*:FEED,*:HOST=embed.ly,Twitterbot:US,Facebot:US',
+		);
+
+		$normalize = static function ( $value ) {
+			$parts = preg_split( '/[,\n]+/', (string) $value );
+			$parts = array_filter( array_map( 'trim', $parts ), static function ( $part ) {
+				return '' !== $part;
+			} );
+
+			return implode( ',', $parts );
+		};
+
+		return in_array( $normalize( $ua_list ), array_map( $normalize, $legacy ), true );
 	}
 
 	/**
