@@ -5,10 +5,11 @@
   "private": true,
   "license": "GPL-3.0",
   "scripts": {
-    "build": "wp-scripts build admin/src/index.js --output-path=admin/build",
-    "start": "wp-scripts start admin/src/index.js --output-path=admin/build",
-    "lint:js": "wp-scripts lint-js admin/src",
-    "format": "wp-scripts format admin/src",
+    "build": "wp-scripts build admin/app/src/index.js --output-path=admin/app/build",
+    "start": "wp-scripts start admin/app/src/index.js --output-path=admin/app/build",
+    "lint:js": "wp-scripts lint-js admin/app/src",
+    "format": "wp-scripts format admin/app/src",
+    "test": "wp-scripts test-unit-js",
     "test:unit": "wp-scripts test-unit-js"
   },
   "devDependencies": {

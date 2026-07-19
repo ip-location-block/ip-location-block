@@ -3,27 +3,38 @@
  * IP Location Block - React (Beta) admin.
  *
  * Registers a separate "IP Location Block (Beta)" menu that mounts the React
- * app (admin/build/). The classic admin is untouched and remains the default;
- * this Beta UI is opt-in until it reaches parity and is promoted.
+ * app (admin/app/build/). The classic admin is untouched and remains the
+ * default; this Beta UI is opt-in until it reaches parity and is promoted.
  *
  * Requires WordPress 5.0+ (wp-element / React). On older WP the menu is hidden.
+ *
+ * Ported 1:1 (behavior-preserving) from the legacy IP_Location_Block_Beta
+ * (formerly admin/class-ip-location-block-beta.php). The legacy name is kept
+ * working via class_alias in compat/legacy-aliases.php. Unlike the frozen
+ * classic admin, this class is new code (introduced alongside the React
+ * admin) and is therefore namespaced + written to modern PHP 8.1 idioms
+ * rather than kept under its legacy identity.
  *
  * @package IP_Location_Block
  */
 
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
+declare(strict_types=1);
 
-class IP_Location_Block_Beta {
+namespace IPLocationBlock\Admin;
 
-	const SLUG = 'ip-location-block-beta';
+/**
+ * Class ReactAdmin
+ */
+final class ReactAdmin {
 
-	private static $instance = null;
-	private $hook = '';
+	public const SLUG = 'ip-location-block-beta';
 
-	public static function get_instance() {
-		return self::$instance ? self::$instance : ( self::$instance = new self );
+	private static ?self $instance = null;
+
+	private string $hook = '';
+
+	public static function get_instance(): self {
+		return self::$instance ??= new self();
 	}
 
 	private function __construct() {
@@ -36,17 +47,17 @@ class IP_Location_Block_Beta {
 	/**
 	 * The Beta UI needs the wp-element (React) runtime shipped since WP 5.0.
 	 */
-	public static function is_supported() {
+	public static function is_supported(): bool {
 		return version_compare( get_bloginfo( 'version' ), '5.0', '>=' );
 	}
 
-	public function add_menu() {
+	public function add_menu(): void {
 		if ( ! self::is_supported() ) {
 			return;
 		}
 		$network = is_network_admin();
 
-		$this->hook = add_submenu_page(
+		$this->hook = (string) add_submenu_page(
 			$network ? 'settings.php' : 'options-general.php',
 			__( 'IP Location Block (Beta)', 'ip-location-block' ),
 			__( 'IP Location Block (Beta)', 'ip-location-block' ),
@@ -64,8 +75,8 @@ class IP_Location_Block_Beta {
 	 * Enqueue the built React bundle + its WP script dependencies (read from
 	 * the generated asset manifest) and bootstrap data for the app.
 	 */
-	public function enqueue() {
-		$asset_path = IP_LOCATION_BLOCK_PATH . 'admin/build/index.asset.php';
+	public function enqueue(): void {
+		$asset_path = IP_LOCATION_BLOCK_PATH . 'admin/app/build/index.asset.php';
 		if ( ! file_exists( $asset_path ) ) {
 			return; // assets not built (npm run build)
 		}
@@ -74,13 +85,13 @@ class IP_Location_Block_Beta {
 		// Bundled Leaflet for the Search tab map (exposes window.L).
 		wp_enqueue_style(
 			'ip-location-block-leaflet',
-			plugins_url( 'admin/vendor/leaflet/leaflet.css', IP_LOCATION_BLOCK_BASE ),
+			plugins_url( 'admin/app/vendor/leaflet/leaflet.css', IP_LOCATION_BLOCK_BASE ),
 			array(),
 			IP_LOCATION_BLOCK_VERSION
 		);
 		wp_enqueue_script(
 			'ip-location-block-leaflet',
-			plugins_url( 'admin/vendor/leaflet/leaflet.js', IP_LOCATION_BLOCK_BASE ),
+			plugins_url( 'admin/app/vendor/leaflet/leaflet.js', IP_LOCATION_BLOCK_BASE ),
 			array(),
 			IP_LOCATION_BLOCK_VERSION,
 			true
@@ -88,7 +99,7 @@ class IP_Location_Block_Beta {
 
 		wp_enqueue_script(
 			self::SLUG,
-			plugins_url( 'admin/build/index.js', IP_LOCATION_BLOCK_BASE ),
+			plugins_url( 'admin/app/build/index.js', IP_LOCATION_BLOCK_BASE ),
 			array_merge( $asset['dependencies'], array( 'ip-location-block-leaflet' ) ),
 			$asset['version'],
 			true
@@ -103,14 +114,14 @@ class IP_Location_Block_Beta {
 		// both so every component's styles load.
 		wp_enqueue_style(
 			self::SLUG,
-			plugins_url( 'admin/build/style-index.css', IP_LOCATION_BLOCK_BASE ),
+			plugins_url( 'admin/app/build/style-index.css', IP_LOCATION_BLOCK_BASE ),
 			array( 'wp-components' ),
 			$asset['version']
 		);
-		if ( file_exists( IP_LOCATION_BLOCK_PATH . 'admin/build/index.css' ) ) {
+		if ( file_exists( IP_LOCATION_BLOCK_PATH . 'admin/app/build/index.css' ) ) {
 			wp_enqueue_style(
 				self::SLUG . '-components',
-				plugins_url( 'admin/build/index.css', IP_LOCATION_BLOCK_BASE ),
+				plugins_url( 'admin/app/build/index.css', IP_LOCATION_BLOCK_BASE ),
 				array( self::SLUG ),
 				$asset['version']
 			);
@@ -129,7 +140,7 @@ class IP_Location_Block_Beta {
 		wp_set_script_translations( self::SLUG, 'ip-location-block' );
 	}
 
-	public function render() {
+	public function render(): void {
 		// Give WordPress a definite notice anchor before the React heading. This
 		// screen's stylesheet suppresses those notices, but the marker prevents
 		// core or third-party code from relocating them inside the product bar.

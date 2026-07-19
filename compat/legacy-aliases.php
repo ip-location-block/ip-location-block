@@ -6,7 +6,9 @@
  * existing integrations, the frozen classic admin, the deployed mu-plugin
  * copies and third-party code keep resolving the historic names. Every alias
  * is guarded so a real (not-yet-ported) legacy class of the same name always
- * wins — this phase only aliases the seven "support leaf" classes.
+ * wins. Every ported legacy class is aliased here; the provider facades
+ * (IP_Location_Block_Provider / _API / _API_Cache) are real classes in
+ * compat/ instead, because their behavior diverges from the new services.
  *
  * class_alias() autoloads its target (the namespaced class), so requiring this
  * file eagerly loads the ports and runs their top-level side effects (e.g. the
@@ -31,6 +33,7 @@ $ip_location_block_aliases = array(
 	'IP_Location_Block_Loader'       => 'IPLocationBlock\\Core\\HookLoader',
 	'IP_Location_Block_Rest'         => 'IPLocationBlock\\Rest\\RestApi',
 	'IP_Location_Block_Diagnostics'  => 'IPLocationBlock\\Diagnostics\\Diagnostics',
+	'IP_Location_Block_Beta'         => 'IPLocationBlock\\Admin\\ReactAdmin',
 );
 
 foreach ( $ip_location_block_aliases as $ip_location_block_legacy => $ip_location_block_target ) {

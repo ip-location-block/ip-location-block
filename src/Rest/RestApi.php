@@ -476,7 +476,7 @@ class RestApi {
 			// exist only under their legacy names and are require_once'd on demand;
 			// every such reference in this file is intentionally left legacy.
 			if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
-				require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+				require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 			}
 			$merged = array_replace_recursive(
 				Validator::get_option(),
@@ -610,7 +610,7 @@ class RestApi {
 		$options = self::sanitize_settings_payload( $draft );
 
 		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 		}
 
 		return rest_ensure_response( array(
@@ -703,7 +703,7 @@ class RestApi {
 			return $scope;
 		}
 		if ( ! class_exists( 'IP_Location_Block_Admin', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/class-ip-location-block-admin.php';
 		}
 
 		$url = Util::generate_link(
@@ -723,7 +723,7 @@ class RestApi {
 			return $scope;
 		}
 		if ( ! class_exists( 'IP_Location_Block_Admin', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/class-ip-location-block-admin.php';
 		}
 
 		Util::delete_link(
@@ -746,7 +746,7 @@ class RestApi {
 	 */
 	private static function sanitize_settings_payload( $input ) {
 		if ( ! class_exists( 'IP_Location_Block_Admin', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/class-ip-location-block-admin.php';
 		}
 
 		$current = Validator::get_option();
@@ -856,7 +856,7 @@ class RestApi {
 	private static function persist_settings( $settings, $scope ) {
 		if ( 'network' === $scope ) {
 			if ( ! class_exists( 'IP_Location_Block_Admin', false ) ) {
-				require_once IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
+				require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/class-ip-location-block-admin.php';
 			}
 			if ( ! \IP_Location_Block_Admin::get_instance()->update_multisite_settings( $settings ) ) {
 				return new \WP_Error(
@@ -1230,7 +1230,7 @@ class RestApi {
 			);
 		}
 		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 		}
 
 		$found = \IP_Location_Block_Admin_Ajax::find_exceptions( 'find-' . $target );
@@ -1258,7 +1258,7 @@ class RestApi {
 		$_POST['ip'] = sanitize_text_field( (string) $request->get_param( 'ip' ) );
 
 		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 		}
 
 		return rest_ensure_response( \IP_Location_Block_Admin_Ajax::search_ip( $provider ) );
@@ -1279,7 +1279,7 @@ class RestApi {
 		$length   = null === $length ? 100 : (int) $length;
 
 		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 		}
 		if ( ! function_exists( 'is_plugin_active' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -1347,7 +1347,7 @@ class RestApi {
 			);
 		}
 		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 		}
 
 		return rest_ensure_response( array(
@@ -1661,10 +1661,10 @@ class RestApi {
 		}
 
 		if ( ! class_exists( 'IP_Location_Block_Admin', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/class-ip-location-block-admin.php';
 		}
 		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
-			require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 		}
 
 		if ( 'stop' === $action ) {

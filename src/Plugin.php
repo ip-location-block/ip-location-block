@@ -56,15 +56,16 @@ final class Plugin
         \add_action('rest_api_init', array('IP_Location_Block_Rest', 'register_routes'));
 
         // Dashboard / administrative functionality (classic + React admin).
-        // Contract-bound legacy identities — the admin/beta classes exist ONLY
-        // under their legacy names (frozen admin layer); do not namespace.
         if (\is_admin()) {
-            require IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-admin.php';
+            // Contract-bound legacy identity — the classic admin class exists
+            // ONLY under its legacy name (frozen admin layer); do not namespace.
+            require IP_LOCATION_BLOCK_PATH . 'admin/legacy/class-ip-location-block-admin.php';
             \add_action('plugins_loaded', array('IP_Location_Block_Admin', 'get_instance'));
 
-            // React (Beta) admin — separate opt-in menu; classic admin stays default.
-            require IP_LOCATION_BLOCK_PATH . 'admin/class-ip-location-block-beta.php';
-            \add_action('plugins_loaded', array('IP_Location_Block_Beta', 'get_instance'));
+            // React (Beta) admin — separate opt-in menu; classic admin stays
+            // default. New code (not frozen), so it is autoloaded under its
+            // namespaced identity rather than a legacy require + class name.
+            \add_action('plugins_loaded', array(Admin\ReactAdmin::class, 'get_instance'));
         }
     }
 }

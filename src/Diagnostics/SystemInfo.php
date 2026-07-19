@@ -4,8 +4,8 @@
  *
  * Extracted from IP_Location_Block_Admin_Ajax::get_wp_info() so the REST
  * Diagnostics environment report (and the classic admin debug info panel,
- * via the one-line delegate left in admin/includes/class-admin-ajax.php) no
- * longer requires pulling in the frozen classic admin from front-end-reachable
+ * via the one-line delegate left in admin/legacy/includes/class-admin-ajax.php)
+ * no longer requires pulling in the frozen classic admin from front-end-reachable
  * code paths.
  *
  * @package IP_Location_Block

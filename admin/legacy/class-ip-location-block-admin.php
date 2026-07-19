@@ -96,7 +96,7 @@ class IP_Location_Block_Admin {
 		}
 		wp_enqueue_style(
 			'ip-location-block-welcome',
-			plugins_url( 'admin/css/welcome.css', IP_LOCATION_BLOCK_BASE ),
+			plugins_url( 'admin/legacy/css/welcome.css', IP_LOCATION_BLOCK_BASE ),
 			array( 'dashicons' ),
 			IP_LOCATION_BLOCK_VERSION
 		);
@@ -371,8 +371,8 @@ class IP_Location_Block_Admin {
 		$footer     = true;
 		$dependency = array( 'jquery' );
 		$version    = $release ? IP_LOCATION_BLOCK_VERSION : max(
-			filemtime( IP_LOCATION_BLOCK_PATH . 'admin/css/admin.css' ),
-			filemtime( IP_LOCATION_BLOCK_PATH . 'admin/js/admin.js' )
+			filemtime( IP_LOCATION_BLOCK_PATH . 'admin/legacy/css/admin.css' ),
+			filemtime( IP_LOCATION_BLOCK_PATH . 'admin/legacy/js/admin.js' )
 		);
 
 		switch ( $this->admin_tab ) {
@@ -407,17 +407,19 @@ class IP_Location_Block_Admin {
 					add_filter( 'google-charts', array( $this, 'google_charts_cn' ) );
 				}
 
-				// Enqueue leaflet.js
+				// Enqueue leaflet.js (shared with the React admin; lives under
+				// admin/app/vendor, not alongside this file, so resolve it from
+				// the plugin base rather than relative to __FILE__).
 				wp_enqueue_style(
 					IP_Location_Block::PLUGIN_NAME . '-leaflet',
-					plugins_url( 'vendor/leaflet/leaflet.css', __FILE__ ),
+					plugins_url( 'admin/app/vendor/leaflet/leaflet.css', IP_LOCATION_BLOCK_BASE ),
 					array(),
 					IP_LOCATION_BLOCK_VERSION,
 					'all'
 				);
 				wp_enqueue_script(
 					IP_Location_Block::PLUGIN_NAME . '-leaflet',
-					plugins_url( 'vendor/leaflet/leaflet.js', __FILE__ ),
+					plugins_url( 'admin/app/vendor/leaflet/leaflet.js', IP_LOCATION_BLOCK_BASE ),
 					array(),
 					IP_LOCATION_BLOCK_VERSION,
 					$footer
@@ -1158,7 +1160,7 @@ class IP_Location_Block_Admin {
         <div class="wrap ip-location-block-wrap">
             <h2><?php echo $title; ?></h2>
             <?php
-            include(IP_LOCATION_BLOCK_PATH.'admin/includes/status.php');
+            include(IP_LOCATION_BLOCK_PATH.'admin/legacy/includes/status.php');
             ?>
             <h2 class="nav-tab-wrapper">
 				<?php foreach ( $tabs as $key => $val ) {
@@ -1224,12 +1226,12 @@ class IP_Location_Block_Admin {
 	 */
 	private function register_settings_tab() {
 		$files = array(
-			0 => 'admin/includes/tab-settings.php',
-			1 => 'admin/includes/tab-statistics.php',
-			4 => 'admin/includes/tab-accesslog.php',
-			2 => 'admin/includes/tab-geolocation.php',
-			3 => 'admin/includes/tab-attribution.php',
-			5 => 'admin/includes/tab-network.php',
+			0 => 'admin/legacy/includes/tab-settings.php',
+			1 => 'admin/legacy/includes/tab-statistics.php',
+			4 => 'admin/legacy/includes/tab-accesslog.php',
+			2 => 'admin/legacy/includes/tab-geolocation.php',
+			3 => 'admin/legacy/includes/tab-attribution.php',
+			5 => 'admin/legacy/includes/tab-network.php',
 		);
 
 		require_once IP_LOCATION_BLOCK_PATH . $files[ $this->admin_tab ];
@@ -2089,7 +2091,7 @@ class IP_Location_Block_Admin {
 	 * @link https://core.trac.wordpress.org/browser/trunk/wp-admin/admin-ajax.php
 	 */
 	public function admin_ajax_callback() {
-		require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+		require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 
 		// Check request origin, nonce, capability.
 		$this->check_admin_post( true );

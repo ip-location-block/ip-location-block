@@ -1,6 +1,6 @@
 # Files EXCLUDED from the WordPress.org release. Consumed by rsync --exclude-from.
 # Leading "/" ANCHORS to repo root: excludes ONLY top-level dev cruft and never
-# reaches into the committed runtime vendor tree (admin/vendor) or the shipped
+# reaches into the committed runtime vendor tree (admin/app/vendor) or the shipped
 # composer autoloaders (/vendor with pear/net_dns2, /vendor_prefixed with the
 # scoped geo libraries) — all of which MUST ship. The two bundled
 # classes/db-providers/*/vendor trees were removed in 1.4.0 (replaced by the
@@ -26,7 +26,7 @@
 /node_modules
 /package.json
 /package-lock.json
-/admin/src
+/admin/app/src
 /webpack.config.js
 /composer.json
 /composer.lock

@@ -22,8 +22,10 @@ use PHPUnit\Framework\TestCase;
  *
  *   - src/Plugin.php — the `plugins_loaded` / `rest_api_init` hook callables.
  *     Deployed mu-plugin copies remove_action() the literal string identity
- *     `array('IP_Location_Block','get_instance')`, and the classic + Beta admin
- *     classes only exist under their legacy names (frozen admin layer).
+ *     `array('IP_Location_Block','get_instance')`, and the classic admin class
+ *     only exists under its legacy name (frozen admin layer). The React (Beta)
+ *     admin is new code — it is namespaced (IPLocationBlock\Admin\ReactAdmin)
+ *     and therefore does not appear in this allowlist.
  *   - src/Rest/RestApi.php, src/Support/FileSystem.php, src/Logging/Logs.php —
  *     class_exists() probes and static calls into the FROZEN classic admin
  *     (IP_Location_Block_Admin / IP_Location_Block_Admin_Ajax), which is served
@@ -48,7 +50,6 @@ final class ArchitectureTest extends TestCase
             'IP_Location_Block',       // mu-plugin remove_action() identity
             'IP_Location_Block_Rest',  // REST routes callable
             'IP_Location_Block_Admin', // frozen classic admin (is_admin only)
-            'IP_Location_Block_Beta',  // frozen Beta admin bootstrap
         ],
         'src/Core/Validator.php' => [
             'IP_Location_Block_Rewrite', // external add-on, legacy-only name

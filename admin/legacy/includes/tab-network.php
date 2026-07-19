@@ -119,7 +119,7 @@ class IP_Location_Block_Admin_Tab {
 	 * @param array $args associative array of `id`, `title`, `callback`.
 	 */
 	public static function render_network( $args ) {
-		require_once IP_LOCATION_BLOCK_PATH . 'admin/includes/class-admin-ajax.php';
+		require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 
 		if ( self::$controls['warn'] ) {
 			$context = IP_Location_Block_Admin::get_instance();
