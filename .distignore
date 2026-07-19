@@ -50,3 +50,6 @@
 .DS_Store
 Thumbs.db
 _tmp
+
+# --- AI coding assistant session/tooling state (unanchored; never product code) ---
+.claude

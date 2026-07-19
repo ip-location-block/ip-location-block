@@ -3,6 +3,7 @@ Contributors: darkog
 Tags: country, block, ip address, ip geo block, geolocation
 Requires at least: 3.7
 Tested up to: 7.0
+Requires PHP: 8.1
 Stable tag: 1.3.9
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
@@ -63,6 +64,9 @@ Combined with those methods and IP address geolocation, you'll be surprised to f
 * **Extendability:**
   You can customize the behavior of this plugin via `add_filter()` with [pre-defined filter hook](https://iplocationblock.com/codex/ "Codex | IP Location Block"). See various use cases in [samples.php](https://iplocationblock.com/codex/example-use-cases-for-the-developer-hooks/) bundled within this package.
   You can also get the extension [IP Geo Allow](https://github.com/ddur/WordPress-IP-Geo-Allow "GitHub - ddur/WordPress-IP-Geo-Allow: WordPress Plugin Exension for WordPress-IP-Geo-Block Plugin") by [Dragan](https://github.com/ddur "ddur (Dragan) - GitHub"). It makes admin screens strictly private with more flexible way than specifying IP addresses.
+
+* **Deprecations (1.4.0):**
+  Registration of external/third-party geolocation providers has been removed: `IP_Location_Block_Provider::register_addon()` is now a deprecated no-op and the uploads `apis/` directory is no longer scanned for add-on providers. The `ip-location-block-api-dir` filter has been removed. A new `ip-location-block-deprecated` action fires whenever a deprecated integration point is used, so integrators can detect and update legacy code. Legacy global class names (`IP_Location_Block`, `IP_Location_Block_Provider`, `IP_Location_Block_API`, etc.) are guaranteed to remain available as aliases throughout the 1.x release series.
 
 * **Self blocking prevention and easy rescue:**
   Website owners do not prefer themselves to be blocked. This plugin prevents such a sad thing unless you force it. And futhermore, if such a situation occurs, you can [rescue yourself](https://iplocationblock.com/codex/what-should-i-do-when-im-locked-out/ "What should I do when I'm locked out? | IP Location Block") easily.
@@ -241,6 +245,19 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 11. **IP Location Plugin** - Multisite list on network
 
 == Changelog ==
+
+= 1.4.0 =
+
+*Release Date - 19 Jul 2026*
+
+* New: Rewritten plugin internals on a modern PSR-4/Composer architecture with scoped ("prefixed") third-party dependencies, so bundled libraries no longer collide with copies shipped by other plugins.
+* Change: Minimum required PHP version raised to 8.1.
+* Change: The geolocation provider registry is now sealed. External/third-party geolocation providers are no longer supported: `IP_Location_Block_Provider::register_addon()` is now a deprecated no-op and the uploads `apis/` directory is no longer scanned for add-on providers.
+* New: `ip-location-block-deprecated` action fires whenever a deprecated integration point is used, so integrators can detect and update legacy code.
+* Compat: Legacy global class names remain available as aliases throughout the 1.x release series.
+* Change: Bundled per-provider vendor libraries replaced by scoped Composer packages.
+* Fix: Uninstall no longer causes a fatal error when the settings row was already removed from the database.
+* Fix: Cron database downloads now persist the downloaded file path and last-updated timestamp correctly.
 
 = 1.3.9 =
 

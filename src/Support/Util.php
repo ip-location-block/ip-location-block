@@ -1319,7 +1319,7 @@ class Util {
 	 * @link   https://github.com/zendframework/zend-http/blob/master/src/PhpEnvironment/RemoteAddress.php
 	 */
 	public static function get_client_ip( $vars = null ) {
-		foreach ( explode( ',', $vars ) as $var ) {
+		foreach ( explode( ',', (string) $vars ) as $var ) {
 			if ( isset( $_SERVER[ $var ] ) ) {
 				$ips = array_map( 'trim', explode( ',', $_SERVER[ $var ] ) );
 				while ( $var = array_pop( $ips ) ) {
