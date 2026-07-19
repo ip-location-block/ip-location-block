@@ -34,11 +34,25 @@ import SimpleBlocking from './SimpleBlocking';
 import ScanCountry from '../components/ScanCountry';
 import { queryParam } from '../navigation';
 
-const STORAGE_KEY = 'ilbBetaSettingsMode';
+const STORAGE_KEY = 'ilbSettingsMode';
+const LEGACY_STORAGE_KEY = 'ilbBetaSettingsMode';
 
 const readStoredMode = () => {
 	try {
-		const v = window.localStorage.getItem( STORAGE_KEY );
+		let v = window.localStorage.getItem( STORAGE_KEY );
+		if ( v === null ) {
+			// One-time fallback: migrate the pre-1.4.0 "Beta" key.
+			const legacy = window.localStorage.getItem( LEGACY_STORAGE_KEY );
+			if ( legacy !== null ) {
+				try {
+					window.localStorage.setItem( STORAGE_KEY, legacy );
+					window.localStorage.removeItem( LEGACY_STORAGE_KEY );
+				} catch {
+					// storage write may fail — the fallback value still applies
+				}
+				v = legacy;
+			}
+		}
 		return v === 'simple' || v === 'advanced' ? v : null;
 	} catch {
 		return null;

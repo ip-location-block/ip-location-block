@@ -80,4 +80,20 @@ describe( 'quota banner logic', () => {
 		expect( shouldShowBanner( { status: 'ok' }, storage ) ).toBe( false );
 		expect( isDismissed( { status: 'ok' }, storage ) ).toBe( true );
 	} );
+
+	test( 'migrates a dismissal stored under the pre-1.4.0 "Beta" key', () => {
+		const storage = makeStorage();
+		// Seed the legacy key with the current incident's fingerprint.
+		storage.setItem( 'ilbBetaQuotaBannerDismissed', incidentKey( exhausted ) );
+
+		// The dismissal is honoured via the legacy fallback...
+		expect( isDismissed( exhausted, storage ) ).toBe( true );
+		expect( shouldShowBanner( exhausted, storage ) ).toBe( false );
+
+		// ...and the value is migrated to the new key, clearing the old one.
+		expect( storage.getItem( 'ilbQuotaBannerDismissed' ) ).toBe(
+			incidentKey( exhausted )
+		);
+		expect( storage.getItem( 'ilbBetaQuotaBannerDismissed' ) ).toBe( null );
+	} );
 } );

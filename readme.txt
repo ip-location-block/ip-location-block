@@ -264,6 +264,9 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 * Improvement: The Search tool now queries several providers at once, lists only the currently configured providers (marking any local provider whose database is missing), and adds an "Anonymize IP address" toggle for the result preview.
 * Improvement: The new admin now shows a persistent, per-incident upgrade banner on every tab when the IP Location Block provider key is exhausted, rate-limited, or needs an upgrade.
 * Improvement: Downloading local databases now reports a per-file summary of what was updated.
+* Change: The admin now has a single menu entry. The redesigned interface is the default and opens at the plugin's original location ("Settings -> IP Location Block", or the top-level menu on multisite); the separate "IP Location Block (Beta)" entry is gone.
+* New: The classic interface stays reachable through a floating "Classic view" switcher, and your choice is remembered per user. The classic view is deprecated and will be removed in a future major release.
+* Change: Old `ip-location-block-beta` bookmarks now redirect to the merged page, preserving the tab and other deep-link parameters.
 
 = 1.3.9 =
 

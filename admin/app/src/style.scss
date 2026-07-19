@@ -52,20 +52,25 @@
 	}
 }
 
-/* Keep the Beta screen focused: WordPress notices live outside the app and
- * can otherwise push the product shell around unpredictably. */
-body.settings_page_ip-location-block-beta {
-	.ilb-beta-wrap {
+/* Keep the React view focused: WordPress notices live outside the app and can
+ * otherwise push the product shell around unpredictably. The merged slug serves
+ * BOTH interfaces, so hide notices ONLY under the React view — whose wrap
+ * carries .ilb-view-new. The classic view keeps normal WordPress notices. */
+body.settings_page_ip-location-block,
+body.toplevel_page_ip-location-block {
+	.ilb-view-new {
 		margin-top: 0;
 	}
+}
 
-	#wpbody-content .notice,
-	#wpbody-content > .updated,
-	#wpbody-content > .error,
-	#wpbody-content > .update-nag,
-	.ilb-beta-wrap > .updated,
-	.ilb-beta-wrap > .error,
-	.ilb-beta-wrap > .update-nag {
+#wpbody-content:has(.ilb-view-new) {
+	.notice,
+	> .updated,
+	> .error,
+	> .update-nag,
+	.ilb-view-new > .updated,
+	.ilb-view-new > .error,
+	.ilb-view-new > .update-nag {
 		display: none !important;
 	}
 }
@@ -174,20 +179,6 @@ body.settings_page_ip-location-block-beta {
 			text-decoration: none;
 		}
 	}
-}
-
-.ilb-badge {
-	display: inline-block;
-	font-size: 9px;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	background: var(--ilb-surface-2);
-	color: var(--ilb-muted);
-	border: 1px solid var(--ilb-border-soft);
-	border-radius: 2px;
-	padding: 1px 5px;
-	vertical-align: middle;
 }
 
 /* Protection status */

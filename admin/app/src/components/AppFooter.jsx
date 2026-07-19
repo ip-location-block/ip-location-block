@@ -4,7 +4,7 @@ import { __ } from '@wordpress/i18n';
 
 import { getAttributions } from '../api';
 
-const boot = window.ipLocationBlockBeta || {};
+const boot = window.ipLocationBlockAdmin || {};
 
 export default function AppFooter() {
 	const [ open, setOpen ] = useState( false );

@@ -61,8 +61,7 @@ class IP_Location_Block_Admin {
 	 * @return bool
 	 */
 	private function is_beta_screen() {
-		return isset( $_GET['page'] ) &&
-			'ip-location-block-beta' === sanitize_key( wp_unslash( $_GET['page'] ) );
+		return \IPLocationBlock\Admin\ReactAdmin::is_react_screen();
 	}
 
 	/**
@@ -359,8 +358,10 @@ class IP_Location_Block_Admin {
 
 		// Only load the plugin's admin UI assets on its own settings screen(s).
 		// Loading admin.js elsewhere interferes with unrelated admin pages (e.g. disabling checkboxes).
+		// Never load the classic assets under the React view (avoids a double-load).
 		$slug = IP_Location_Block::PLUGIN_NAME;
-		if ( ! in_array( $hook_suffix, array( 'settings_page_' . $slug, 'toplevel_page_' . $slug ), true ) ) {
+		if ( ! in_array( $hook_suffix, array( 'settings_page_' . $slug, 'toplevel_page_' . $slug ), true )
+			|| \IPLocationBlock\Admin\ReactAdmin::is_react_screen() ) {
 			return;
 		}
 
@@ -1105,6 +1106,13 @@ class IP_Location_Block_Admin {
 	 *
 	 */
 	public function display_plugin_admin_page() {
+		// The React admin is the default view on this merged slug; render it and
+		// stop before emitting any classic markup.
+		if ( \IPLocationBlock\Admin\ReactAdmin::is_react_screen() ) {
+			\IPLocationBlock\Admin\ReactAdmin::get_instance()->render();
+			return;
+		}
+
 		$tab  = $this->admin_tab;
 		$tabs = array(
 			5 => __( 'Sites list', 'ip-location-block' ),

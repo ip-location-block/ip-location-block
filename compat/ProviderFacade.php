@@ -127,9 +127,12 @@ class IP_Location_Block_Provider {
 	 * @return bool
 	 */
 	private static function is_react_admin_screen() {
-		$slug = class_exists( '\\IPLocationBlock\\Admin\\ReactAdmin' )
-			? \IPLocationBlock\Admin\ReactAdmin::SLUG
-			: 'ip-location-block-beta';
+		if ( class_exists( '\\IPLocationBlock\\Admin\\ReactAdmin' ) ) {
+			return \IPLocationBlock\Admin\ReactAdmin::is_react_screen();
+		}
+
+		// Fallback for uninstall-ish contexts where the admin class is absent.
+		$slug = 'ip-location-block';
 
 		if ( isset( $_GET['page'] ) ) {
 			$page = function_exists( 'sanitize_key' )

@@ -1,11 +1,11 @@
 /**
- * REST client for the Beta admin. wp-api-fetch (enqueued as a dependency)
+ * REST client for the admin app. wp-api-fetch (enqueued as a dependency)
  * auto-configures the site REST root + wp_rest nonce; we also register the
  * bootstrap nonce explicitly for robustness.
  */
 import apiFetch from '@wordpress/api-fetch';
 
-const boot = window.ipLocationBlockBeta || {};
+const boot = window.ipLocationBlockAdmin || {};
 const ns = boot.restNamespace || 'ip-location-block/v1';
 const settingsScope = boot.isNetwork ? 'network' : 'site';
 

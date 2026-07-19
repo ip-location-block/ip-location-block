@@ -1,5 +1,5 @@
 /**
- * Root of the Beta admin: a full-width product bar + a contained TabPanel shell.
+ * Root of the admin app: a full-width product bar + a contained TabPanel shell.
  */
 import {
 	useCallback,
@@ -25,12 +25,18 @@ import {
 } from './api';
 import ModeBadge from './components/ModeBadge';
 import AppFooter from './components/AppFooter';
+import ViewSwitcher from './components/ViewSwitcher';
 import QuotaBanner from './components/QuotaBanner';
 import { criticalChecks, issueCount } from './diagnosticsLogic';
 import { dismissQuotaBanner, shouldShowBanner } from './quotaBannerLogic';
-import { betaUrl, queryParam, replaceTabInUrl } from './navigation';
+import {
+	betaUrl,
+	queryParam,
+	replaceTabInUrl,
+	resolveTabName,
+} from './navigation';
 
-const boot = window.ipLocationBlockBeta || {};
+const boot = window.ipLocationBlockAdmin || {};
 const isNetwork = !! boot.isNetwork;
 
 const TABS = [
@@ -116,9 +122,6 @@ function Header() {
 					<div className="ilb-topbar__titles">
 						<h1 className="ilb-topbar__title">
 							{ __( 'IP Location Block', 'ip-location-block' ) }
-							<span className="ilb-badge">
-								{ __( 'Beta', 'ip-location-block' ) }
-							</span>
 						</h1>
 						{ boot.version && (
 							<p className="ilb-topbar__sub">
@@ -203,7 +206,8 @@ function CriticalBanner( { checks } ) {
 }
 
 export default function App() {
-	const requestedTab = queryParam( 'tab' );
+	// Accept both React tab names and legacy classic numeric `tab=` deep links.
+	const requestedTab = resolveTabName( queryParam( 'tab' ) );
 	const initialTabName = TABS.some( ( tab ) => tab.name === requestedTab )
 		? requestedTab
 		: 'settings';
@@ -348,6 +352,7 @@ export default function App() {
 				</TabPanel>
 			</main>
 			<AppFooter />
+			<ViewSwitcher />
 		</div>
 	);
 }

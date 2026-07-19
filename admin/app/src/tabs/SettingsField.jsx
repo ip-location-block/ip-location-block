@@ -185,7 +185,7 @@ export default function SettingsField( {
 				<strong className="ilb-form-row__label">{ field.label }</strong>
 				<em className="ilb-field-advanced">
 					{ __(
-						'Advanced field, coming soon in the Beta UI (use the classic screen for now).',
+						'Advanced field, coming soon in the new interface (use the Classic view for now).',
 						'ip-location-block'
 					) }
 				</em>

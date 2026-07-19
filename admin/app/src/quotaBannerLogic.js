@@ -10,7 +10,8 @@
  * re-show a banner the user already dismissed for the same incident.
  */
 
-const STORAGE_KEY = 'ilbBetaQuotaBannerDismissed';
+const STORAGE_KEY = 'ilbQuotaBannerDismissed';
+const LEGACY_STORAGE_KEY = 'ilbBetaQuotaBannerDismissed';
 
 const BLOCKING_STATES = new Set( [
 	'exhausted',
@@ -40,8 +41,24 @@ export const incidentKey = ( quota ) => {
 };
 
 const readStore = ( storage ) => {
+	const store = storage || window.localStorage;
 	try {
-		return ( storage || window.localStorage ).getItem( STORAGE_KEY );
+		const current = store.getItem( STORAGE_KEY );
+		if ( current !== null && current !== undefined ) {
+			return current;
+		}
+		// One-time fallback: migrate the pre-1.4.0 "Beta" key.
+		const legacy = store.getItem( LEGACY_STORAGE_KEY );
+		if ( legacy !== null && legacy !== undefined ) {
+			try {
+				store.setItem( STORAGE_KEY, legacy );
+				store.removeItem( LEGACY_STORAGE_KEY );
+			} catch {
+				// storage write may fail — the fallback value still applies
+			}
+			return legacy;
+		}
+		return null;
 	} catch {
 		return null;
 	}
