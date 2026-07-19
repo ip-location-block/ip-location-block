@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace IPLocationBlock\Tests\Unit\Providers;
 
+use Brain\Monkey\Functions;
 use IPLocationBlock\Providers\NativeProvider;
+use IPLocationBlock\Providers\NativeQuotaService;
 use IPLocationBlock\Providers\PrecisionLocationSource;
 use IPLocationBlock\Providers\ProviderInterface;
 use IPLocationBlock\Providers\ProviderRegistry;
@@ -105,7 +107,7 @@ final class ProviderRegistryTest extends TestCase {
 	public function test_active_provider_ids( array $settings, array $expected ): void {
 		$this->assertSame(
 			$expected,
-			ProviderRegistry::instance()->activeProviderIds( $settings, false, false )
+			ProviderRegistry::instance()->activeProviderIds( $settings, false )
 		);
 	}
 
@@ -127,19 +129,11 @@ final class ProviderRegistryTest extends TestCase {
 				array( 'providers' => array( 'IP2Location' => '' ) ),
 				array(),
 			),
-			'restrict_api limits to locals' => array(
+			// restrict_api is dropped: a stored value no longer filters providers.
+			'restrict_api in stored settings is ignored' => array(
 				array( 'restrict_api' => 1, 'providers' => array( 'IPInfoDB' => 'key' ) ),
-				array( 'IP2Location' ),
+				array( 'IP2Location', 'IPInfoDB' ),
 			),
-		);
-	}
-
-	public function test_ignore_restrict_api_includes_remotes(): void {
-		$settings = array( 'restrict_api' => 1, 'providers' => array( 'IPInfoDB' => 'key' ) );
-
-		$this->assertSame(
-			array( 'IP2Location', 'IPInfoDB' ),
-			ProviderRegistry::instance()->activeProviderIds( $settings, false, true )
 		);
 	}
 
@@ -149,7 +143,7 @@ final class ProviderRegistryTest extends TestCase {
 		);
 		$expected = array( 'IP2Location', 'IPInfoDB', 'ipapi', 'ipstack' );
 
-		$shuffled = ProviderRegistry::instance()->activeProviderIds( $settings, true, false );
+		$shuffled = ProviderRegistry::instance()->activeProviderIds( $settings, true );
 		sort( $shuffled );
 		sort( $expected );
 
@@ -161,7 +155,7 @@ final class ProviderRegistryTest extends TestCase {
 			'providers' => array( 'IPInfoDB' => 'a', 'ipapi' => 'b' ),
 		);
 
-		$ids = ProviderRegistry::instance()->activeProviderIds( $settings, true, false );
+		$ids = ProviderRegistry::instance()->activeProviderIds( $settings, true );
 
 		$this->assertSame( 'IP2Location', $ids[0], 'locals always precede shuffled remotes' );
 	}
@@ -203,6 +197,114 @@ final class ProviderRegistryTest extends TestCase {
 		// explicit empty => excluded (unless forced)
 		$this->assertSame( array( 'GeoLite2' ), $registry->localProviderIds( array( 'IP2Location' => '' ) ) );
 		$this->assertSame( array( 'IP2Location', 'GeoLite2' ), $registry->localProviderIds( array( 'IP2Location' => '' ), true ) );
+	}
+
+	/** ===== isNativeEnforced() (pure: precision rule + real key) ===== */
+
+	/**
+	 * @dataProvider nativeEnforcedProvider
+	 */
+	public function test_is_native_enforced( array $settings, bool $expected ): void {
+		$this->assertSame( $expected, ProviderRegistry::instance()->isNativeEnforced( $settings ) );
+	}
+
+	public function nativeEnforcedProvider(): array {
+		return array(
+			'real key + precision rule' => array(
+				array( 'providers' => array( 'IP Location Block' => 'realkey' ), 'white_list' => 'US:State:Washington' ),
+				true,
+			),
+			'real key + precision rule in public list' => array(
+				array(
+					'providers' => array( 'IP Location Block' => 'realkey' ),
+					'public'    => array( 'white_list' => 'US:City:Seattle' ),
+				),
+				true,
+			),
+			'real key but only plain-country rule' => array(
+				array( 'providers' => array( 'IP Location Block' => 'realkey' ), 'white_list' => 'US,MK' ),
+				false,
+			),
+			'real key but no rules at all' => array(
+				array( 'providers' => array( 'IP Location Block' => 'realkey' ) ),
+				false,
+			),
+			'@ sentinel key is not a real key' => array(
+				array( 'providers' => array( 'IP Location Block' => '@' ), 'white_list' => 'US:State:Washington' ),
+				false,
+			),
+			'empty key is not selected' => array(
+				array( 'providers' => array( 'IP Location Block' => '' ), 'white_list' => 'US:State:Washington' ),
+				false,
+			),
+			'native not selected at all' => array(
+				array( 'providers' => array( 'IPInfoDB' => 'k' ), 'white_list' => 'US:State:Washington' ),
+				false,
+			),
+		);
+	}
+
+	public function test_native_enforced_tracks_the_shared_precision_fingerprint(): void {
+		// isNativeEnforced must key off the SAME precision fingerprint definition
+		// that PrecisionCacheGuard uses (one definition, reused).
+		$registry = ProviderRegistry::instance();
+
+		$with_rule = array( 'providers' => array( 'IP Location Block' => 'k' ), 'white_list' => 'US:State:Washington' );
+		$no_rule   = array( 'providers' => array( 'IP Location Block' => 'k' ), 'white_list' => 'US' );
+
+		$this->assertNotSame( array(), \IPLocationBlock\Settings\PrecisionCacheGuard::fingerprint( $with_rule ) );
+		$this->assertTrue( $registry->isNativeEnforced( $with_rule ) );
+
+		$this->assertSame( array(), \IPLocationBlock\Settings\PrecisionCacheGuard::fingerprint( $no_rule ) );
+		$this->assertFalse( $registry->isNativeEnforced( $no_rule ) );
+	}
+
+	/** ===== enforcement ordering (native promoted to index 0) ===== */
+
+	/** Mixed selection: native (real key) + an implicit local, with a precision rule. */
+	private const MIXED_ENFORCED = array(
+		'providers'  => array( 'IP Location Block' => 'realkey' ), // IP2Location stays implicit
+		'white_list' => 'US:State:Washington',
+	);
+
+	public function test_native_promoted_to_front_when_enforced(): void {
+		Functions\when( 'wp_salt' )->justReturn( 'salt' );
+		Functions\when( 'get_transient' )->justReturn( false ); // no cached quota => not blocking
+		NativeQuotaService::flushMemo();
+
+		$this->assertSame(
+			array( 'IP Location Block', 'IP2Location' ),
+			ProviderRegistry::instance()->activeProviderIds( self::MIXED_ENFORCED, false ),
+			'native must be prioritized ahead of the local fallback'
+		);
+	}
+
+	public function test_native_not_promoted_when_cached_quota_is_blocking(): void {
+		Functions\when( 'wp_salt' )->justReturn( 'salt' );
+		Functions\when( 'get_transient' )->justReturn( array( 'status' => 'rate_limited' ) );
+		NativeQuotaService::flushMemo();
+
+		$this->assertSame(
+			array( 'IP2Location', 'IP Location Block' ),
+			ProviderRegistry::instance()->activeProviderIds( self::MIXED_ENFORCED, false ),
+			'an exhausted/blocked key keeps the normal order (no failed live API call)'
+		);
+	}
+
+	public function test_native_not_promoted_without_a_precision_rule(): void {
+		Functions\when( 'wp_salt' )->justReturn( 'salt' );
+		Functions\when( 'get_transient' )->justReturn( false );
+		NativeQuotaService::flushMemo();
+
+		$settings = array(
+			'providers'  => array( 'IP Location Block' => 'realkey' ),
+			'white_list' => 'US,MK', // plain country only => not enforced
+		);
+
+		$this->assertSame(
+			array( 'IP2Location', 'IP Location Block' ),
+			ProviderRegistry::instance()->activeProviderIds( $settings, false )
+		);
 	}
 
 	public function test_providers_with_capability(): void {

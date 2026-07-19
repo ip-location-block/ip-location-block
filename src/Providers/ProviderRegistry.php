@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace IPLocationBlock\Providers;
 
+use IPLocationBlock\Settings\PrecisionCacheGuard;
+
 /**
  * The COMPLETE, CLOSED set of geolocation providers.
  *
@@ -133,24 +135,40 @@ final class ProviderRegistry {
 	 * Ids of the providers active for a lookup, excluding the synthetic 'Cache'
 	 * entry:
 	 *   truthy stored key  OR  (unset AND implicitly enabled).
-	 * restrict_api limits candidates to local providers; locals keep their fixed
-	 * order and remotes are shuffled only when requested.
+	 * Locals keep their fixed order and remotes are shuffled only when requested.
+	 *
+	 * Native-first enforcement (see {@see isNativeEnforced()}) is the last step:
+	 * when precision rules exist and the native key is real, NativeProvider is
+	 * moved ahead of the locals so its city/state precision fills the result and
+	 * the IP cache — unless its cached quota is blocking. This is the choke point
+	 * the live lookup consumes (via LegacyMeta::get_valid_providers), so the
+	 * ordering must be applied here rather than only in {@see activeProviders()}.
 	 *
 	 * @param array<string,mixed> $settings
 	 *
 	 * @return string[]
 	 */
-	public function activeProviderIds( array $settings, bool $shuffle = false, bool $ignoreRestrictApi = false ): array {
-		$include_remotes = $ignoreRestrictApi || empty( $settings['restrict_api'] );
+	public function activeProviderIds( array $settings, bool $shuffle = false ): array {
+		return $this->applyNativeEnforcement( $this->selectedProviderIds( $settings, $shuffle ), $settings );
+	}
 
-		$candidates = $this->localProviders();
-		if ( $include_remotes ) {
-			$remotes = $this->remoteProviders();
-			if ( $shuffle ) {
-				shuffle( $remotes );
-			}
-			$candidates = array_merge( $candidates, $remotes );
+	/**
+	 * The raw selected-provider id list, in registry order (locals first, remotes
+	 * shuffled only when requested) — WITHOUT native-first enforcement. Callers
+	 * that only need the selected SET/COUNT (e.g. {@see isNativeOnly()}) use this
+	 * so they never trigger the enforcement quota read; enforcement never changes
+	 * the set, only the order.
+	 *
+	 * @param array<string,mixed> $settings
+	 *
+	 * @return string[]
+	 */
+	private function selectedProviderIds( array $settings, bool $shuffle ): array {
+		$remotes = $this->remoteProviders();
+		if ( $shuffle ) {
+			shuffle( $remotes );
 		}
+		$candidates = array_merge( $this->localProviders(), $remotes );
 
 		$map = isset( $settings['providers'] ) && is_array( $settings['providers'] ) ? $settings['providers'] : array();
 		$out = array();
@@ -171,9 +189,9 @@ final class ProviderRegistry {
 	 *
 	 * @return ProviderInterface[]
 	 */
-	public function activeProviders( array $settings, bool $shuffle = false, bool $ignoreRestrictApi = false ): array {
+	public function activeProviders( array $settings, bool $shuffle = false ): array {
 		$out = array();
-		foreach ( $this->activeProviderIds( $settings, $shuffle, $ignoreRestrictApi ) as $id ) {
+		foreach ( $this->activeProviderIds( $settings, $shuffle ) as $id ) {
 			$provider = $this->get( $id );
 			if ( $provider ) {
 				$out[] = $provider;
@@ -185,14 +203,86 @@ final class ProviderRegistry {
 
 	/**
 	 * Whether the native provider is the ONLY active provider (drives the
-	 * "Native" precision mode).
+	 * "Native" precision mode). Uses the raw selection: enforcement ordering never
+	 * changes the active set, so this stays a pure set/count check.
 	 *
 	 * @param array<string,mixed> $settings
 	 */
 	public function isNativeOnly( array $settings ): bool {
-		$ids = $this->activeProviderIds( $settings, true, false );
+		$ids = $this->selectedProviderIds( $settings, true );
 
 		return count( $ids ) === 1 && NativeProvider::ID === $ids[0];
+	}
+
+	/**
+	 * Whether native-first enforcement applies: precision (":"-bearing) rules
+	 * exist AND the native provider is selected with a REAL key (not ''/'@').
+	 *
+	 * When true, the native provider is prioritized automatically and the other
+	 * selected providers become country-level fallback — so mixed providers no
+	 * longer silently break city/state precision. The precision-rule signal is
+	 * the shared fingerprint used by PrecisionCacheGuard (one definition).
+	 *
+	 * @param array<string,mixed> $settings
+	 */
+	public function isNativeEnforced( array $settings ): bool {
+		$map = isset( $settings['providers'] ) && is_array( $settings['providers'] ) ? $settings['providers'] : array();
+		$key = isset( $map[ NativeProvider::ID ] ) ? (string) $map[ NativeProvider::ID ] : '';
+		if ( '' === $key || '@' === $key ) {
+			return false;
+		}
+
+		return array() !== PrecisionCacheGuard::fingerprint( $settings );
+	}
+
+	/**
+	 * Promote NativeProvider to index 0 when enforcement applies.
+	 *
+	 * A no-op unless native coexists with at least one other active provider and
+	 * is not already first. Quota fast-skip: when the native key's CACHED quota
+	 * status is blocking (read-only — no HTTP refresh), the promotion is skipped
+	 * so an exhausted key does not trigger a failed live API call per request;
+	 * the normal order applies as fallback.
+	 *
+	 * @param string[]            $ids
+	 * @param array<string,mixed> $settings
+	 *
+	 * @return string[]
+	 */
+	private function applyNativeEnforcement( array $ids, array $settings ): array {
+		if ( count( $ids ) < 2 ) {
+			return $ids;
+		}
+
+		$pos = array_search( NativeProvider::ID, $ids, true );
+		if ( false === $pos || 0 === $pos ) {
+			return $ids;
+		}
+
+		if ( ! $this->isNativeEnforced( $settings ) || self::nativeQuotaBlocked( $settings ) ) {
+			return $ids;
+		}
+
+		unset( $ids[ $pos ] );
+		array_unshift( $ids, NativeProvider::ID );
+
+		return array_values( $ids );
+	}
+
+	/**
+	 * Whether the native key's cached quota status blocks readiness. Read-only:
+	 * it consults the existing transient/memo via NativeQuotaService WITHOUT ever
+	 * triggering an HTTP refresh, so the registry path never makes a network call.
+	 *
+	 * @param array<string,mixed> $settings
+	 */
+	private static function nativeQuotaBlocked( array $settings ): bool {
+		$map = isset( $settings['providers'] ) && is_array( $settings['providers'] ) ? $settings['providers'] : array();
+		$key = isset( $map[ NativeProvider::ID ] ) ? (string) $map[ NativeProvider::ID ] : '';
+
+		$status = ( new NativeQuotaService() )->cachedStatus( $key );
+
+		return null !== $status && in_array( $status, NativeQuotaService::STATUS_BLOCKING, true );
 	}
 
 	/**

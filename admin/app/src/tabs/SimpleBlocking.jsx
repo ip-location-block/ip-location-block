@@ -96,20 +96,24 @@ export default function SimpleBlocking( {
 		setProviderReady( !! providerStatus?.ready );
 	}, [ providerStatus ] );
 
-	const restrictApi = !! settings.restrict_api;
 	const nativeSelected = !! storedProviders[ 'IP Location Block' ];
+	// Local (unsaved) native-only heuristic: native is selected and every other
+	// real provider is unselected, so precision will be available once saved.
 	const draftNative =
 		nativeSelected &&
-		! restrictApi &&
 		Object.entries( storedProviders ).every(
 			( [ name, value ] ) =>
 				name === 'IP Location Block' || name === 'Cache' || ! value
 		);
-	const preciseAvailable = !! ( providerStatus?.native || draftNative );
-	// Native remote does not run under restrict_api ("Do not send IP address to
-	// external APIs"), so precision is locked even though Native is selected.
-	// That case gets a specific hint instead of the generic provider upsell.
-	const gatedByRestrict = ! preciseAvailable && nativeSelected && restrictApi;
+	// Precision is available when native is the sole (saved) source, when
+	// native-first enforcement is active (a real key + precision rules, other
+	// providers acting as country-level fallback), or in the native-only draft.
+	const enforcedNative = !! providerStatus?.enforcedNative;
+	const preciseAvailable = !! (
+		providerStatus?.native ||
+		enforcedNative ||
+		draftNative
+	);
 
 	// --- writers ------------------------------------------------------------
 	const writeRules = ( nextMode, next, mirror = alsoBackend ) => {
@@ -406,39 +410,40 @@ export default function SimpleBlocking( {
 												aria-hidden="true"
 											/>
 											<div>
-												{ gatedByRestrict ? (
-													<p className="ilb-simple__gate-copy">
-														{ __(
-															'Precision rules need live lookups from the “IP Location Block” provider. Disable “Do not send IP address to external APIs” to use them.',
-															'ip-location-block'
-														) }
-													</p>
-												) : (
-													<>
-														<p className="ilb-simple__gate-copy">
-															{ __(
-																'State- and city-level blocking needs the “IP Location Block” geolocation provider, the only one that returns state/city data (a premium key is required for that data).',
-																'ip-location-block'
-															) }
-														</p>
-														<Button
-															variant="secondary"
-															onClick={
-																focusProviderSetup
-															}
-															className="ilb-simple__gate-action"
-														>
-															{ __(
-																'Set up Native provider',
-																'ip-location-block'
-															) }
-														</Button>
-													</>
-												) }
+												<p className="ilb-simple__gate-copy">
+													{ __(
+														'State- and city-level blocking needs the “IP Location Block” geolocation provider, the only one that returns state/city data (a premium key is required for that data).',
+														'ip-location-block'
+													) }
+												</p>
+												<Button
+													variant="secondary"
+													onClick={
+														focusProviderSetup
+													}
+													className="ilb-simple__gate-action"
+												>
+													{ __(
+														'Set up Native provider',
+														'ip-location-block'
+													) }
+												</Button>
 											</div>
 										</div>
 									) : (
 										<>
+											{ enforcedNative && (
+												<p className="ilb-simple__precise-info">
+													<span
+														className="dashicons dashicons-info-outline"
+														aria-hidden="true"
+													/>
+													{ __(
+														'The IP Location Block provider is prioritized automatically for these rules; your other providers act as country-level fallback.',
+														'ip-location-block'
+													) }
+												</p>
+											) }
 											{ draftPrecise.map( ( row, i ) => (
 												<div
 													className="ilb-simple__precise-row"

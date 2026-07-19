@@ -190,8 +190,6 @@ class Options {
 			'view' => 7,       // More than 7 page view in 5 seconds
 			'time' => 5,       // More than 7 page view in 5 seconds
 		),
-		// since version 3.0.13
-		'restrict_api'         => false,       // Do not send IP address to external APIs
 		// since version 3.0.14
 		'login_link'           => array(
 			'link' => null,    // key of login link
@@ -332,6 +330,12 @@ class Options {
 			foreach ( array( 'admin', 'ajax', 'plugins', 'themes' ) as $tmp ) {
 				$settings['validation'][ $tmp ] &= ~2;
 			}
+
+			// The restrict_api option ("Do not send IP address to external APIs")
+			// was hard-dropped in 1.4.0: all selected providers are simply active,
+			// and native-first enforcement disclosed in-product supersedes it. Drop
+			// any stored value so it can never gate the paid native provider again.
+			unset( $settings['restrict_api'] );
 
 			// Refresh the deployed mu-plugin copy — ONLY when one already exists
 			// (the user opted into mu-plugins validation timing). Ships the 1.4.0

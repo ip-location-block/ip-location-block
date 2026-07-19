@@ -24,7 +24,7 @@ Combined with those methods and IP address geolocation, you'll be surprised to f
   IP Location Block provides [Native Geo-Location Provider](https://iplocationblock.com/codex/native-geo-location-provider/?utm_source=plugin&utm_medium=wporgpage&utm_campaign=readme) that is faster, more secure and provides the needed **precision** for matching **CITY** and **STATE** besides the standard COUNTRY matching.
 
 * **Privacy by design:**
-  IP address is always encrypted on recording in logs/cache. Moreover, it can be anonymized and restricted on sending to the 3rd parties such as geolocation APIs or whois service.
+  IP address is always encrypted on recording in logs/cache. Moreover, it can be anonymized.
 
 * **Immigration control:**
   Access to the basic and important entrances into back-end such as `wp-comments-post.php`, `xmlrpc.php`, `wp-login.php`, `wp-signup.php`, `wp-admin/admin.php`, `wp-admin/admin-ajax.php`, `wp-admin/admin-post.php` will be validated by means of a country code based on IP address. It allows you to configure either whitelist or blacklist to [specify the countires](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements "ISO 3166-1 alpha-2 - Wikipedia"), [CIDR notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing "Classless Inter-Domain Routing - Wikipedia") for a range of IP addresses and [AS number](https://en.wikipedia.org/wiki/Autonomous_system_(Internet) "Autonomous system (Internet) - Wikipedia") for a group of IP networks.
@@ -280,6 +280,9 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 * Change: The admin now has a single menu entry. The redesigned interface is the default and opens at the plugin's original location ("Settings -> IP Location Block", or the top-level menu on multisite); the separate "IP Location Block (Beta)" entry is gone.
 * New: The classic interface stays reachable through a floating "Classic view" switcher, and your choice is remembered per user. The classic view is deprecated and will be removed in a future major release.
 * Change: Old `ip-location-block-beta` bookmarks now redirect to the merged page, preserving the tab and other deep-link parameters.
+* Removed: The "Do not send IP address to external APIs" option (`restrict_api`). Predating the native provider, it silently disabled the paid provider (and its city/state precision) for many users who never chose it; all selected providers are now simply active. Encryption and the "Anonymize IP address" option are unaffected.
+* Change: When city/state precision rules exist and the IP Location Block provider is selected with a real key, that provider is now prioritized automatically. Other selected providers act as country-level fallback, so a mixed provider selection no longer quietly breaks precision. Whitelisted precision rules fall back to their country during a native outage so visitors are not locked out.
+* New: `ip-location-block-precision-degraded` action fires when a whitelisted precision rule is matched at country level because the provider returned no city/state (a native outage/fallback), so integrators can observe and log availability-first passes.
 
 = 1.3.9 =
 

@@ -44,6 +44,9 @@ export default function ModeBadge( { mode } ) {
 		return null;
 	}
 	const native = !! mode.native;
+	// Enforced: native is prioritized automatically alongside other providers
+	// (precision rules + a real key). A distinct state between Native and Standard.
+	const enforced = ! native && !! mode.enforced;
 
 	const panel = () => {
 		if ( native ) {
@@ -60,6 +63,30 @@ export default function ModeBadge( { mode } ) {
 						<p>
 							{ __(
 								'City and state rules are available.',
+								'ip-location-block'
+							) }
+						</p>
+					</div>
+				</div>
+			);
+		}
+		if ( enforced ) {
+			return (
+				<div className="ilb-mode-panel__status ilb-mode-panel__status--info">
+					<span
+						className="dashicons dashicons-info-outline"
+						aria-hidden="true"
+					/>
+					<div>
+						<strong>
+							{ __(
+								'Native provider prioritized',
+								'ip-location-block'
+							) }
+						</strong>
+						<p>
+							{ __(
+								'City and state rules are enforced: the IP Location Block provider is used first while precision rules exist, and your other providers act as country-level fallback.',
 								'ip-location-block'
 							) }
 						</p>
@@ -112,7 +139,7 @@ export default function ModeBadge( { mode } ) {
 			<button
 				type="button"
 				className={ `ilb-mode ilb-mode--${
-					native ? 'native' : 'standard'
+					native ? 'native' : enforced ? 'enforced' : 'standard'
 				}` }
 				onClick={ () => setOpen( ( v ) => ! v ) }
 				aria-expanded={ open }
@@ -125,6 +152,8 @@ export default function ModeBadge( { mode } ) {
 				<span className="ilb-mode__dot" aria-hidden="true" />
 				{ native
 					? __( 'Native Mode', 'ip-location-block' )
+					: enforced
+					? __( 'Native — enforced', 'ip-location-block' )
 					: __( 'Standard Mode', 'ip-location-block' ) }
 				<span
 					className={ `dashicons dashicons-arrow-${

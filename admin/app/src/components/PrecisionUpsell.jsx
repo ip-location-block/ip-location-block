@@ -1,7 +1,9 @@
 /**
  * Standard -> Native precision callout for the Geolocation API settings
- * section. Three states driven by the geolocation "mode":
+ * section. States driven by the geolocation "mode":
  *   - native            : precision is on — reassure.
+ *   - enforced          : native prioritized automatically alongside other
+ *                         providers — reassure, no action needed.
  *   - api on, not native : Standard Mode — tell them which providers to disable.
  *   - api off            : the free-user comparison + Upgrade CTA.
  * Copy is shared with the header dropdown via PrecisionContent.
@@ -33,6 +35,31 @@ export default function PrecisionUpsell( { mode } ) {
 					<p>
 						{ __(
 							'City and state rules are available through the IP Location Block provider.',
+							'ip-location-block'
+						) }
+					</p>
+				</div>
+			</div>
+		);
+	}
+
+	if ( mode.enforced ) {
+		return (
+			<div className="ilb-precision-status ilb-precision-status--info">
+				<span
+					className="dashicons dashicons-info-outline"
+					aria-hidden="true"
+				/>
+				<div>
+					<strong>
+						{ __(
+							'Native provider prioritized',
+							'ip-location-block'
+						) }
+					</strong>
+					<p>
+						{ __(
+							'City and state rules are enforced automatically. The IP Location Block provider is used first while precision rules exist; your other providers act as country-level fallback, so there is nothing to disable.',
 							'ip-location-block'
 						) }
 					</p>

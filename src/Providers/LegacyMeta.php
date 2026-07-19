@@ -148,7 +148,10 @@ final class LegacyMeta {
 	 * @param array $settings
 	 * @param bool  $rand
 	 * @param bool  $cache
-	 * @param bool  $all
+	 * @param bool  $all    Legacy no-op for provider filtering: it only ever
+	 *                      mattered via the removed restrict_api option. Kept for
+	 *                      signature compatibility; all selected providers are
+	 *                      active regardless of its value.
 	 *
 	 * @return array
 	 */
@@ -156,7 +159,7 @@ final class LegacyMeta {
 		$registry = ProviderRegistry::instance();
 		$cache_on = $cache && ! empty( $settings['cache_hold'] );
 
-		$ids = $registry->activeProviderIds( $settings, (bool) $rand, (bool) $all );
+		$ids = $registry->activeProviderIds( $settings, (bool) $rand );
 
 		if ( $cache_on ) {
 			$map = isset( $settings['providers'] ) && is_array( $settings['providers'] ) ? $settings['providers'] : array();

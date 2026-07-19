@@ -263,11 +263,13 @@ final class GeolocationResolverTest extends TestCase {
 		$this->assertSame( 0, $native->lookupCalls, 'no live lookup without a precision rule' );
 	}
 
-	public function test_stale_precision_row_replayed_when_not_native_only(): void {
+	public function test_stale_precision_row_refreshed_when_native_enforced_with_mixed_providers(): void {
 		$this->seedCache( self::PUBLIC_IP, array( 'code' => 'US', 'city' => '', 'state' => '', 'asn' => '' ) );
 
 		$native = new FakePrecisionProvider( 'IP Location Block', $this->cityStateResult() );
-		// Native selected but IP2Location stays implicitly enabled => not native-only.
+		// Native selected with a REAL key while IP2Location stays implicitly enabled
+		// (mixed) + a precision rule => native-enforced. The self-heal broadens from
+		// native-only to also cover the enforced case, so the stale row refreshes.
 		$settings = array(
 			'cache_hold' => 1,
 			'white_list' => 'US:State:Washington',
@@ -276,8 +278,28 @@ final class GeolocationResolverTest extends TestCase {
 
 		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array( $native ), $this->context( $settings ), true );
 
+		$this->assertSame( 'IP Location Block', $out['provider'], 'enforced native refreshes the stale row' );
+		$this->assertSame( 'Seattle', $out['city'] );
+		$this->assertSame( 'Washington', $out['state'] );
+		$this->assertSame( 1, $native->lookupCalls );
+	}
+
+	public function test_stale_precision_row_replayed_when_native_selected_without_a_real_key(): void {
+		$this->seedCache( self::PUBLIC_IP, array( 'code' => 'US', 'city' => '', 'state' => '', 'asn' => '' ) );
+
+		$native = new FakePrecisionProvider( 'IP Location Block', $this->cityStateResult() );
+		// '@' selects native but is NOT a real key => neither native-only nor
+		// enforced, so the stale row is replayed (self-heal stays bounded).
+		$settings = array(
+			'cache_hold' => 1,
+			'white_list' => 'US:State:Washington',
+			'providers'  => array( 'IP Location Block' => '@' ),
+		);
+
+		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array( $native ), $this->context( $settings ), true );
+
 		$this->assertSame( 'Cache', $out['provider'] );
-		$this->assertSame( 0, $native->lookupCalls, 'self-heal is bounded to native-only mode' );
+		$this->assertSame( 0, $native->lookupCalls, 'no self-heal without native-only or a real enforced key' );
 	}
 
 	public function test_partial_precision_row_is_not_treated_as_stale(): void {

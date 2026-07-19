@@ -125,8 +125,10 @@ final class GeolocationResolver {
 	 *
 	 * True only when ALL of: the row carries no precision data (empty city AND
 	 * state); the active lists contain a precision rule; and the native provider
-	 * is the sole active source. The native-only guard prevents repeated futile
-	 * refreshes under providers that can never return city/state.
+	 * is either the sole active source OR native-enforced (mixed providers with a
+	 * real key + precision rules, where native is prioritized to index 0). That
+	 * guard prevents repeated futile refreshes under provider selections that can
+	 * never return city/state.
 	 *
 	 * @param array<string,mixed> $hit
 	 * @param array<string,mixed> $settings
@@ -142,7 +144,9 @@ final class GeolocationResolver {
 			return false;
 		}
 
-		return ProviderRegistry::instance()->isNativeOnly( $settings );
+		$registry = ProviderRegistry::instance();
+
+		return $registry->isNativeOnly( $settings ) || $registry->isNativeEnforced( $settings );
 	}
 
 	/**

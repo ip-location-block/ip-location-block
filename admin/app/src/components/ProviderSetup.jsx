@@ -230,10 +230,6 @@ export default function ProviderSetup( {
 			'providers',
 			makeExclusiveProviderMap( providerMap, names, provider, credential )
 		);
-		const meta = providers.find( ( item ) => item.name === provider );
-		if ( ! meta?.local && settings.restrict_api ) {
-			onChange( 'restrict_api', false );
-		}
 		setActivated( { ...response, provider, ready: true } );
 		setNotice( {
 			status: 'success',
@@ -343,18 +339,6 @@ export default function ProviderSetup( {
 					),
 					provider,
 					replaced.join( ', ' )
-				)
-			)
-		) {
-			return;
-		}
-		if (
-			! meta?.local &&
-			settings.restrict_api &&
-			! window.confirm(
-				__(
-					'This provider sends visitor IP addresses to an external API. Disable “Do not send IP address to external APIs” and continue?',
-					'ip-location-block'
 				)
 			)
 		) {

@@ -1147,21 +1147,6 @@ class IP_Location_Block_Admin_Tab {
 			)
 		);
 
-		// Do not send IP address to external APIs
-		add_settings_field(
-			$option_name . '_restrict_api',
-			__( '<dfn title="This option restricts not to send IP address to the external Geolocation APIs.">Do not send IP address to external APIs</dfn>', 'ip-location-block' ),
-			array( $context, 'callback_field' ),
-			$option_slug,
-			$section,
-			array(
-				'type'   => 'checkbox',
-				'option' => $option_name,
-				'field'  => 'restrict_api',
-				'value'  => ! empty( $options['restrict_api'] ),
-			)
-		);
-
 		// Record IP address cache
 		add_settings_field(
 			$option_name . '_cache_hold',

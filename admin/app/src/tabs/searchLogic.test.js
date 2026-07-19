@@ -32,12 +32,10 @@ describe( 'search logic', () => {
 		] );
 	} );
 
-	test( 'anonymize defaults on when either privacy setting is truthy', () => {
+	test( 'anonymize defaults on when the anonymize setting is truthy', () => {
 		expect( defaultAnonymize( { anonymize: 1 } ) ).toBe( true );
-		expect( defaultAnonymize( { restrict_api: 1 } ) ).toBe( true );
-		expect( defaultAnonymize( { anonymize: 0, restrict_api: 0 } ) ).toBe(
-			false
-		);
+		expect( defaultAnonymize( { anonymize: 0 } ) ).toBe( false );
+		expect( defaultAnonymize( {} ) ).toBe( false );
 		expect( defaultAnonymize( undefined ) ).toBe( false );
 	} );
 

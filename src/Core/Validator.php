@@ -510,7 +510,21 @@ class Validator {
 				$list = $settings['white_list'];
 				// 'ZZ' will be blocked if it's not in the $list.
 				if ( $list && ! self::validate_list_match( $list, $validate ) ) {
-					return $hook ? $validate + array( 'result' => 'blocked' ) : 'blocked';
+					// Availability-first degradation (whitelist only): when the
+					// lookup carries NO precision data (empty city AND state — a
+					// native outage or country-level fallback), a whitelisted
+					// precision entry like "US:State:Washington" must not lock the
+					// visitor out on their country. Retry with precision entries
+					// reduced to their country prefix; a degraded pass keeps the
+					// visitor and is disclosed via an additive action. When
+					// precision data IS present but simply mismatches, this never
+					// applies and the block stands.
+					if ( self::result_lacks_precision( $validate )
+						&& self::validate_list_match( self::degrade_precision_list( $list ), $validate ) ) {
+						\do_action( 'ip-location-block-precision-degraded', $validate, $settings );
+					} else {
+						return $hook ? $validate + array( 'result' => 'blocked' ) : 'blocked';
+					}
 				} // can't overwrite existing result
 			} elseif ( $block && 1 === (int) $settings['matching_rule'] ) {
 				// 'ZZ' will NOT be blocked if it's not in the $list.
@@ -594,6 +608,47 @@ class Validator {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Whether a geolocation result carries NO precision data — empty city AND
+	 * empty state. This is the "native outage / country-level fallback" signal
+	 * that gates whitelist precision degradation. A present-but-mismatched
+	 * precision field (city or state non-empty) is NOT lacking precision.
+	 *
+	 * @param array $result
+	 *
+	 * @return bool
+	 */
+	private static function result_lacks_precision( $result ) {
+		$city  = isset( $result['city'] ) ? (string) $result['city'] : '';
+		$state = isset( $result['state'] ) ? (string) $result['state'] : '';
+
+		return '' === $city && '' === $state;
+	}
+
+	/**
+	 * Reduce every precision (":"-bearing) entry in a rule list to its country
+	 * prefix, e.g. "US:State:Washington" / "US:Seattle" => "US". Plain-country
+	 * entries pass through unchanged. Used to re-test the whitelist availability-
+	 * first when the provider returned no city/state.
+	 *
+	 * @param string $list
+	 *
+	 * @return string
+	 */
+	private static function degrade_precision_list( $list ) {
+		$out = array();
+		foreach ( \explode( ',', (string) $list ) as $entry ) {
+			$entry = \trim( $entry );
+			if ( '' === $entry ) {
+				continue;
+			}
+			$cc    = \strstr( $entry, ':', true );
+			$out[] = false === $cc ? $entry : \trim( $cc );
+		}
+
+		return \implode( ',', $out );
 	}
 
 

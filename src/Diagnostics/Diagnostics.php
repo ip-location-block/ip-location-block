@@ -211,7 +211,7 @@ class Diagnostics {
 		$problems = array();
 
 		foreach ( $provider['providers'] as $item ) {
-			if ( ! $item['selected'] || '' === $item['reason'] || 'privacy_restriction' === $item['reason'] ) {
+			if ( ! $item['selected'] || '' === $item['reason'] ) {
 				continue;
 			}
 			$reason = $item['reason'];
@@ -247,15 +247,23 @@ class Diagnostics {
 		$active_native = in_array( 'IP Location Block', $provider['active'], true );
 		$others        = array_values( array_diff( $provider['active'], array( 'IP Location Block' ) ) );
 		$mixed         = $active_native && ! empty( $others );
+		// Native-first enforcement (precision rules + a real native key) makes the
+		// mixed selection benign: the IP Location Block provider is prioritized
+		// automatically and the others act as country-level fallback. In that case
+		// this is an INFO note, not a warning to disable providers. It stays a
+		// warning when native is selected WITHOUT a key while precision rules exist.
+		$enforced = $mixed && ! empty( $provider['enforcedNative'] );
 		self::add_check(
 			$checks,
 			'native-mixed-providers',
-			$mixed ? 'warning' : 'pass',
+			$enforced ? 'info' : ( $mixed ? 'warning' : 'pass' ),
 			'providers',
 			__( 'Native provider mode', 'ip-location-block' ),
-			$mixed
-				? __( 'IP Location Block is enabled with other providers. Disable the other providers to use Native Mode and consistent city/state results.', 'ip-location-block' )
-				: __( 'The provider selection does not conflict with Native Mode.', 'ip-location-block' ),
+			$enforced
+				? __( 'Other providers act as country-level fallback while precision rules exist — the IP Location Block provider is prioritized automatically.', 'ip-location-block' )
+				: ( $mixed
+					? __( 'IP Location Block is enabled with other providers. Disable the other providers to use Native Mode and consistent city/state results.', 'ip-location-block' )
+					: __( 'The provider selection does not conflict with Native Mode.', 'ip-location-block' ) ),
 			$others,
 			array( $provider_action ),
 			true

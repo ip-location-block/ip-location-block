@@ -1665,7 +1665,6 @@ class IP_Location_Block_Admin {
 				'save_statistics',
 				'cache_hold',
 				'anonymize',
-				'restrict_api',
 				'network_wide',
 				'clean_uninstall',
 				'simulate',

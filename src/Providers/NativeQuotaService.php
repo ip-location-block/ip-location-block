@@ -188,6 +188,36 @@ final class NativeQuotaService {
 	}
 
 	/**
+	 * The normalized quota status string from CACHED data only — never triggers
+	 * an HTTP refresh. Returns null when nothing is cached (memo miss + transient
+	 * miss) or the key is absent, so read-only callers (the registry's native
+	 * enforcement quota fast-skip) can distinguish "no cached signal" from a real
+	 * blocking status without ever making a network call.
+	 */
+	public function cachedStatus( string $key ): ?string {
+		if ( '' === $key || '@' === $key ) {
+			return null;
+		}
+
+		$fingerprint = CredentialFingerprint::of( 'IP Location Block', $key );
+
+		if ( array_key_exists( $fingerprint, self::$memo ) ) {
+			$contents = self::$memo[ $fingerprint ];
+		} else {
+			$cached = get_transient( 'ip_location_block_quota_' . substr( $fingerprint, 0, 40 ) );
+			if ( false === $cached ) {
+				return null;
+			}
+			self::$memo[ $fingerprint ] = $cached;
+			$contents                   = $cached;
+		}
+
+		$status = $this->normalize( $contents );
+
+		return isset( $status['status'] ) ? (string) $status['status'] : null;
+	}
+
+	/**
 	 * Whether a normalized status blocks native readiness.
 	 *
 	 * @param array<string,mixed> $status

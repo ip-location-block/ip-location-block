@@ -449,6 +449,7 @@ class RestApi {
 
 		return rest_ensure_response( array(
 			'native'     => (bool) ProviderRegistry::instance()->isNativeOnly( $settings ),
+			'enforced'   => (bool) ProviderRegistry::instance()->isNativeEnforced( $settings ),
 			'apiEnabled' => in_array( 'IP Location Block', $valid, true ),
 			'apiKey'     => ( '' !== $key && '@' !== $key ),
 			'others'     => $others,
@@ -1006,7 +1007,7 @@ class RestApi {
 		$native_key      = isset( $stored['IP Location Block'] ) ? (string) $stored['IP Location Block'] : '';
 		$native_selected = isset( $catalog['IP Location Block'] ) && self::provider_is_selected( 'IP Location Block', $catalog['IP Location Block'], $stored );
 		$quota           = null;
-		if ( $native_selected && empty( $settings['restrict_api'] ) && '' !== $native_key && '@' !== $native_key ) {
+		if ( $native_selected && '' !== $native_key && '@' !== $native_key ) {
 			$quota = ( new NativeQuotaService() )->status( $native_key );
 		}
 
@@ -1022,7 +1023,7 @@ class RestApi {
 
 			$selected   = self::provider_is_selected( $name, $meta, $stored );
 			$local      = ! empty( $meta['local'] );
-			$is_active  = $selected && ( $local || empty( $settings['restrict_api'] ) );
+			$is_active  = $selected;
 			$credential = isset( $stored[ $name ] ) ? (string) $stored[ $name ] : '';
 			$auth       = isset( $meta['api_auth'] ) ? (int) $meta['api_auth'] : ProviderRegistry::AUTH_OPTIONAL;
 			$key_ready  = ProviderRegistry::AUTH_REQUIRED !== $auth || ( '' !== $credential && '@' !== $credential );
@@ -1035,9 +1036,7 @@ class RestApi {
 			}
 
 			$reason = '';
-			if ( $selected && ! $is_active ) {
-				$reason = 'privacy_restriction';
-			} elseif ( $selected && ! $key_ready ) {
+			if ( $selected && ! $key_ready ) {
 				$reason = 'missing_key';
 			} elseif ( $selected && $local && ! $usable ) {
 				$reason = 'database_missing';
@@ -1066,12 +1065,13 @@ class RestApi {
 		}
 
 		return array(
-			'active'    => $active,
-			'providers' => $providers,
-			'ready'     => (bool) $ready,
-			'native'    => (bool) ProviderRegistry::instance()->isNativeOnly( $settings ),
-			'protected' => (bool) $protected,
-			'quota'     => $quota,
+			'active'         => $active,
+			'providers'      => $providers,
+			'ready'          => (bool) $ready,
+			'native'         => (bool) ProviderRegistry::instance()->isNativeOnly( $settings ),
+			'enforcedNative' => (bool) ProviderRegistry::instance()->isNativeEnforced( $settings ),
+			'protected'      => (bool) $protected,
+			'quota'          => $quota,
 		);
 	}
 

@@ -21,6 +21,9 @@
 * **Change:** The admin now has a single menu entry. The redesigned interface is the default and opens at the plugin's original location ("Settings -> IP Location Block", or the top-level menu on multisite); the separate "IP Location Block (Beta)" entry is gone.
 * **New feature:** The classic interface stays reachable through a floating "Classic view" switcher, and your choice is remembered per user. The classic view is deprecated and will be removed in a future major release.
 * **Change:** Old `ip-location-block-beta` bookmarks now redirect to the merged page, preserving the tab and other deep-link parameters.
+* **Removed:** The "Do not send IP address to external APIs" option (`restrict_api`). Predating the native provider, it silently disabled the paid provider (and its city/state precision) for many users who never deliberately chose it; all selected providers are now simply active. Encryption and the "Anonymize IP address" option are unaffected.
+* **Change:** When city/state precision rules exist and the IP Location Block provider is selected with a real key, that provider is now prioritized automatically (other selected providers act as country-level fallback), so a mixed provider selection no longer quietly breaks precision. Whitelisted precision rules fall back to their country prefix during a native outage so visitors are not locked out.
+* **New feature:** `ip-location-block-precision-degraded` action fires when a whitelisted precision rule is matched at country level because the provider returned no city/state, so integrators can observe and log availability-first passes.
 
 (See readme.txt for the full 1.0.0-1.3.9 changelog; this file predates that switch and is retained for historical reference.)
 

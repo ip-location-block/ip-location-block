@@ -186,7 +186,9 @@ class IP_Location_Block_Provider {
 	 * @param array $settings
 	 * @param bool  $rand
 	 * @param bool  $cache
-	 * @param bool  $all
+	 * @param bool  $all    Legacy no-op for provider filtering: it only ever
+	 *                      affected the result through the removed restrict_api
+	 *                      option. Retained for signature compatibility.
 	 *
 	 * @return array
 	 */

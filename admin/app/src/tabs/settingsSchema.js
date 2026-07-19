@@ -817,18 +817,6 @@ export const SECTIONS = [
 							'ip-location-block'
 						),
 					},
-					{
-						path: 'restrict_api',
-						label: __(
-							'Do not send IP address to external APIs',
-							'ip-location-block'
-						),
-						type: 'toggle',
-						tip: __(
-							'Only use local databases — no visitor IP leaves your server. Disables remote providers.',
-							'ip-location-block'
-						),
-					},
 				],
 			},
 			{

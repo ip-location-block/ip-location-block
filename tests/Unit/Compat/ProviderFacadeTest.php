@@ -55,8 +55,16 @@ final class ProviderFacadeTest extends TestCase {
 		);
 	}
 
-	public function test_get_valid_providers_restrict_matches_snapshot(): void {
-		$settings = array( 'cache_hold' => 1, 'restrict_api' => 1, 'providers' => array() );
+	public function test_get_valid_providers_ignores_restrict_api(): void {
+		// restrict_api was hard-dropped in 1.4.0: a stored value must no longer
+		// exclude remote providers. With a remote selected, it stays active — the
+		// fixture was updated deliberately to encode this no-op (previously the
+		// remote was filtered out).
+		$settings = array(
+			'cache_hold'   => 1,
+			'restrict_api' => 1,
+			'providers'    => array( 'IPInfoDB' => 'key' ),
+		);
 
 		$this->assertSame(
 			$this->snapshot( 'valid_restrict' ),

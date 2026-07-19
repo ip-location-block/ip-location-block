@@ -127,6 +127,43 @@ final class NativeQuotaServiceTest extends TestCase {
 		$this->assertSame( $cached, $result );
 	}
 
+	/** ===== cachedStatus(): read-only, never hits the network ===== */
+
+	public function test_cached_status_null_for_sentinel_keys(): void {
+		$this->assertNull( $this->service()->cachedStatus( '' ) );
+		$this->assertNull( $this->service()->cachedStatus( '@' ) );
+	}
+
+	public function test_cached_status_null_on_transient_miss_without_network(): void {
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\when( 'wp_remote_get' )->alias(
+			static function () {
+				throw new \RuntimeException( 'cachedStatus must never hit the network' );
+			}
+		);
+
+		$this->assertNull( $this->service()->cachedStatus( 'valid-key' ) );
+	}
+
+	public function test_cached_status_reads_blocking_status_from_transient(): void {
+		Functions\when( 'get_transient' )->justReturn( array( 'status' => 'rate_limited' ) );
+		Functions\when( 'wp_remote_get' )->alias(
+			static function () {
+				throw new \RuntimeException( 'cachedStatus must never hit the network' );
+			}
+		);
+
+		$this->assertSame( 'rate_limited', $this->service()->cachedStatus( 'valid-key' ) );
+	}
+
+	public function test_cached_status_reads_ok_status_from_transient(): void {
+		Functions\when( 'get_transient' )->justReturn(
+			array( 'balance' => array( 'recurring' => 100, 'total' => 100 ) )
+		);
+
+		$this->assertSame( 'ok', $this->service()->cachedStatus( 'valid-key' ) );
+	}
+
 	public function test_fetch_stores_fresh_response_in_transient(): void {
 		$body = '{"balance":{"recurring":100,"total":100}}';
 		Functions\when( 'get_transient' )->justReturn( false );

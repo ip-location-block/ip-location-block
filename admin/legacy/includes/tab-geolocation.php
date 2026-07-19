@@ -106,7 +106,7 @@ class IP_Location_Block_Admin_Tab {
 				'type'   => 'checkbox',
 				'option' => $option_name,
 				'field'  => 'anonymize',
-				'value'  => ! empty( $options['anonymize'] ) || ! empty( $options['restrict_api'] ),
+				'value'  => ! empty( $options['anonymize'] ),
 			)
 		);
 

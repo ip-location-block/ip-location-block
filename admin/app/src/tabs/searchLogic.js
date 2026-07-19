@@ -30,10 +30,10 @@ export const defaultSelectedProviders = ( list = [] ) =>
 		.filter( ( provider ) => ! provider.disabled )
 		.map( ( provider ) => provider.name );
 
-// Mirror tab-geolocation.php:99-109 — the search preview masks by default when
-// either privacy setting is on.
+// Mirror tab-geolocation.php — the search preview masks by default when the
+// "Anonymize IP address" privacy setting is on.
 export const defaultAnonymize = ( settings ) =>
-	!! ( settings && ( settings.anonymize || settings.restrict_api ) );
+	!! ( settings && settings.anonymize );
 
 /**
  * Mask an IP for display, replicating PHP Util::anonymize_ip( $ip, true ):

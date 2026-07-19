@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace IPLocationBlock\Tests\Unit\Core;
 
+use Brain\Monkey\Actions;
 use IPLocationBlock\Core\Validator;
 use IPLocationBlock\Tests\Unit\TestCase;
 
@@ -208,6 +209,110 @@ final class ValidatorTest extends TestCase {
 		// plain-country rule for the same code.
 		$this->assertTrue(
 			Validator::validate_list_match( 'US:City:Seattle,US', array( 'code' => 'US', 'city' => null ) )
+		);
+	}
+
+	/** ===== validate_lookup_result(): whitelist precision degradation ===== */
+
+	/**
+	 * Availability-first: a whitelisted precision rule (e.g. "US:State:Washington")
+	 * must NOT lock out the visitor on their country when the provider returned no
+	 * precision data (empty city AND state — a native outage/fallback). The result
+	 * degrades to the country prefix and a disclosure action fires.
+	 */
+	public function test_whitelist_precision_degrades_to_country_when_no_precision_data(): void {
+		Actions\expectDone( 'ip-location-block-precision-degraded' )->once();
+
+		$settings = array( 'matching_rule' => 0, 'white_list' => 'US:State:Washington', 'black_list' => '' );
+		$validate = array( 'code' => 'US', 'city' => '', 'state' => '' );
+
+		$this->assertSame(
+			'passed',
+			Validator::validate_lookup_result( false, $validate, $settings, true )
+		);
+	}
+
+	public function test_whitelist_degradation_keeps_visitor_but_not_a_foreign_country(): void {
+		// Degrading precision entries to their country prefix must not whitelist a
+		// DIFFERENT country: "US:State:Washington" => "US" still does not match FR.
+		Actions\expectDone( 'ip-location-block-precision-degraded' )->never();
+
+		$settings = array( 'matching_rule' => 0, 'white_list' => 'US:State:Washington', 'black_list' => '' );
+		$validate = array( 'code' => 'FR', 'city' => '', 'state' => '' );
+
+		$this->assertSame(
+			'blocked',
+			Validator::validate_lookup_result( false, $validate, $settings, true )
+		);
+	}
+
+	public function test_whitelist_no_degradation_when_precision_present_but_mismatched(): void {
+		// City/state ARE present but do not match: this is a real mismatch, not an
+		// outage, so the block stands and no degradation action fires.
+		Actions\expectDone( 'ip-location-block-precision-degraded' )->never();
+
+		$settings = array( 'matching_rule' => 0, 'white_list' => 'US:State:Washington', 'black_list' => '' );
+		$validate = array( 'code' => 'US', 'city' => 'Portland', 'state' => 'Oregon' );
+
+		$this->assertSame(
+			'blocked',
+			Validator::validate_lookup_result( false, $validate, $settings, true )
+		);
+	}
+
+	public function test_whitelist_plain_country_match_needs_no_degradation(): void {
+		// Already whitelisted at country level on the original list: the degradation
+		// path is never entered and no action fires.
+		Actions\expectDone( 'ip-location-block-precision-degraded' )->never();
+
+		$settings = array( 'matching_rule' => 0, 'white_list' => 'US', 'black_list' => '' );
+		$validate = array( 'code' => 'US', 'city' => '', 'state' => '' );
+
+		$this->assertSame(
+			'passed',
+			Validator::validate_lookup_result( false, $validate, $settings, true )
+		);
+	}
+
+	public function test_whitelist_degraded_pass_sets_hook_result(): void {
+		// With a hook name the degraded pass returns the merged 'passed' result.
+		Actions\expectDone( 'ip-location-block-precision-degraded' )->once();
+
+		$settings = array( 'matching_rule' => 0, 'white_list' => 'US:State:Washington', 'black_list' => '' );
+		$validate = array( 'code' => 'US', 'city' => '', 'state' => '' );
+
+		$out = Validator::validate_lookup_result( 'public', $validate, $settings, true );
+
+		$this->assertSame( 'passed', $out['result'] );
+		$this->assertSame( 'US', $out['code'] );
+	}
+
+	/** ===== validate_lookup_result(): blacklist is unchanged (no degradation) ===== */
+
+	public function test_blacklist_absent_precision_data_passes_unchanged(): void {
+		// Blacklist + empty precision: the precision rule cannot match, so the
+		// visitor passes (as today). Degradation NEVER applies to the blacklist —
+		// it must not start blocking the whole country.
+		Actions\expectDone( 'ip-location-block-precision-degraded' )->never();
+
+		$settings = array( 'matching_rule' => 1, 'white_list' => '', 'black_list' => 'US:State:Washington' );
+		$validate = array( 'code' => 'US', 'city' => '', 'state' => '' );
+
+		$this->assertSame(
+			'passed',
+			Validator::validate_lookup_result( false, $validate, $settings, true )
+		);
+	}
+
+	public function test_blacklist_present_precision_match_still_blocks(): void {
+		Actions\expectDone( 'ip-location-block-precision-degraded' )->never();
+
+		$settings = array( 'matching_rule' => 1, 'white_list' => '', 'black_list' => 'US:State:Washington' );
+		$validate = array( 'code' => 'US', 'city' => '', 'state' => 'Washington' );
+
+		$this->assertSame(
+			'blocked',
+			Validator::validate_lookup_result( false, $validate, $settings, true )
 		);
 	}
 
