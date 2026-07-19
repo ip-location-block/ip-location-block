@@ -2,7 +2,12 @@
 /**
  * Drop-in for IP Location Block custom filters for admin
  *
- * This file should be named as `drop-in-admin.php`.
+ * This file should be named as `drop-in-admin.php` and placed in
+ * `wp-content/uploads/ip-location-block/dropins/`.
+ *
+ * Since 1.4.0 the plugin internals are namespaced (IPLocationBlock\), but the
+ * `IP_Location_Block` class used below IS the supported public API and is
+ * guaranteed through all 1.x releases.
  *
  * @package   IP_Location_Block
  * @author    darkog <dg@darkog.com>
