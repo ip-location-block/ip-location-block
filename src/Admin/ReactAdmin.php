@@ -8,12 +8,11 @@
  *
  * Requires WordPress 5.0+ (wp-element / React). On older WP the menu is hidden.
  *
- * Ported 1:1 (behavior-preserving) from the legacy IP_Location_Block_Beta
- * (formerly admin/class-ip-location-block-beta.php). The legacy name is kept
- * working via class_alias in compat/legacy-aliases.php. Unlike the frozen
- * classic admin, this class is new code (introduced alongside the React
- * admin) and is therefore namespaced + written to modern PHP 8.1 idioms
- * rather than kept under its legacy identity.
+ * The legacy class name IP_Location_Block_Beta is kept working via class_alias
+ * in compat/legacy-aliases.php. Unlike the frozen classic admin, this class is
+ * new code (introduced alongside the React admin) and is therefore namespaced
+ * + written to modern PHP 8.1 idioms rather than kept under its legacy
+ * identity.
  *
  * @package IP_Location_Block
  */

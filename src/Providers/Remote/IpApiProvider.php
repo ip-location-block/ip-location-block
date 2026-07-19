@@ -16,9 +16,8 @@ use IPLocationBlock\Providers\Capability;
 use IPLocationBlock\Providers\ProviderRegistry;
 
 /**
- * Ports IP_Location_Block_API_ipapi. The legacy get_location() override
- * re-escaped the four scalar fields on success and, on failure, surfaced the
- * provider `error.info` message — reproduced verbatim in mapResult().
+ * On success, mapResult() re-escapes the four scalar fields; on failure it
+ * surfaces the provider's `error.info` message.
  */
 final class IpApiProvider extends AbstractRemoteProvider {
 

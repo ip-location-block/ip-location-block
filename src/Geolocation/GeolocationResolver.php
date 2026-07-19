@@ -17,12 +17,13 @@ use IPLocationBlock\Providers\ProviderInterface;
 use IPLocationBlock\Support\Util;
 
 /**
- * Replaces the legacy IP_Location_Block::_get_geolocation() provider loop.
+ * Provider loop for a single geolocation lookup: cache-first read, per-provider
+ * lookup with the precision gate, and ASN enrichment.
  *
  * Returns the legacy-shaped intermediate array
  * (`time / provider / asn / code / city / state`) that the Validator wraps in
  * make_validation(); or the private/empty short-circuit, or the not-found
- * envelope. Phase 4 wires this into the Validator.
+ * envelope.
  */
 final class GeolocationResolver {
 
@@ -39,17 +40,17 @@ final class GeolocationResolver {
 	public function resolve( string $ip, array $settings, array $providers, LookupContext $context, bool $useCache = true ): array {
 		$started = microtime( true );
 
-		// Loop back / private address. Legacy parity: private IPs short-circuit
-		// before the cache is ever consulted.
+		// Loop back / private address. Private IPs short-circuit before the
+		// cache is consulted.
 		if ( Util::is_private_ip( $ip ) ) {
 			return array( 'time' => 0, 'provider' => 'Private', 'code' => 'XX' );
 		}
 
-		// Cache-first (replaces the 'Cache' pseudo-provider; emits provider =>
-		// 'Cache' for log parity). Replays previously-stored — hence
-		// native-resolved — city/state. Runs BEFORE the empty-provider check:
-		// legacy kept 'Cache' in the provider list, so a cache hit replayed even
-		// when every real provider was disabled.
+		// Cache-first read; emits provider => 'Cache', the value logs and
+		// statistics expect. Replays previously-stored — hence
+		// native-resolved — city/state. This read precedes the empty-provider
+		// check: a cache hit must replay even when every real provider is
+		// disabled.
 		if ( $useCache && ! empty( $settings['cache_hold'] ) ) {
 			$hit = $this->cache->find( $ip );
 			if ( $hit ) {

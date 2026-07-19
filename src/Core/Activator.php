@@ -17,10 +17,11 @@ use IPLocationBlock\Logging\Logs;
 use IPLocationBlock\Settings\Options;
 
 /**
- * Plugin (de)activation — 1:1 port of IP_Location_Block_Activate.
+ * Handles plugin activation and deactivation, including per-blog setup on a
+ * multisite network.
  *
- * The historic eager require_once of util/opts/logs/cron at the top of the
- * legacy file is dropped: those classes are autoloaded (and aliased) now.
+ * Util/Options/Logs/Scheduler are autoloaded (and aliased for legacy callers)
+ * rather than eagerly required.
  */
 class Activator {
 

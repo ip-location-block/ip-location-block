@@ -20,8 +20,8 @@ use IPLocationBlock\Core\Validator;
 /**
  * Class Options
  *
- * Ported 1:1 from IP_Location_Block_Opts (classes/class-ip-location-block-opts.php).
- * The legacy name is kept working via class_alias in compat/legacy-aliases.php.
+ * The legacy class name IP_Location_Block_Opts is kept working via
+ * class_alias in compat/legacy-aliases.php.
  */
 class Options {
 

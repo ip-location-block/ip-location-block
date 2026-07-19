@@ -56,7 +56,7 @@ interface ProviderInterface {
 
 	/**
 	 * Whether the provider is selected by default when the settings map has no
-	 * explicit entry for it (legacy registry `key === null`).
+	 * explicit entry for it.
 	 */
 	public function implicitlyEnabled(): bool;
 

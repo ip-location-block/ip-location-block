@@ -60,7 +60,7 @@ final class ProviderRegistry {
 	}
 
 	/**
-	 * Look up a provider by exact id (legacy get_provider is case-sensitive).
+	 * Look up a provider by exact, case-sensitive id.
 	 */
 	public function get( string $id ): ?ProviderInterface {
 		return $this->providers[ $id ] ?? null;
@@ -102,8 +102,7 @@ final class ProviderRegistry {
 	}
 
 	/**
-	 * Configurable selection list: locals first, then non-locals (reproduces the
-	 * legacy get_providers('key', …, $all = true) ordering).
+	 * Configurable selection list: locals first, then non-locals.
 	 *
 	 * @return ProviderInterface[]
 	 */
@@ -112,8 +111,7 @@ final class ProviderRegistry {
 	}
 
 	/**
-	 * Ids of local providers that are addon-download candidates (mirrors the
-	 * legacy IP_Location_Block_Provider::get_addons).
+	 * Ids of local providers that are addon-download candidates.
 	 *
 	 * @param array<string,mixed> $providersMap settings['providers'].
 	 *
@@ -132,8 +130,8 @@ final class ProviderRegistry {
 	}
 
 	/**
-	 * Ids of the providers active for a lookup — the legacy get_valid_providers
-	 * selection rule WITHOUT the synthetic 'Cache' entry:
+	 * Ids of the providers active for a lookup, excluding the synthetic 'Cache'
+	 * entry:
 	 *   truthy stored key  OR  (unset AND implicitly enabled).
 	 * restrict_api limits candidates to local providers; locals keep their fixed
 	 * order and remotes are shuffled only when requested.
@@ -187,7 +185,7 @@ final class ProviderRegistry {
 
 	/**
 	 * Whether the native provider is the ONLY active provider (drives the
-	 * "Native" precision mode). Mirrors the legacy is_native().
+	 * "Native" precision mode).
 	 *
 	 * @param array<string,mixed> $settings
 	 */

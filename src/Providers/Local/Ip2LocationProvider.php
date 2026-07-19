@@ -177,16 +177,15 @@ final class Ip2LocationProvider extends AbstractLocalProvider {
 	}
 
 	/**
-	 * Attribution HTML (verbatim from the legacy provider).
+	 * Attribution HTML required by the IP2Location LITE CC BY-SA 4.0 license.
 	 */
 	public function getAttribution(): string {
 		return 'This site or product includes IP2Location LITE data available from <a class="ip-location-block-link" href="https://lite.ip2location.com" rel=noreferrer target=_blank>https://lite.ip2location.com</a>. (<a href="https://creativecommons.org/licenses/by-sa/4.0/" title="Creative Commons &mdash; Attribution-ShareAlike 4.0 International &mdash; CC BY-SA 4.0" rel=noreferrer target=_blank>CC BY-SA 4.0</a>)';
 	}
 
 	/**
-	 * Register the two IP2Location settings fields. Verbatim body from the
-	 * legacy provider (the frozen classic admin discovers this via
-	 * method_exists on the compat adapter).
+	 * Register the two IP2Location settings fields (the frozen classic admin
+	 * discovers this via method_exists on the compat adapter).
 	 *
 	 * @param mixed ...$callback The classic callback pair.
 	 */

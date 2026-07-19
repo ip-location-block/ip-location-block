@@ -460,10 +460,10 @@ class Validator {
 	 * @return array
 	 */
 	private static function _get_geolocation( $ip, $settings, $providers, $args = array(), $callback = '' ) {
-		// Map the legacy provider-NAME list to sealed-registry instances. A
-		// 'Cache' entry is no longer a pseudo-provider: it becomes the resolver's
-		// cache-first flag. Unknown names (removed/third-party) resolve to null
-		// and are skipped, exactly as the legacy get_instance() returned null.
+		// Map the provider-name list to sealed-registry instances. A 'Cache'
+		// entry is not a pseudo-provider: it becomes the resolver's cache-first
+		// flag. Unknown names (removed/third-party) resolve to null and are
+		// skipped.
 		$use_cache = false;
 		$instances = array();
 		foreach ( (array) $providers as $provider ) {
@@ -485,10 +485,9 @@ class Validator {
 		$context = \IPLocationBlock\Providers\LookupContext::fromLegacyArgs( $settings, $args );
 
 		// The resolver owns the private-IP / empty-provider short-circuit,
-		// cache-first replay, the precision gate (instanceof PrecisionLocationSource
-		// — the legacy supports('city'|'state') || 'Cache' gate is gone) and ASN
-		// enrichment. It returns the legacy intermediate array which make_validation
-		// wraps.
+		// cache-first replay, the precision gate (instanceof PrecisionLocationSource)
+		// and ASN enrichment. It returns the legacy intermediate array which
+		// make_validation wraps.
 		$resolver = new \IPLocationBlock\Geolocation\GeolocationResolver();
 		$result   = $resolver->resolve( $ip, $settings, $instances, $context, $use_cache );
 

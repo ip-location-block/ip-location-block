@@ -21,9 +21,8 @@ use IPLocationBlock\Support\Util;
 use IPLocationBlock\Vendor\GeoIp2\Database\Reader;
 
 /**
- * Ports IP_Location_Block_API_GeoLite2. Lookups run against the SCOPED GeoIp2
- * reader; the separate ASN-database second pass is preserved (LookupContext's
- * asnPass flag replaces the legacy $args['asn']). Every
+ * Lookups run against the SCOPED GeoIp2 reader; the separate ASN-database
+ * second pass is preserved via LookupContext's asnPass flag. Every
  * `ip-location-block-geolite2-*` filter is preserved at its firing point.
  */
 final class GeoLite2Provider extends AbstractLocalProvider {
@@ -190,15 +189,15 @@ final class GeoLite2Provider extends AbstractLocalProvider {
 	}
 
 	/**
-	 * Attribution HTML (verbatim from the legacy provider).
+	 * Attribution HTML required by the MaxMind GeoLite2 CC BY-SA 4.0 license.
 	 */
 	public function getAttribution(): string {
 		return 'This product includes GeoLite2 data created by MaxMind, available from <a class="ip-location-block-link" href="https://www.maxmind.com" rel=noreferrer target=_blank>https://www.maxmind.com</a>. (<a href="https://creativecommons.org/licenses/by-sa/4.0/" title="Creative Commons &mdash; Attribution-ShareAlike 4.0 International &mdash; CC BY-SA 4.0" rel=noreferrer target=_blank>CC BY-SA 4.0</a>)';
 	}
 
 	/**
-	 * Register the GeoLite2 settings field(s). Verbatim body from the legacy
-	 * provider (discovered via method_exists on the compat adapter).
+	 * Register the GeoLite2 settings field(s) (discovered via method_exists on
+	 * the compat adapter).
 	 *
 	 * @param mixed ...$callback The classic callback pair.
 	 */

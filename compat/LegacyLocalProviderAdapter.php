@@ -53,7 +53,7 @@ class LegacyLocalProviderAdapter extends LegacyProviderAdapter {
 	}
 
 	/**
-	 * Delegate to the provider's verbatim settings-field body.
+	 * Delegate to the provider's settings-field callback.
 	 *
 	 * @param mixed $callback
 	 */

@@ -2,17 +2,17 @@
 /**
  * Legacy class aliases.
  *
- * Maps each old procedural class name onto its 1:1 namespaced port so that
- * existing integrations, the frozen classic admin, the deployed mu-plugin
+ * Maps each old procedural class name onto its namespaced replacement class so
+ * that existing integrations, the frozen classic admin, the deployed mu-plugin
  * copies and third-party code keep resolving the historic names. Every alias
- * is guarded so a real (not-yet-ported) legacy class of the same name always
- * wins. Every ported legacy class is aliased here; the provider facades
+ * is guarded so a real legacy class of the same name (if one is still defined)
+ * always wins. Every renamed class is aliased here; the provider facades
  * (IP_Location_Block_Provider / _API / _API_Cache) are real classes in
  * compat/ instead, because their behavior diverges from the new services.
  *
  * class_alias() autoloads its target (the namespaced class), so requiring this
- * file eagerly loads the ports and runs their top-level side effects (e.g. the
- * IP_LOCATION_BLOCK_* constants defined in Logs).
+ * file eagerly loads the replacement classes and runs their top-level side
+ * effects (e.g. the IP_LOCATION_BLOCK_* constants defined in Logs).
  *
  * @package IP_Location_Block
  * @since   1.4.0
@@ -47,10 +47,8 @@ unset( $ip_location_block_aliases, $ip_location_block_legacy, $ip_location_block
 /*----------------------------------------------------------------------------*
  * Legacy constants.
  *
- * The provider subsystem redesign (phase 3) tombstoned classes/class-ip-location
- * -block-apis.php and the two db-provider files, which used to define these on
- * every request. The classic admin and the REST layer still read them via
- * defined()/concatenation, so they are re-declared here (eager, once per
+ * The classic admin and the REST layer still read these via
+ * defined()/concatenation, so they are declared here (eager, once per
  * request) to preserve the historic contract. Facade class names are NOT
  * aliased — IP_Location_Block_Provider / _API / _API_Cache are real classes
  * (classmapped in compat/). Per-provider legacy class names
@@ -58,19 +56,19 @@ unset( $ip_location_block_aliases, $ip_location_block_legacy, $ip_location_block
  * IP_Location_Block_API::get_instance() covers all real usage.
  *----------------------------------------------------------------------------*/
 
-// Service type flags (were defined at the top of apis.php).
+// Service type flags.
 defined( 'IP_LOCATION_BLOCK_API_TYPE_IPV4' ) || define( 'IP_LOCATION_BLOCK_API_TYPE_IPV4', 1 );
 defined( 'IP_LOCATION_BLOCK_API_TYPE_IPV6' ) || define( 'IP_LOCATION_BLOCK_API_TYPE_IPV6', 2 );
 defined( 'IP_LOCATION_BLOCK_API_TYPE_BOTH' ) || define( 'IP_LOCATION_BLOCK_API_TYPE_BOTH', 3 );
 
-// IP2Location database URLs and paths (were defined in the db-provider file).
+// IP2Location database URLs and paths.
 defined( 'IP_LOCATION_BLOCK_IP2LOC_IPV4_DAT' ) || define( 'IP_LOCATION_BLOCK_IP2LOC_IPV4_DAT', 'IP2LOCATION-LITE-DB1.BIN' );
 defined( 'IP_LOCATION_BLOCK_IP2LOC_IPV6_DAT' ) || define( 'IP_LOCATION_BLOCK_IP2LOC_IPV6_DAT', 'IP2LOCATION-LITE-DB1.IPV6.BIN' );
 defined( 'IP_LOCATION_BLOCK_IP2LOC_IPV4_ZIP' ) || define( 'IP_LOCATION_BLOCK_IP2LOC_IPV4_ZIP', 'https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.BIN.ZIP' );
 defined( 'IP_LOCATION_BLOCK_IP2LOC_IPV6_ZIP' ) || define( 'IP_LOCATION_BLOCK_IP2LOC_IPV6_ZIP', 'https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.IPV6.BIN.ZIP' );
 defined( 'IP_LOCATION_BLOCK_IP2LOC_DOWNLOAD' ) || define( 'IP_LOCATION_BLOCK_IP2LOC_DOWNLOAD', 'https://lite.ip2location.com/database/ip-country' );
 
-// GeoLite2 (MaxMind) database URLs and paths (were defined in the db-provider file).
+// GeoLite2 (MaxMind) database URLs and paths.
 defined( 'IP_LOCATION_BLOCK_GEOLITE2_DB_IP' ) || define( 'IP_LOCATION_BLOCK_GEOLITE2_DB_IP', 'GeoLite2-Country.mmdb' );
 defined( 'IP_LOCATION_BLOCK_GEOLITE2_DB_ASN' ) || define( 'IP_LOCATION_BLOCK_GEOLITE2_DB_ASN', 'GeoLite2-ASN.mmdb' );
 defined( 'IP_LOCATION_BLOCK_GEOLITE2_ZIP_IP' ) || define( 'IP_LOCATION_BLOCK_GEOLITE2_ZIP_IP', 'https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=%s&suffix=tar.gz' );

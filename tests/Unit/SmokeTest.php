@@ -8,8 +8,8 @@ use IPLocationBlock\Plugin;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Sanity check that the PSR-4 autoloader resolves the plugin kernel.
- * Keeps the suite non-empty and green during the Phase 1 scaffold.
+ * Sanity check that the PSR-4 autoloader resolves the plugin kernel and that
+ * the plugin constants are defined.
  */
 final class SmokeTest extends TestCase
 {

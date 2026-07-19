@@ -17,13 +17,12 @@ use IPLocationBlock\Providers\ProviderRegistry;
 use IPLocationBlock\Support\Util;
 
 /**
- * Ports IP_Location_Block_API_ipinfoio. The legacy get_location() override
- * split the combined `loc` field into lat/long and parsed the `org` field into
- * an ASN — reproduced verbatim in mapResult().
+ * mapResult() splits the combined `loc` field into lat/long and parses the
+ * `org` field into an ASN.
  *
- * Note: the legacy get_country() override set %API_FORMAT%/%API_OPTION% that the
- * URL template does not contain, so it was a no-op (the normal endpoint was
- * always used). We therefore keep the default lookupCountry().
+ * Note: %API_FORMAT%/%API_OPTION% do not appear in the URL template, so
+ * overriding lookupCountry() to set them would be a no-op; the default
+ * lookupCountry() (same endpoint as lookup()) is used instead.
  */
 final class IpInfoIoProvider extends AbstractRemoteProvider {
 

@@ -13,10 +13,9 @@ namespace IPLocationBlock\Providers;
 use IPLocationBlock\Geolocation\LocationResult;
 
 /**
- * Ports the legacy IP_Location_Block_API::build_url() + fetch_provider() engine
- * onto the new provider contract: placeholder substitution, wp_remote_get,
- * content-type sniffing (json/xml/plain), transform map, short-term wp_cache and
- * IP-family rejection.
+ * Shared HTTP-provider engine: placeholder substitution, wp_remote_get,
+ * content-type sniffing (json/xml/plain), transform map, short-term wp_cache
+ * and IP-family rejection.
  */
 abstract class AbstractRemoteProvider implements ProviderInterface {
 
@@ -71,8 +70,8 @@ abstract class AbstractRemoteProvider implements ProviderInterface {
 
 	/**
 	 * Provider-specific post-processing of the raw transform array. The base
-	 * implementation is the identity mapping. Overridden by providers whose
-	 * legacy get_location() reshaped the response (ipinfo.io, ipapi).
+	 * implementation is the identity mapping. Overridden by providers that need
+	 * to reshape the response further (ipinfo.io, ipapi).
 	 *
 	 * @param array<string,mixed> $raw
 	 */
@@ -97,7 +96,7 @@ abstract class AbstractRemoteProvider implements ProviderInterface {
 	}
 
 	/**
-	 * Port of IP_Location_Block_API::fetch_provider() (+ build_url()).
+	 * Fetch and normalize a provider's HTTP response into the transform array.
 	 *
 	 * @param array<string,string> $api Placeholder overrides for this call.
 	 *

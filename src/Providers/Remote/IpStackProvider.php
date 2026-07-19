@@ -15,8 +15,7 @@ use IPLocationBlock\Providers\Capability;
 use IPLocationBlock\Providers\ProviderRegistry;
 
 /**
- * Ports IP_Location_Block_API_ipstack. Metadata + template verbatim; no
- * response reshaping (plain transform).
+ * No response reshaping — uses the base class's plain transform.
  */
 final class IpStackProvider extends AbstractRemoteProvider {
 

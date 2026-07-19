@@ -8,10 +8,9 @@ use IPLocationBlock\Core\Validator;
 use IPLocationBlock\Tests\Unit\TestCase;
 
 /**
- * The country/city/state rule matcher and the result predicates. These are the
- * pure, WP-free static methods carried over 1:1 from the legacy
- * IP_Location_Block class — their behavior is the country-blocking decision
- * surface, so they are pinned here.
+ * The country/city/state rule matcher and the result predicates. These are
+ * pure, WP-free static methods; their behavior is the country-blocking
+ * decision surface, so they are pinned here.
  */
 final class ValidatorTest extends TestCase {
 

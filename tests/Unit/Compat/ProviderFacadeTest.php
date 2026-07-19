@@ -10,8 +10,8 @@ use IPLocationBlock\Compat;
 use IPLocationBlock\Tests\Unit\TestCase;
 
 /**
- * Byte-parity of the IP_Location_Block_Provider facade against the pre-migration
- * snapshots recorded from the legacy class (tests/fixtures/snapshots/), plus the
+ * Byte-parity of the IP_Location_Block_Provider facade against recorded
+ * fixtures of the legacy payload shape (tests/fixtures/snapshots/), plus the
  * register_addon() no-op + deprecation behaviour.
  */
 final class ProviderFacadeTest extends TestCase {

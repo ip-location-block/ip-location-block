@@ -10,8 +10,8 @@
  * on the compat facade. The compat facade (IP_Location_Block_Provider) now
  * delegates to this class, so the dependency direction is compat -> src.
  *
- * Loose-typed on purpose: this is 1:1-ported legacy reshaping logic and its
- * callers rely on the historic coercion behavior (no declare(strict_types=1)).
+ * Loose-typed on purpose: callers rely on PHP's loose-type coercion behavior
+ * (no declare(strict_types=1)).
  *
  * @package IP_Location_Block
  * @since   1.4.0

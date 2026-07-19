@@ -123,7 +123,7 @@ abstract class IP_Location_Block_API {
 	}
 
 	/**
-	 * Resolve the stored credential for a provider (verbatim legacy semantics).
+	 * Resolve the stored credential for a provider.
 	 *
 	 * @return mixed|null
 	 */

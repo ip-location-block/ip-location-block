@@ -28,9 +28,8 @@ final class Capability {
 
 	/**
 	 * Bit => legacy `supports` string, in the canonical order used by every
-	 * legacy provider registry entry (verified against captured snapshots:
-	 * Native ipv4,ipv6,asn,city,state / GeoLite2 ipv4,ipv6,asn,asn_database /
-	 * locals+remotes ipv4,ipv6).
+	 * provider registry entry: Native ipv4,ipv6,asn,city,state / GeoLite2
+	 * ipv4,ipv6,asn,asn_database / locals+remotes ipv4,ipv6.
 	 */
 	private const LEGACY_MAP = array(
 		self::IPV4         => 'ipv4',

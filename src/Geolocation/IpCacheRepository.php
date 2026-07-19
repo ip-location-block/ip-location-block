@@ -13,13 +13,12 @@ namespace IPLocationBlock\Geolocation;
 use IPLocationBlock\Logging\Logs;
 
 /**
- * Ports the IP_Location_Block_API_Cache logic. The IP cache is NO LONGER a
- * pseudo-provider — GeolocationResolver reads it cache-first and
- * IP_Location_Block::endof_validate writes to it after the precision gate, so a
- * cached city/state can only ever have been native-resolved.
+ * The IP cache is not a pseudo-provider: GeolocationResolver reads it
+ * cache-first, and IP_Location_Block::endof_validate writes to it after the
+ * precision gate, so a cached city/state can only ever have been
+ * native-resolved.
  *
- * The static memcache is shared across all instances (matching the legacy
- * `protected static $memcache`).
+ * The static memcache is shared across all instances.
  */
 final class IpCacheRepository {
 
@@ -31,7 +30,7 @@ final class IpCacheRepository {
 	private static array $memcache = array();
 
 	/**
-	 * Read a cache row (legacy get_cache()).
+	 * Read a cache row.
 	 *
 	 * @return array<string,mixed>|null
 	 */
@@ -50,7 +49,7 @@ final class IpCacheRepository {
 	}
 
 	/**
-	 * Write a cache row (legacy update_cache()).
+	 * Write a cache row.
 	 *
 	 * @param array<string,mixed> $validate
 	 * @param array<string,mixed> $settings
@@ -107,7 +106,7 @@ final class IpCacheRepository {
 	}
 
 	/**
-	 * Clear the cache (legacy clear_cache()).
+	 * Clear the cache.
 	 */
 	public function clear(): void {
 		Logs::clear_cache();

@@ -320,9 +320,8 @@ class RestApi {
 	}
 
 	/**
-	 * Persist dismissal of an admin notice. Mirrors the classic
-	 * `dismiss-notice` admin-ajax command (the flag lives in the plugin's
-	 * settings, so it is per-site rather than per-user).
+	 * Persist dismissal of an admin notice. The dismissal flag lives in the
+	 * plugin's settings, so it is per-site rather than per-user.
 	 */
 	public static function dismiss_notice( \WP_REST_Request $request ) {
 		$id = sanitize_text_field( (string) $request->get_param( 'id' ) );
@@ -382,8 +381,7 @@ class RestApi {
 
 	/**
 	 * Country verdict from every enabled provider for the current IP.
-	 * Reshapes \IP_Location_Block_Admin_Ajax::scan_country() into
-	 * { ip, providers: [ { name, type, code } ] }.
+	 * Returns { ip, providers: [ { name, type, code } ] }.
 	 */
 	public static function scan_country( \WP_REST_Request $request ) {
 		$source = sanitize_key( (string) $request->get_param( 'source' ) );
@@ -1824,7 +1822,8 @@ class RestApi {
 	}
 
 	/**
-	 * Validate bulk-list values and mirror the classic anonymized-IP conversion.
+	 * Validate bulk-list values, converting wildcard-suffixed IPs into their
+	 * CIDR equivalents.
 	 */
 	private static function normalize_list_value( $value, $type ) {
 		$value = trim( (string) $value );

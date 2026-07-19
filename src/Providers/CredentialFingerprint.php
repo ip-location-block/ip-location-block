@@ -13,8 +13,7 @@ namespace IPLocationBlock\Providers;
 /**
  * Non-reversible identifier for a provider credential. Safe to embed in
  * transient names and verification metadata; the credential itself is never
- * persisted outside the option. Verbatim port of
- * IP_Location_Block_Provider::credential_fingerprint().
+ * persisted outside the option.
  */
 final class CredentialFingerprint {
 

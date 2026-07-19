@@ -8,10 +8,9 @@ use IPLocationBlock\Rest\RestApi;
 use IPLocationBlock\Tests\Unit\TestCase;
 
 /**
- * Pure/near-pure payload-shaping helpers carried over 1:1 from the legacy
- * IP_Location_Block_Rest class. These are the REST byte-compat guard at the
- * unit level; the exhaustive route/payload oracle is the pre5/post5 snapshot
- * diff captured for the migration (see the phase 5 plan), not this suite.
+ * Pure/near-pure payload-shaping helpers for the REST API. These are the REST
+ * byte-compat guard at the unit level; they do not exercise every route or
+ * the full request/response cycle.
  */
 final class RestApiTest extends TestCase {
 

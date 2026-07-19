@@ -15,8 +15,8 @@ namespace IPLocationBlock\Support;
 /**
  * Class Dns
  *
- * Ported 1:1 from IP_Location_Block_Lkup (classes/class-ip-location-block-lkup.php).
- * The legacy name is kept working via class_alias in compat/legacy-aliases.php.
+ * The legacy class name IP_Location_Block_Lkup is kept working via
+ * class_alias in compat/legacy-aliases.php.
  *
  * Two deliberate changes vs. the legacy class:
  *   - the lazy `require_once includes/Net/DNS2.php` / set_include_path() pair is

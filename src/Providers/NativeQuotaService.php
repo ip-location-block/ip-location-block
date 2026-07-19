@@ -13,11 +13,10 @@ namespace IPLocationBlock\Providers;
 use IPLocationBlock\Support\Util;
 
 /**
- * Fetch + normalize the api.iplocationblock.com per-key quota. Verbatim port of
- * IP_Location_Block_Provider::get_native_quota / normalize_native_quota /
- * get_native_quota_status. Blocking statuses gate provider readiness in REST.
+ * Fetches and normalizes the api.iplocationblock.com per-key quota. Blocking
+ * statuses gate provider readiness in REST.
  *
- * Transient name unchanged: `ip_location_block_quota_<fingerprint40>`.
+ * Transient name: `ip_location_block_quota_<fingerprint40>`.
  */
 final class NativeQuotaService {
 

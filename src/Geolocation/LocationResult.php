@@ -34,7 +34,7 @@ final class LocationResult {
 
 	/**
 	 * Build from a legacy transform-shaped array. Empty strings collapse to
-	 * null so isUsable()/toLegacyArray() behave like the legacy engine.
+	 * null so isUsable() treats them as absent and toLegacyArray() omits them.
 	 *
 	 * @param array<string,mixed> $data
 	 */
@@ -80,8 +80,8 @@ final class LocationResult {
 	}
 
 	/**
-	 * Rejected result — the provider cannot answer this IP family. The legacy
-	 * engine returned bare `false` here; the compat adapter restores that.
+	 * Rejected result — the provider cannot answer this IP family; the compat
+	 * adapter converts this back to bare `false`.
 	 */
 	public static function rejected(): self {
 		return new self( rejected: true );
@@ -92,8 +92,8 @@ final class LocationResult {
 	}
 
 	/**
-	 * Normalize a raw country code the way legacy fetch_provider did:
-	 * keep the leading two uppercase letters, otherwise null.
+	 * Normalize a raw country code: keep the leading two uppercase letters,
+	 * otherwise null.
 	 */
 	public static function normalizeCountryCode( mixed $code ): ?string {
 		if ( ! is_string( $code ) ) {
@@ -104,8 +104,7 @@ final class LocationResult {
 	}
 
 	/**
-	 * Usable == a valid 2-letter country code and no error. Mirrors the legacy
-	 * gate `! empty( countryCode ) && empty( errorMessage )` (codes are already
+	 * Usable == a valid 2-letter country code and no error (codes are already
 	 * normalized to two uppercase letters or null upstream).
 	 */
 	public function isUsable(): bool {

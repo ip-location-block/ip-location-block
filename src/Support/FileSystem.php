@@ -15,8 +15,8 @@ namespace IPLocationBlock\Support;
 /**
  * Class FileSystem
  *
- * Ported 1:1 from IP_Location_Block_FS (classes/class-ip-location-block-file.php).
- * The legacy name is kept working via class_alias in compat/legacy-aliases.php.
+ * The legacy class name IP_Location_Block_FS is kept working via class_alias
+ * in compat/legacy-aliases.php.
  */
 class FileSystem {
 

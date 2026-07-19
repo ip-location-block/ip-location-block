@@ -17,9 +17,8 @@ use IPLocationBlock\Providers\LookupContext;
 use IPLocationBlock\Providers\ProviderRegistry;
 
 /**
- * Ports IP_Location_Block_API_IPInfoDB. Metadata verbatim from the legacy
- * registry entry; template + the ip-country get_country fast path verbatim from
- * the legacy subclass.
+ * Uses the `ip-city` endpoint by default; lookupCountry() switches to the
+ * lighter `ip-country` endpoint.
  */
 final class IpInfoDbProvider extends AbstractRemoteProvider {
 
@@ -74,7 +73,7 @@ final class IpInfoDbProvider extends AbstractRemoteProvider {
 	}
 
 	/**
-	 * Lighter ip-country endpoint (legacy get_country override).
+	 * Lighter ip-country endpoint.
 	 */
 	public function lookupCountry( string $ip, LookupContext $context ): LocationResult {
 		$api                 = $this->apiDefaults();

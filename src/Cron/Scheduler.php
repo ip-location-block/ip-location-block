@@ -21,8 +21,10 @@ use IPLocationBlock\Settings\Options;
 /**
  * Class Scheduler
  *
- * Ported 1:1 from IP_Location_Block_Cron (classes/class-ip-location-block-cron.php).
- * The legacy name is kept working via class_alias in compat/legacy-aliases.php.
+ * Schedules and runs the database-download cron job.
+ *
+ * The legacy class name IP_Location_Block_Cron is kept working via
+ * class_alias in compat/legacy-aliases.php.
  */
 class Scheduler {
 
@@ -93,10 +95,7 @@ class Scheduler {
 		$context = Validator::get_instance();
 		$args    = Validator::get_request_headers( $settings );
 
-		// download database files (higher priority order). ProviderRegistry +
-		// DownloadableProviderInterface replace the legacy
-		// IP_Location_Block_Provider::get_addons() + IP_Location_Block_API::get_instance()
-		// ->download() pair (the compat local-provider adapter wrapped exactly this).
+		// Download database files for local, downloadable providers, in priority order.
 		$registry  = ProviderRegistry::instance();
 		$providers = $registry->localProviderIds( is_array( $settings['providers'] ) ? $settings['providers'] : array() );
 		foreach ( $providers as $provider ) {
@@ -108,9 +107,8 @@ class Scheduler {
 				$res[ $provider ] = $report->files();
 
 				// Persist the fresh *_path / *_last values computed during the
-				// download. The legacy providers updated a local copy of
-				// $options[$provider] that was never saved, so cron rescheduling
-				// and the option both kept stale timestamps. DownloadReport
+				// download immediately: cron rescheduling and the saved option
+				// both need them, or they keep stale timestamps. DownloadReport
 				// exposes them via settingsFragment().
 				$fragment = $report->settingsFragment();
 				if ( is_array( $fragment ) && ! empty( $fragment ) ) {

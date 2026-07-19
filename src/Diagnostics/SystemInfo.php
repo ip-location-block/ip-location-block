@@ -2,11 +2,10 @@
 /**
  * IP Location Block - System information (diagnostics support data)
  *
- * Extracted from IP_Location_Block_Admin_Ajax::get_wp_info() so the REST
- * Diagnostics environment report (and the classic admin debug info panel,
- * via the one-line delegate left in admin/legacy/includes/class-admin-ajax.php)
- * no longer requires pulling in the frozen classic admin from front-end-reachable
- * code paths.
+ * Supplies the REST Diagnostics environment report and the classic admin
+ * debug info panel (the latter via the one-line delegate in
+ * admin/legacy/includes/class-admin-ajax.php), so neither code path needs to
+ * pull in the frozen classic admin from front-end-reachable code.
  *
  * @package IP_Location_Block
  */

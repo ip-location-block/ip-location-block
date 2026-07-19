@@ -27,8 +27,8 @@ define( 'IP_LOCATION_BLOCK_CIPHER_TYPE', 'AES-256-CBC' ); // for openssl
 /**
  * Class Logs
  *
- * Ported 1:1 from IP_Location_Block_Logs (classes/class-ip-location-block-logs.php).
- * The legacy name is kept working via class_alias in compat/legacy-aliases.php.
+ * The legacy class name IP_Location_Block_Logs is kept working via
+ * class_alias in compat/legacy-aliases.php.
  */
 class Logs {
 

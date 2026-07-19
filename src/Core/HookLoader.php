@@ -21,8 +21,8 @@ use IPLocationBlock\Support\Util;
  * the plugin, and register them with the WordPress API. Call the
  * run function to execute the list of actions and filters.
  *
- * Ported 1:1 from IP_Location_Block_Loader (classes/class-ip-location-block-load.php).
- * The legacy name is kept working via class_alias in compat/legacy-aliases.php.
+ * The legacy class name IP_Location_Block_Loader is kept working via
+ * class_alias in compat/legacy-aliases.php.
  */
 class HookLoader {
 

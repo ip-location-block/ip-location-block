@@ -197,9 +197,8 @@ final class GeolocationResolverTest extends TestCase {
 	}
 
 	/**
-	 * Legacy parity: 'Cache' used to sit in the provider list itself, so a
-	 * cache hit replayed even when every real provider was disabled. The cache
-	 * read must therefore run BEFORE the empty-provider short-circuit.
+	 * A cache hit must replay even when every real provider is disabled. The
+	 * cache read must therefore run BEFORE the empty-provider short-circuit.
 	 */
 	public function test_cache_replays_even_with_empty_provider_list(): void {
 		$this->seedCache( self::PUBLIC_IP, array( 'code' => 'DE', 'city' => 'Berlin', 'state' => '', 'asn' => '' ) );

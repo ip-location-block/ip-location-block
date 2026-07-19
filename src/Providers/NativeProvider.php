@@ -17,8 +17,8 @@ namespace IPLocationBlock\Providers;
  * provider whose city/state precision survives GeolocationResolver's gate. It
  * also owns every monetization URL as a constant.
  *
- * URL + transform are verbatim from the legacy
- * IP_Location_Block_API_iplocationblock class.
+ * The URL and transform map must match the api.iplocationblock.com wire
+ * contract exactly.
  */
 final class NativeProvider extends AbstractRemoteProvider implements PrecisionLocationSource {
 

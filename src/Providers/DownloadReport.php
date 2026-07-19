@@ -13,11 +13,10 @@ namespace IPLocationBlock\Providers;
 /**
  * Immutable result of a local provider database download.
  *
- * Carries BOTH the legacy per-file result arrays (consumed by the classic admin
- * display and by anything reading the old download() return) AND the settings
- * fragment that must be persisted back into settings[<provider>] — the fix for
- * the historic cron bug where updated *_path / *_last values were computed into
- * a local copy that was never saved.
+ * Carries the legacy per-file result arrays (consumed by the classic admin
+ * display) and the settings fragment that must be persisted back into
+ * settings[<provider>], so cron rescheduling and the saved option don't end
+ * up with stale *_path / *_last values.
  */
 final class DownloadReport {
 

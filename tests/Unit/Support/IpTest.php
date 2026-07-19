@@ -10,10 +10,10 @@ use PHPUnit\Framework\TestCase;
 /**
  * PEAR-parity suite for the native CIDR matcher.
  *
- * Every expected value below was captured from the legacy PEAR
- * Net_IPv4::ipInNetwork() / Net_IPv6::isInNetmask() implementations (the exact
- * call shapes used by IP_Location_Block::check_ips()) BEFORE includes/IP/ was
- * deleted, so this file is the frozen behavioural contract for Support\Ip.
+ * Every expected value below matches the PEAR Net_IPv4::ipInNetwork() /
+ * Net_IPv6::isInNetmask() semantics (the exact call shapes used by
+ * IP_Location_Block::check_ips()), so this file is the frozen behavioural
+ * contract for Support\Ip.
  */
 final class IpTest extends TestCase {
 

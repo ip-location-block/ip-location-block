@@ -17,8 +17,8 @@ use IPLocationBlock\Core\Validator;
 /**
  * Class Util
  *
- * Ported 1:1 from IP_Location_Block_Util (classes/class-ip-location-block-util.php).
- * The legacy name is kept working via class_alias in compat/legacy-aliases.php.
+ * The legacy class name IP_Location_Block_Util is kept working via
+ * class_alias in compat/legacy-aliases.php.
  *
  * Wrapped in a bracketed namespace so the trailing global get_userdata()
  * polyfill (below) still declares a *global* function — some plugins rely on it
