@@ -30,3 +30,39 @@ if (!defined('IP_LOCATION_BLOCK_PATH')) {
 if (!defined('IP_LOCATION_BLOCK_BASE')) {
     define('IP_LOCATION_BLOCK_BASE', 'ip-location-block/ip-location-block.php');
 }
+
+// WordPress time constants used by the provider subsystem.
+defined('MINUTE_IN_SECONDS') || define('MINUTE_IN_SECONDS', 60);
+defined('HOUR_IN_SECONDS') || define('HOUR_IN_SECONDS', 3600);
+defined('DAY_IN_SECONDS') || define('DAY_IN_SECONDS', 86400);
+
+// Minimal WP_Error so quota/tester code paths return a usable object without a
+// full WordPress install. is_wp_error() is stubbed per test via Brain Monkey.
+if (!class_exists('WP_Error')) {
+    class WP_Error
+    {
+        /** @var string */
+        public $code;
+        /** @var string */
+        public $message;
+        /** @var mixed */
+        public $data;
+
+        public function __construct($code = '', $message = '', $data = '')
+        {
+            $this->code = $code;
+            $this->message = $message;
+            $this->data = $data;
+        }
+
+        public function get_error_message()
+        {
+            return $this->message;
+        }
+
+        public function get_error_code()
+        {
+            return $this->code;
+        }
+    }
+}

@@ -101,6 +101,21 @@ class Scheduler {
 
 				$res[ $provider ] = $geo->download( $args );
 
+				// Persist the fresh *_path / *_last values computed during the
+				// download. The legacy providers updated a local copy of
+				// $options[$provider] that was never saved, so cron rescheduling
+				// and the option both kept stale timestamps. The compat adapter
+				// exposes them via settings_fragment().
+				if ( method_exists( $geo, 'settings_fragment' ) ) {
+					$fragment = $geo->settings_fragment();
+					if ( is_array( $fragment ) && ! empty( $fragment ) ) {
+						$settings[ $provider ] = array_merge(
+							isset( $settings[ $provider ] ) && is_array( $settings[ $provider ] ) ? $settings[ $provider ] : array(),
+							$fragment
+						);
+					}
+				}
+
 				// re-schedule cron job
 				self::schedule_cron_job( $settings['update'], $settings[ $provider ], false );
 

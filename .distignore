@@ -1,9 +1,11 @@
 # Files EXCLUDED from the WordPress.org release. Consumed by rsync --exclude-from.
 # Leading "/" ANCHORS to repo root: excludes ONLY top-level dev cruft and never
-# reaches into the three committed runtime vendor trees (admin/vendor,
-# classes/db-providers/ip2location/vendor, classes/db-providers/maxmind/vendor),
-# which contain their own tests/composer.json/phpunit.xml.dist and MUST ship.
-# NEVER add a bare "vendor" line. "/dist" is required (prevents rsync self-recursion).
+# reaches into the committed runtime vendor tree (admin/vendor) or the shipped
+# composer autoloaders (/vendor with pear/net_dns2, /vendor_prefixed with the
+# scoped geo libraries) — all of which MUST ship. The two bundled
+# classes/db-providers/*/vendor trees were removed in 1.4.0 (replaced by the
+# scoped composer dependencies). NEVER add a bare "vendor" line. "/dist" is
+# required (prevents rsync self-recursion).
 
 # --- Version control / CI ---
 /.git
