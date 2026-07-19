@@ -627,10 +627,15 @@ body.toplevel_page_ip-location-block {
 
 .ilb-panel-section.components-panel__body {
 	border: 0;
-	border-bottom: 1px solid var(--ilb-border);
 
-	&:last-child {
-		border-bottom: 0;
+	/* Core overlaps adjacent panel bodies by 1px, which hides their divider.
+	 * Restore normal flow and draw the separator only for collapsed rows. */
+	& + & {
+		margin-top: 0;
+	}
+
+	&:not(.is-opened):not(:last-child) {
+		border-bottom: 1px solid var(--ilb-border-soft);
 	}
 
 	.components-panel__body-title {
