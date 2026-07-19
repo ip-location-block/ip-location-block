@@ -59,8 +59,8 @@ class Options {
 		'validation'           => array(   // Action hook for validation
 			'comment'   => false,   // Validate on comment post
 			'login'     => 1,       // Validate on login
-			'admin'     => 1,       // Validate on admin (1:country 2:ZEP)
-			'ajax'      => 0,       // Validate on ajax/post (1:country 2:ZEP)
+			'admin'     => 1,       // Validate on admin (1:country; ZEP bit removed in 1.4.0)
+			'ajax'      => 0,       // Validate on ajax/post (1:country; ZEP bit removed in 1.4.0)
 			'xmlrpc'    => 1,       // Validate on xmlrpc (1:country 2:close)
 			'proxy'     => null,    // $_SERVER variables for IPs
 			'reclogs'   => 1,       // 1:blocked 2:passed 3:unauth 4:auth 5:all 6:blocked/passed
@@ -71,8 +71,8 @@ class Options {
 			// since version 3.0.13
 			'explogs'   => 7,       // expiration time for logs [days]
 			// since version 2.1.0
-			'plugins'   => 0,       // Validate on wp-content/plugins (1:country 2:ZEP)
-			'themes'    => 0,       // Validate on wp-content/themes (1:country 2:ZEP)
+			'plugins'   => 0,       // Validate on wp-content/plugins (1:country; ZEP bit removed in 1.4.0)
+			'themes'    => 0,       // Validate on wp-content/themes (1:country; ZEP bit removed in 1.4.0)
 			// since version 2.2.9
 			'timing'    => 0,       // 0:init, 1:mu-plugins, 2:drop-in
 			'recdays'   => 30,      // Number of days for validation statistics
@@ -408,7 +408,8 @@ class Options {
 			foreach ( array( 'admin', 'ajax' ) as $tmp ) {
 				if ( $settings['validation'][ $tmp ] == 2 ) {
 					$settings['validation'][ $tmp ] = 3;
-				} // WP-ZEP + Block by country
+				} // historic migration: 2 (WP-ZEP only) -> 3 (WP-ZEP + country);
+				  // the later 1.3.8+ step strips the ZEP bit again, leaving 1.
 			}
 		}
 

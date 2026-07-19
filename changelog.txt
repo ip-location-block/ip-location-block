@@ -1,5 +1,6 @@
 = 1.4.0 =
 * **New feature:** Rewritten plugin internals on a modern PSR-4/Composer architecture with scoped ("prefixed") third-party dependencies, so bundled libraries no longer collide with copies shipped by other plugins.
+* **Removed:** WP-ZEP (Zero-day Exploit Prevention), as announced in 1.3.8. Its nonce-based request tracing is gone; the admin/ajax/plugins/themes targets now use country blocking only, and any WP-ZEP bits left in stored settings are cleaned up automatically on upgrade.
 * **Change:** Minimum required PHP version raised to 8.1.
 * **Change:** The geolocation provider registry is now sealed. External/third-party geolocation providers are no longer supported: `IP_Location_Block_Provider::register_addon()` is now a deprecated no-op and the uploads `apis/` directory is no longer scanned for add-on providers.
 * **New feature:** `ip-location-block-deprecated` action fires whenever a deprecated integration point is used, so integrators can detect and update legacy code.

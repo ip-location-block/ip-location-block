@@ -188,9 +188,11 @@ class Validator {
 				\add_action( self::CRON_NAME, array( $this, 'exec_update_db' ) );
 			}
 
-			// garbage collection for IP address cache, enque script for authentication
+			// garbage collection for IP address cache
 			\add_action( self::CACHE_NAME, array( $this, 'exec_cache_gc' ) );
-			\add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_nonce' ), $priority[0] ); // @since  0.2.8.0
+			// The front-end enqueue_nonce hook was removed with WP-ZEP (1.4.0):
+			// its only consumer was the deleted authenticate.js. The classic
+			// admin still calls enqueue_nonce() on admin_enqueue_scripts itself.
 		}
 
 		// register validation of updating metadata
@@ -748,7 +750,6 @@ class Validator {
 	public function validate_ip( $hook, $settings, $block = true, $die = true ) {
 		// register auxiliary validation functions
 		// priority high 3 close_xmlrpc, close_restapi
-		//               4 check_nonce (high), check_user (low)
 		//               5 check_upload (high), check_signature (low)
 		//               6 check_auth
 		//               7 check_ips_black (high), check_ips_white (low)
