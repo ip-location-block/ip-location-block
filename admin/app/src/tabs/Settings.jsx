@@ -5,7 +5,7 @@
  * Both edit the same state and share the Save bar, so switching views never
  * loses edits. Fresh installs land on Simple; the choice is remembered locally.
  */
-import { useState, useEffect } from '@wordpress/element';
+import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
 import {
 	Panel,
 	PanelBody,
@@ -32,6 +32,7 @@ import { setPath } from './paths';
 import SettingsField from './SettingsField';
 import SimpleBlocking from './SimpleBlocking';
 import ScanCountry from '../components/ScanCountry';
+import SaveToastRegion from '../components/SaveToastRegion';
 import { queryParam } from '../navigation';
 
 const STORAGE_KEY = 'ilbSettingsMode';
@@ -143,8 +144,13 @@ export default function Settings() {
 	const [ mode, setMode ] = useState( null ); // resolved once settings load
 	const [ loading, setLoading ] = useState( true );
 	const [ saving, setSaving ] = useState( false );
-	const [ notice, setNotice ] = useState( null );
-	const [ warnings, setWarnings ] = useState( [] );
+	const [ saveNotices, setSaveNotices ] = useState( [] );
+	const noticeSequence = useRef( 0 );
+	const dismissSaveNotice = useCallback( ( id ) => {
+		setSaveNotices( ( current ) =>
+			current.filter( ( notice ) => notice.id !== id )
+		);
+	}, [] );
 
 	useEffect( () => {
 		Promise.all( [
@@ -185,7 +191,7 @@ export default function Settings() {
 					);
 				}
 			)
-			.catch( ( e ) => setNotice( { status: 'error', msg: e.message } ) )
+			.catch( () => setSettings( null ) )
 			.finally( () => setLoading( false ) );
 	}, [ requestedView ] );
 
@@ -230,16 +236,27 @@ export default function Settings() {
 
 	const onSave = () => {
 		setSaving( true );
-		setNotice( null );
-		setWarnings( [] );
+		setSaveNotices( [] );
 		saveSettings( settings, sources.context?.scope?.current || 'site' )
 			.then( ( saved ) => {
 				setSettings( saved );
-				setWarnings( saveWarnings( saved ) );
-				setNotice( {
-					status: 'success',
-					msg: __( 'Settings saved.', 'ip-location-block' ),
-				} );
+				const warningNotices = saveWarnings( saved ).map(
+					( warning ) => ( {
+						id: `warning-${ ++noticeSequence.current }`,
+						status: 'warning',
+						message: warning.message,
+						persistent: true,
+					} )
+				);
+				setSaveNotices( [
+					...warningNotices,
+					{
+						id: `success-${ ++noticeSequence.current }`,
+						status: 'success',
+						message: __( 'Settings saved.', 'ip-location-block' ),
+						persistent: false,
+					},
+				] );
 				window.dispatchEvent(
 					new CustomEvent( 'ip-location-block-settings-saved', {
 						detail: { settings: saved },
@@ -250,7 +267,16 @@ export default function Settings() {
 					// Saved successfully; provider status will refresh next load.
 				} );
 			} )
-			.catch( ( e ) => setNotice( { status: 'error', msg: e.message } ) )
+			.catch( ( e ) =>
+				setSaveNotices( [
+					{
+						id: `error-${ ++noticeSequence.current }`,
+						status: 'error',
+						message: e.message,
+						persistent: true,
+					},
+				] )
+			)
 			.finally( () => setSaving( false ) );
 	};
 
@@ -258,28 +284,10 @@ export default function Settings() {
 
 	return (
 		<div className="ilb-settings">
-			{ notice && (
-				<Notice
-					status={ notice.status }
-					onRemove={ () => setNotice( null ) }
-				>
-					{ notice.msg }
-				</Notice>
-			) }
-
-			{ warnings.map( ( warning, index ) => (
-				<Notice
-					key={ warning.code || index }
-					status="warning"
-					onRemove={ () =>
-						setWarnings( ( current ) =>
-							current.filter( ( _, i ) => i !== index )
-						)
-					}
-				>
-					{ warning.message }
-				</Notice>
-			) ) }
+			<SaveToastRegion
+				notices={ saveNotices }
+				onRemove={ dismissSaveNotice }
+			/>
 
 			<div className="ilb-settings__modebar">
 				<div
