@@ -331,6 +331,40 @@ class Options {
 			foreach ( array( 'admin', 'ajax', 'plugins', 'themes' ) as $tmp ) {
 				$settings['validation'][ $tmp ] &= ~2;
 			}
+
+			// Refresh the deployed mu-plugin copy — ONLY when one already exists
+			// (the user opted into mu-plugins validation timing). Ships the 1.4.0
+			// template over the old copy; a no-op when timing is `init`.
+			if ( self::get_validation_timing() ) {
+				self::upgrade_validation_timing_mu_plugin( $settings );
+			}
+
+			// Prune unknown provider keys left behind by removed third-party
+			// add-ons: the registry is now sealed. Keep only ids the registry
+			// knows (case-insensitively) plus the synthetic 'Cache' selector.
+			if ( isset( $settings['providers'] ) && is_array( $settings['providers'] ) ) {
+				$known = array( 'cache' => true );
+				foreach ( array_keys( \IPLocationBlock\Providers\ProviderRegistry::instance()->catalog() ) as $pid ) {
+					$known[ strtolower( $pid ) ] = true;
+				}
+
+				$kept   = array();
+				$pruned = array();
+				foreach ( $settings['providers'] as $pkey => $pval ) {
+					if ( isset( $known[ strtolower( (string) $pkey ) ] ) ) {
+						$kept[ $pkey ] = $pval;
+					} else {
+						$pruned[] = $pkey;
+					}
+				}
+
+				if ( ! empty( $pruned ) ) {
+					$settings['providers'] = $kept;
+					if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+						error_log( 'IP Location Block: pruned unknown provider key(s) during 1.4.0 upgrade: ' . implode( ', ', $pruned ) );
+					}
+				}
+			}
 		}
 
 		// Update Settings

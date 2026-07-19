@@ -39,14 +39,17 @@ final class GeolocationResolver {
 	public function resolve( string $ip, array $settings, array $providers, LookupContext $context, bool $useCache = true ): array {
 		$started = microtime( true );
 
-		// Loop back / private address / empty provider list.
-		if ( Util::is_private_ip( $ip ) || count( $providers ) < 1 ) {
+		// Loop back / private address. Legacy parity: private IPs short-circuit
+		// before the cache is ever consulted.
+		if ( Util::is_private_ip( $ip ) ) {
 			return array( 'time' => 0, 'provider' => 'Private', 'code' => 'XX' );
 		}
 
 		// Cache-first (replaces the 'Cache' pseudo-provider; emits provider =>
 		// 'Cache' for log parity). Replays previously-stored — hence
-		// native-resolved — city/state.
+		// native-resolved — city/state. Runs BEFORE the empty-provider check:
+		// legacy kept 'Cache' in the provider list, so a cache hit replayed even
+		// when every real provider was disabled.
 		if ( $useCache && ! empty( $settings['cache_hold'] ) ) {
 			$hit = $this->cache->find( $ip );
 			if ( $hit ) {
@@ -59,6 +62,11 @@ final class GeolocationResolver {
 					'state'    => isset( $hit['state'] ) && '' !== $hit['state'] ? $hit['state'] : null,
 				);
 			}
+		}
+
+		// Empty provider list (after a cache miss).
+		if ( count( $providers ) < 1 ) {
+			return array( 'time' => 0, 'provider' => 'Private', 'code' => 'XX' );
 		}
 
 		foreach ( $providers as $provider ) {

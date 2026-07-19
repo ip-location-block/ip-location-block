@@ -196,6 +196,25 @@ final class GeolocationResolverTest extends TestCase {
 		$this->assertSame( 'XX', $out['code'] );
 	}
 
+	/**
+	 * Legacy parity: 'Cache' used to sit in the provider list itself, so a
+	 * cache hit replayed even when every real provider was disabled. The cache
+	 * read must therefore run BEFORE the empty-provider short-circuit.
+	 */
+	public function test_cache_replays_even_with_empty_provider_list(): void {
+		$this->seedCache( self::PUBLIC_IP, array( 'code' => 'DE', 'city' => 'Berlin', 'state' => '', 'asn' => '' ) );
+
+		$settings = array( 'cache_hold' => 1 );
+
+		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array(), $this->context( $settings ), true );
+
+		$this->assertSame( 'Cache', $out['provider'] );
+		$this->assertSame( 'DE', $out['code'] );
+		$this->assertSame( 'Berlin', $out['city'] );
+		$this->assertNull( $out['state'] );
+		$this->assertNull( $out['asn'] );
+	}
+
 	public function test_no_usable_result_returns_unknown_envelope(): void {
 		$provider = new FakeProvider( 'Empty', LocationResult::error( 'nope' ) );
 		$settings = array();
