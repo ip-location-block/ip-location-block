@@ -30,6 +30,26 @@ export const decodeLegacySignature = ( value = '' ) => {
 	}
 };
 
+/**
+ * Non-fatal warnings the server attaches to a successful POST /settings
+ * response (e.g. an mu-plugin copy failure that silently reset validation
+ * timing). Returns a clean, display-ready list; HTML tags in the message
+ * (the server wraps paths in <code>…</code>) are stripped for plain-text
+ * notices.
+ *
+ * @param {Object} response The POST /settings response object.
+ * @return {Array<{code:string,message:string}>} Display-ready warnings.
+ */
+export const saveWarnings = ( response ) => {
+	const list = Array.isArray( response?.warnings ) ? response.warnings : [];
+	return list
+		.filter( ( item ) => item && item.message )
+		.map( ( item ) => ( {
+			code: String( item.code || '' ),
+			message: String( item.message ).replace( /<\/?[^>]+>/g, '' ),
+		} ) );
+};
+
 export const selectedMimeMap = ( catalog = [], selected = {} ) => {
 	const allowed = new Map(
 		catalog.map( ( item ) => [ item.extension, item.mime ] )

@@ -350,6 +350,45 @@ body.settings_page_ip-location-block-beta {
 	}
 }
 
+/* Persistent native-provider quota upsell banner (all tabs). */
+.ilb-quota-banner {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 16px;
+	padding: 11px 12px;
+	border: 1px solid #dba617;
+	border-left-width: 4px;
+	border-radius: var(--ilb-radius);
+	background: var(--ilb-warning-soft);
+	color: #664d00;
+
+	> .dashicons {
+		flex: none;
+		color: var(--ilb-warning);
+	}
+
+	&__message {
+		display: flex;
+		flex: 1;
+		gap: 4px;
+		min-width: 0;
+		flex-direction: column;
+
+		strong {
+			color: var(--ilb-text);
+		}
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex: none;
+		flex-wrap: wrap;
+	}
+}
+
 /* -------------------------------------------------------------------------
  * Section headings shared accent (Statistics, Tools, Simple UI)
  * ---------------------------------------------------------------------- */
@@ -1606,8 +1645,13 @@ body.settings_page_ip-location-block-beta {
  * Search tab
  * ---------------------------------------------------------------------- */
 .ilb-search {
-	&__notice,
+	&__notice {
+		margin-top: 16px;
+	}
+
 	&__results {
+		display: grid;
+		gap: 16px;
 		margin-top: 16px;
 	}
 
@@ -1623,6 +1667,47 @@ body.settings_page_ip-location-block-beta {
 
 	&__form-card .components-flex {
 		align-items: flex-end;
+	}
+
+	&__providers {
+		margin: 18px 0 4px;
+		padding: 0;
+		border: 0;
+
+		legend {
+			margin-bottom: 8px;
+			padding: 0;
+			font-size: 13px;
+			font-weight: 600;
+			color: var(--ilb-text);
+		}
+	}
+
+	&__providers-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 6px 20px;
+	}
+
+	&__providers-empty {
+		margin: 0;
+		color: var(--ilb-muted);
+	}
+
+	&__anonymize {
+		margin-top: 14px;
+	}
+
+	&__result-card .ilb-panel-shell__header {
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	&__result-ip {
+		color: var(--ilb-muted);
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+			monospace;
+		font-size: 12px;
 	}
 
 	&__details {
@@ -2862,6 +2947,17 @@ body.settings_page_ip-location-block-beta {
 
 	> .components-notice {
 		margin: 0;
+	}
+
+	&__summary {
+		margin: 6px 0 0;
+		padding-left: 18px;
+		font-size: 12px;
+
+		li {
+			margin: 2px 0;
+			overflow-wrap: anywhere;
+		}
 	}
 }
 

@@ -259,6 +259,11 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 * Change: Bundled per-provider vendor libraries replaced by scoped Composer packages.
 * Fix: Uninstall no longer causes a fatal error when the settings row was already removed from the database.
 * Fix: Cron database downloads now persist the downloaded file path and last-updated timestamp correctly.
+* Fix: A file-system permission failure while writing/removing the mu-plugin during a settings save is now surfaced as a warning in the new admin instead of being silently dropped (previously the validation timing quietly reverted to "init" with no explanation).
+* Fix: The "external add-on provider was ignored" notice is no longer discarded unseen on the new admin screen (where all admin notices are hidden). It is now a dismissible Diagnostics entry; acknowledging it removes the ignored provider keys.
+* Improvement: The Search tool now queries several providers at once, lists only the currently configured providers (marking any local provider whose database is missing), and adds an "Anonymize IP address" toggle for the result preview.
+* Improvement: The new admin now shows a persistent, per-incident upgrade banner on every tab when the IP Location Block provider key is exhausted, rate-limited, or needs an upgrade.
+* Improvement: Downloading local databases now reports a per-file summary of what was updated.
 
 = 1.3.9 =
 

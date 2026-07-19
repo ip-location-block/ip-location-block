@@ -581,9 +581,21 @@ class RestApi {
 		$options = self::sanitize_settings_payload( $input );
 
 		require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-opts.php';
-		$file = Options::setup_validation_timing( $options );
+
+		// Non-fatal save warnings surfaced to the React admin. The response
+		// envelope is the saved settings object; `warnings` is an ADDITIVE
+		// top-level array, always present (empty when the save was clean). Each
+		// entry is { code, message }. The classic admin surfaced the identical
+		// mu-plugin copy/remove failure as an admin notice; the React admin has
+		// no such channel, so the message would otherwise be discarded.
+		$warnings = array();
+		$file     = Options::setup_validation_timing( $options );
 		if ( is_wp_error( $file ) ) {
 			$options['validation']['timing'] = 0;
+			$warnings[]                      = array(
+				'code'    => 'validation-timing',
+				'message' => $file->get_error_message(),
+			);
 		}
 
 		delete_transient( Validator::CRON_NAME );
@@ -594,7 +606,10 @@ class RestApi {
 			return $result;
 		}
 
-		return rest_ensure_response( self::public_settings( Validator::get_option( false ) ) );
+		$response             = self::public_settings( Validator::get_option( false ) );
+		$response['warnings'] = $warnings;
+
+		return rest_ensure_response( $response );
 	}
 
 	/**
@@ -1250,14 +1265,39 @@ class RestApi {
 	/**
 	 * Geolocation lookup for the Search tab. search_ip() reads $_POST['ip'],
 	 * so populate it before delegating.
+	 *
+	 * Two shapes, both supported:
+	 *  - Legacy single: `provider` (string) -> the flat provider result object
+	 *    (unchanged; a compat contract).
+	 *  - Multi (additive): `providers` (array) -> { results: [ { provider,
+	 *    result } ] }, mirroring the classic tool that queried several providers
+	 *    at once.
 	 */
 	public static function search_geolocation( \WP_REST_Request $request ) {
-		$provider = sanitize_text_field( (string) $request->get_param( 'provider' ) );
 		$_POST['ip'] = sanitize_text_field( (string) $request->get_param( 'ip' ) );
 
 		if ( ! class_exists( 'IP_Location_Block_Admin_Ajax', false ) ) {
 			require_once IP_LOCATION_BLOCK_PATH . 'admin/legacy/includes/class-admin-ajax.php';
 		}
+
+		$providers = $request->get_param( 'providers' );
+		if ( is_array( $providers ) && ! empty( $providers ) ) {
+			$results = array();
+			foreach ( $providers as $name ) {
+				$name = sanitize_text_field( (string) $name );
+				if ( '' === $name ) {
+					continue;
+				}
+				$results[] = array(
+					'provider' => $name,
+					'result'   => \IP_Location_Block_Admin_Ajax::search_ip( $name ),
+				);
+			}
+
+			return rest_ensure_response( array( 'results' => $results ) );
+		}
+
+		$provider = sanitize_text_field( (string) $request->get_param( 'provider' ) );
 
 		return rest_ensure_response( \IP_Location_Block_Admin_Ajax::search_ip( $provider ) );
 	}

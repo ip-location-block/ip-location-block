@@ -91,6 +91,15 @@ class IP_Location_Block_Provider {
 		if ( ! function_exists( 'get_option' ) ) {
 			return;
 		}
+
+		// The React (Beta) screen hides every admin notice via its stylesheet,
+		// so rendering here would echo into a hidden node and then delete the
+		// option unseen. On that screen render nothing and keep the option: the
+		// Diagnostics `ignored-addon-providers` check surfaces it instead.
+		if ( self::is_react_admin_screen() ) {
+			return;
+		}
+
 		$keys = get_option( self::IGNORED_ADDONS_OPTION, array() );
 		if ( empty( $keys ) || ! is_array( $keys ) ) {
 			return;
@@ -109,6 +118,36 @@ class IP_Location_Block_Provider {
 		if ( function_exists( 'delete_option' ) ) {
 			delete_option( self::IGNORED_ADDONS_OPTION );
 		}
+	}
+
+	/**
+	 * Whether the current admin request is the React (Beta) admin screen, whose
+	 * stylesheet hides all admin notices.
+	 *
+	 * @return bool
+	 */
+	private static function is_react_admin_screen() {
+		$slug = class_exists( '\\IPLocationBlock\\Admin\\ReactAdmin' )
+			? \IPLocationBlock\Admin\ReactAdmin::SLUG
+			: 'ip-location-block-beta';
+
+		if ( isset( $_GET['page'] ) ) {
+			$page = function_exists( 'sanitize_key' )
+				? sanitize_key( function_exists( 'wp_unslash' ) ? wp_unslash( $_GET['page'] ) : $_GET['page'] )
+				: (string) $_GET['page'];
+			if ( $slug === $page ) {
+				return true;
+			}
+		}
+
+		if ( function_exists( 'get_current_screen' ) ) {
+			$screen = get_current_screen();
+			if ( $screen && isset( $screen->id ) && false !== strpos( (string) $screen->id, $slug ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

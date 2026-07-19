@@ -27,6 +27,7 @@ import {
 	getSettingsContext,
 } from '../api';
 import { SECTIONS } from './settingsSchema';
+import { saveWarnings } from '../settingsLogic';
 import { setPath } from './paths';
 import SettingsField from './SettingsField';
 import SimpleBlocking from './SimpleBlocking';
@@ -129,6 +130,7 @@ export default function Settings() {
 	const [ loading, setLoading ] = useState( true );
 	const [ saving, setSaving ] = useState( false );
 	const [ notice, setNotice ] = useState( null );
+	const [ warnings, setWarnings ] = useState( [] );
 
 	useEffect( () => {
 		Promise.all( [
@@ -215,9 +217,11 @@ export default function Settings() {
 	const onSave = () => {
 		setSaving( true );
 		setNotice( null );
+		setWarnings( [] );
 		saveSettings( settings, sources.context?.scope?.current || 'site' )
 			.then( ( saved ) => {
 				setSettings( saved );
+				setWarnings( saveWarnings( saved ) );
 				setNotice( {
 					status: 'success',
 					msg: __( 'Settings saved.', 'ip-location-block' ),
@@ -248,6 +252,20 @@ export default function Settings() {
 					{ notice.msg }
 				</Notice>
 			) }
+
+			{ warnings.map( ( warning, index ) => (
+				<Notice
+					key={ warning.code || index }
+					status="warning"
+					onRemove={ () =>
+						setWarnings( ( current ) =>
+							current.filter( ( _, i ) => i !== index )
+						)
+					}
+				>
+					{ warning.message }
+				</Notice>
+			) ) }
 
 			<div className="ilb-settings__modebar">
 				<div

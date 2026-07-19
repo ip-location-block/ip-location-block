@@ -8,6 +8,34 @@ import { __, sprintf } from '@wordpress/i18n';
 
 import { updateDatabase } from '../api';
 
+// The /database/update response carries per-file results keyed by provider:
+// { Provider: { ipv4: { filename, message }, … } }. Flatten it into readable
+// "Provider file — message" lines for the success toast.
+export const summarizeDatabaseUpdate = ( response ) => {
+	if ( ! response || typeof response !== 'object' ) {
+		return [];
+	}
+	const lines = [];
+	Object.keys( response ).forEach( ( provider ) => {
+		const files = response[ provider ];
+		if ( ! files || typeof files !== 'object' ) {
+			return;
+		}
+		Object.keys( files ).forEach( ( key ) => {
+			const message = files[ key ] && files[ key ].message;
+			if ( message ) {
+				lines.push(
+					`${ provider } ${ key }: ${ String( message ).replace(
+						/<\/?[^>]+>/g,
+						''
+					) }`
+				);
+			}
+		} );
+	} );
+	return lines;
+};
+
 export default function DatabaseStatus( { rows, schedule, onRefresh } ) {
 	const [ busy, setBusy ] = useState( false );
 	const [ message, setMessage ] = useState( null );
@@ -54,13 +82,15 @@ export default function DatabaseStatus( { rows, schedule, onRefresh } ) {
 						setBusy( true );
 						setMessage( null );
 						updateDatabase()
-							.then( () => {
+							.then( ( response ) => {
 								setMessage( {
 									status: 'success',
 									text: __(
 										'Database update completed.',
 										'ip-location-block'
 									),
+									details:
+										summarizeDatabaseUpdate( response ),
 								} );
 								return onRefresh?.();
 							} )
@@ -82,6 +112,13 @@ export default function DatabaseStatus( { rows, schedule, onRefresh } ) {
 					onRemove={ () => setMessage( null ) }
 				>
 					{ message.text }
+					{ message.details && message.details.length > 0 && (
+						<ul className="ilb-database-status__summary">
+							{ message.details.map( ( line, index ) => (
+								<li key={ index }>{ line }</li>
+							) ) }
+						</ul>
+					) }
 				</Notice>
 			) }
 			<table className="wp-list-table widefat striped ilb-db-status">

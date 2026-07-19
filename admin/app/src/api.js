@@ -165,6 +165,14 @@ export const searchIp = ( ip, provider ) =>
 		data: { ip, provider },
 	} );
 
+// Multi-provider search (additive): returns { results: [ { provider, result } ] }.
+export const searchIpMulti = ( ip, providers ) =>
+	apiFetch( {
+		path: `/${ ns }/geolocation/search`,
+		method: 'POST',
+		data: { ip, providers },
+	} );
+
 export const getNetworkStats = ( duration = 0 ) =>
 	apiFetch( {
 		path: `/${ ns }/network/stats?duration=${ encodeURIComponent(

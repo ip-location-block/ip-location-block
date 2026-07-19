@@ -1,7 +1,12 @@
 /**
  * Root of the Beta admin: a full-width product bar + a contained TabPanel shell.
  */
-import { useCallback, useState, useEffect } from '@wordpress/element';
+import {
+	useCallback,
+	useMemo,
+	useState,
+	useEffect,
+} from '@wordpress/element';
 import { Button, TabPanel } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 
@@ -13,13 +18,16 @@ import Diagnostics from './tabs/Diagnostics';
 import Sites from './tabs/Sites';
 import {
 	getDiagnostics,
+	getProviderStatus,
 	getSettings,
 	getMode,
 	setDiagnosticAcknowledgement,
 } from './api';
 import ModeBadge from './components/ModeBadge';
 import AppFooter from './components/AppFooter';
+import QuotaBanner from './components/QuotaBanner';
 import { criticalChecks, issueCount } from './diagnosticsLogic';
+import { dismissQuotaBanner, shouldShowBanner } from './quotaBannerLogic';
 import { betaUrl, queryParam, replaceTabInUrl } from './navigation';
 
 const boot = window.ipLocationBlockBeta || {};
@@ -203,6 +211,8 @@ export default function App() {
 	const [ diagnosticsLoading, setDiagnosticsLoading ] = useState( true );
 	const [ diagnosticsError, setDiagnosticsError ] = useState( '' );
 	const [ acknowledging, setAcknowledging ] = useState( '' );
+	const [ quota, setQuota ] = useState( null );
+	const [ quotaDismissTick, setQuotaDismissTick ] = useState( 0 );
 
 	const refreshDiagnostics = useCallback( () => {
 		setDiagnosticsLoading( true );
@@ -227,6 +237,40 @@ export default function App() {
 				refreshDiagnostics
 			);
 	}, [ refreshDiagnostics ] );
+
+	// Native-provider quota drives the persistent upsell banner. It rides on the
+	// existing /providers/status payload; refresh it on save like diagnostics.
+	useEffect( () => {
+		let alive = true;
+		const loadQuota = () =>
+			getProviderStatus()
+				.then( ( status ) => alive && setQuota( status?.quota || null ) )
+				.catch( () => {} );
+		loadQuota();
+		window.addEventListener(
+			'ip-location-block-settings-saved',
+			loadQuota
+		);
+		return () => {
+			alive = false;
+			window.removeEventListener(
+				'ip-location-block-settings-saved',
+				loadQuota
+			);
+		};
+	}, [] );
+
+	const showQuotaBanner = useMemo(
+		() => shouldShowBanner( quota ),
+		// quotaDismissTick forces a re-read of the client-side dismissal state.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ quota, quotaDismissTick ]
+	);
+
+	const onQuotaDismiss = () => {
+		dismissQuotaBanner( quota );
+		setQuotaDismissTick( ( tick ) => tick + 1 );
+	};
 
 	const acknowledge = ( id, acknowledged ) => {
 		setAcknowledging( id );
@@ -266,6 +310,12 @@ export default function App() {
 		<div className="ilb-app">
 			<Header />
 			<main className="ilb-app__content">
+				{ showQuotaBanner && (
+					<QuotaBanner
+						quota={ quota }
+						onDismiss={ onQuotaDismiss }
+					/>
+				) }
 				<CriticalBanner checks={ critical } />
 				<TabPanel
 					className="ilb-tabs"

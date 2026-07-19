@@ -41,6 +41,7 @@ class Diagnostics {
 		);
 
 		self::add_provider_checks( $checks, $settings, $provider );
+		self::add_ignored_addon_check( $checks );
 		self::add_rule_checks( $checks, $settings, $provider, $updating );
 		self::add_lockout_check( $checks, $settings, $updating );
 		self::add_compatibility_checks( $checks, $settings );
@@ -87,6 +88,14 @@ class Diagnostics {
 			$settings                           = Validator::get_option();
 			$settings['cache_compat_dismissed'] = (bool) $acknowledged;
 			Validator::update_option( $settings );
+		}
+
+		// Acknowledging the ignored-addon advisory clears the stored add-on
+		// keys: that deletion IS the acknowledgement, so the check can never
+		// re-fire (and the classic one-shot notice, if still queued, becomes a
+		// no-op on its next render).
+		if ( 'ignored-addon-providers' === $id && $acknowledged ) {
+			delete_option( self::ignored_addons_option() );
 		}
 
 		return true;
@@ -298,6 +307,31 @@ class Diagnostics {
 				: __( 'The native provider has no blocking quota issue.', 'ip-location-block' ),
 			array(),
 			$quota_actions
+		);
+	}
+
+	/**
+	 * Warn while deprecated external add-on providers were ignored. The classic
+	 * admin surfaced this as a one-shot admin notice, but that notice is hidden
+	 * (and self-destructs) on the React screen, so this standing check is the
+	 * React equivalent. Acknowledging it deletes the stored keys.
+	 */
+	private static function add_ignored_addon_check( &$checks ) {
+		$keys = get_option( self::ignored_addons_option(), array() );
+		$keys = is_array( $keys ) ? array_values( array_filter( array_map( 'strval', $keys ) ) ) : array();
+
+		self::add_check(
+			$checks,
+			'ignored-addon-providers',
+			empty( $keys ) ? 'pass' : 'warning',
+			'providers',
+			__( 'External add-on providers', 'ip-location-block' ),
+			empty( $keys )
+				? __( 'No unsupported external geolocation providers were detected.', 'ip-location-block' )
+				: __( 'External geolocation providers are no longer supported. The add-on provider(s) listed below were ignored. Acknowledge this notice to dismiss it and remove them.', 'ip-location-block' ),
+			$keys,
+			array(),
+			true
 		);
 	}
 
@@ -639,7 +673,21 @@ class Diagnostics {
 			'native-mixed-providers',
 			'external-only-provider',
 			'full-page-cache-conflict',
+			'ignored-addon-providers',
 		);
+	}
+
+	/**
+	 * Option name that stores the ignored external add-on provider keys. This is
+	 * the literal value of IP_Location_Block_Provider::IGNORED_ADDONS_OPTION;
+	 * it is inlined (not referenced) so the diagnostics engine keeps the
+	 * enforced compat -> src dependency direction and never depends on the
+	 * legacy facade class. (DiagnosticsTest cross-checks it against the constant.)
+	 *
+	 * @return string
+	 */
+	private static function ignored_addons_option() {
+		return 'ip_location_block_ignored_addons';
 	}
 
 	private static function settings_action( $label, $section, $classic_section ) {
