@@ -40,16 +40,43 @@ jobs:
           [ "$BASE_VERSION" = "$README_VERSION" ]       || { echo "::error::tag $BASE_VERSION != readme Stable tag $README_VERSION"; exit 1; }
           echo "✅ versions match: $BASE_VERSION"
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer:v2
+
+      - name: Install Composer dependencies (dev)
+        # post-autoload-dump runs the composer "scope" script, which builds the
+        # php-scoped geo libraries into vendor_prefixed/ (not committed to git).
+        run: composer install --optimize-autoloader --prefer-dist
+
+      - name: Run PHP unit tests
+        run: composer test
+
+      - name: Prune to runtime Composer dependencies
+        # --no-scripts is CRITICAL: php-scoper itself is removed by this prune,
+        # so the post-autoload-dump "scope" script must not attempt to re-run.
+        # After this, vendor/ holds only pear/net_dns2 + the autoloader; the
+        # scoped libraries live in vendor_prefixed/. Both ship in the zip.
+        run: composer install --no-dev --optimize-autoloader --no-scripts --prefer-dist
+
+      - name: Verify scoped vendor tree (grep-guards)
+        run: bash scripts/verify_scoped_build.sh
+
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
 
-      - name: Build admin assets
+      - name: Run JS unit tests
         run: |
           npm ci
-          npm run build
+          npm run test:unit
+
+      - name: Build admin assets
+        run: npm run build
 
       - name: Create distribution directory
         run: |
