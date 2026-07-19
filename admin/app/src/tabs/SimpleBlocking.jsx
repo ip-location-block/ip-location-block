@@ -18,20 +18,27 @@ import {
 	ToggleControl,
 	SelectControl,
 	TextControl,
+	ComboboxControl,
 	Button,
 	FormTokenField,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useEffect, useState } from '@wordpress/element';
+import { useEffect, useRef, useState } from '@wordpress/element';
 
 import { parseRules, serializeRules } from '../lib/rules';
+import { syncDraft } from '../lib/preciseDraft';
 import ProviderSetup from '../components/ProviderSetup';
 import {
 	ALL_CODES,
 	SUGGESTIONS,
 	countryLabel,
-	codeFromToken,
+	expandTokens,
 } from '../data/countries';
+import { hasRegionList, regionList } from '../data/regions';
+
+// Sentinel option value: switches a State row with a bundled region list into
+// free-text entry.
+const CUSTOM_REGION = '__ilb_custom_region__';
 
 const BACKEND_HOOKS = [ 'comment', 'xmlrpc', 'login', 'admin' ];
 
@@ -54,7 +61,23 @@ export default function SimpleBlocking( {
 	const rawMode = Number( pub.matching_rule );
 	const mode = rawMode === 0 || rawMode === 1 ? rawMode : 1; // default: block-list
 	const listKey = mode === 0 ? 'white_list' : 'black_list';
-	const rules = parseRules( pub[ listKey ] || '' );
+	const storedString = pub[ listKey ] || '';
+	const rules = parseRules( storedString );
+
+	// The precise-rule editor keeps LOCAL draft state so that empty, in-progress
+	// rows — which serializeRules intentionally drops — survive rendering.
+	// `syncDraft` rebuilds it only when the stored string changes from OUTSIDE
+	// the editor (reset, preset, save + reload); edits made here are recognised
+	// via `lastWrittenRef` and never clobber the draft.
+	const [ draftPrecise, setDraftPrecise ] = useState(
+		() => parseRules( storedString ).precise
+	);
+	const lastWrittenRef = useRef( storedString );
+	useEffect( () => {
+		setDraftPrecise( ( prev ) =>
+			syncDraft( prev, storedString, lastWrittenRef.current )
+		);
+	}, [ storedString ] );
 
 	const alsoBackend = Number( settings.matching_rule ) !== -1;
 
@@ -73,18 +96,27 @@ export default function SimpleBlocking( {
 		setProviderReady( !! providerStatus?.ready );
 	}, [ providerStatus ] );
 
+	const restrictApi = !! settings.restrict_api;
 	const nativeSelected = !! storedProviders[ 'IP Location Block' ];
 	const draftNative =
 		nativeSelected &&
+		! restrictApi &&
 		Object.entries( storedProviders ).every(
 			( [ name, value ] ) =>
 				name === 'IP Location Block' || name === 'Cache' || ! value
 		);
 	const preciseAvailable = !! ( providerStatus?.native || draftNative );
+	// Native remote does not run under restrict_api ("Do not send IP address to
+	// external APIs"), so precision is locked even though Native is selected.
+	// That case gets a specific hint instead of the generic provider upsell.
+	const gatedByRestrict = ! preciseAvailable && nativeSelected && restrictApi;
 
 	// --- writers ------------------------------------------------------------
 	const writeRules = ( nextMode, next, mirror = alsoBackend ) => {
 		const str = serializeRules( next );
+		// Record what the editor wrote so the draft reconcile treats the ensuing
+		// re-render as self-originated (see syncDraft / lastWrittenRef).
+		lastWrittenRef.current = str;
 		onChange(
 			`public.${ nextMode === 0 ? 'white_list' : 'black_list' }`,
 			str
@@ -108,22 +140,34 @@ export default function SimpleBlocking( {
 	const setMode = ( next ) => {
 		const m = Number( next );
 		onChange( 'public.matching_rule', m );
-		writeRules( m, rules ); // carry the current selection into the new list
+		// carry the current selection into the new list
+		writeRules( m, { countries: rules.countries, precise: draftPrecise } );
 		if ( alsoBackend ) {
 			onChange( 'matching_rule', m );
 		}
 	};
 
 	const setCountries = ( codes ) =>
-		writeRules( mode, { ...rules, countries: codes } );
-	const setPrecise = ( precise ) => writeRules( mode, { ...rules, precise } );
+		writeRules( mode, { countries: codes, precise: draftPrecise } );
+
+	// Update the local draft AND serialize its non-empty subset into settings.
+	const commitPrecise = ( nextDraft ) => {
+		setDraftPrecise( nextDraft );
+		writeRules( mode, {
+			countries: rules.countries,
+			precise: nextDraft,
+		} );
+	};
 
 	const setAlsoBackend = ( on ) => {
 		if ( on ) {
 			onChange( 'matching_rule', mode );
 			onChange(
 				mode === 0 ? 'white_list' : 'black_list',
-				serializeRules( rules )
+				serializeRules( {
+					countries: rules.countries,
+					precise: draftPrecise,
+				} )
 			);
 			BACKEND_HOOKS.forEach( ( h ) =>
 				onChange( `validation.${ h }`, 1 )
@@ -142,11 +186,79 @@ export default function SimpleBlocking( {
 	};
 
 	const updatePrecise = ( i, patch ) =>
-		setPrecise(
-			rules.precise.map( ( r, idx ) =>
+		commitPrecise(
+			draftPrecise.map( ( r, idx ) =>
 				idx === i ? { ...r, ...patch } : r
 			)
 		);
+
+	// The Name cell: a searchable region dropdown for State rows whose country
+	// ships a bundled list (with a "Custom value…" escape hatch), otherwise a
+	// free-text field. Kept to a SINGLE grid cell (see the 4-column grid).
+	const nameField = ( row, i ) => {
+		const hasList = row.level === 'State' && hasRegionList( row.country );
+		const inList =
+			hasList && regionList( row.country ).includes( row.value );
+		const useCombo = hasList && ! row.custom && ( ! row.value || inList );
+
+		if ( useCombo ) {
+			return (
+				<ComboboxControl
+					__nextHasNoMarginBottom
+					label={ __( 'Name', 'ip-location-block' ) }
+					value={ row.value || null }
+					options={ [
+						...regionList( row.country ).map( ( name ) => ( {
+							label: name,
+							value: name,
+						} ) ),
+						{
+							label: __(
+								'Custom value…',
+								'ip-location-block'
+							),
+							value: CUSTOM_REGION,
+						},
+					] }
+					onChange={ ( v ) =>
+						v === CUSTOM_REGION
+							? updatePrecise( i, { custom: true, value: '' } )
+							: updatePrecise( i, { value: v || '' } )
+					}
+				/>
+			);
+		}
+
+		return (
+			<>
+				<TextControl
+					__nextHasNoMarginBottom
+					label={ __( 'Name', 'ip-location-block' ) }
+					value={ row.value }
+					placeholder={
+						row.level === 'City'
+							? __( 'e.g. Seattle', 'ip-location-block' )
+							: __( 'e.g. California', 'ip-location-block' )
+					}
+					onChange={ ( v ) => updatePrecise( i, { value: v } ) }
+				/>
+				{ hasList && (
+					<Button
+						variant="link"
+						className="ilb-simple__name-switch"
+						onClick={ () =>
+							updatePrecise( i, { custom: false, value: '' } )
+						}
+					>
+						{ __(
+							'Choose from the region list',
+							'ip-location-block'
+						) }
+					</Button>
+				) }
+			</>
+		);
+	};
 
 	return (
 		<>
@@ -267,16 +379,12 @@ export default function SimpleBlocking( {
 										) }
 										suggestions={ SUGGESTIONS }
 										onChange={ ( tokens ) =>
-											setCountries(
-												tokens
-													.map( codeFromToken )
-													.filter( Boolean )
-											)
+											setCountries( expandTokens( tokens ) )
 										}
 									/>
 									<p className="ilb-simple__help">
 										{ __(
-											'Start typing a country name or code.',
+											'Start typing a country name or code. “EU (European Union)” adds all 27 member states.',
 											'ip-location-block'
 										) }
 									</p>
@@ -298,29 +406,40 @@ export default function SimpleBlocking( {
 												aria-hidden="true"
 											/>
 											<div>
-												<p className="ilb-simple__gate-copy">
-													{ __(
-														'State- and city-level blocking needs the “IP Location Block” geolocation provider, the only one that returns state/city data (a premium key is required for that data).',
-														'ip-location-block'
-													) }
-												</p>
-												<Button
-													variant="secondary"
-													onClick={
-														focusProviderSetup
-													}
-													className="ilb-simple__gate-action"
-												>
-													{ __(
-														'Set up Native provider',
-														'ip-location-block'
-													) }
-												</Button>
+												{ gatedByRestrict ? (
+													<p className="ilb-simple__gate-copy">
+														{ __(
+															'Precision rules need live lookups from the “IP Location Block” provider. Disable “Do not send IP address to external APIs” to use them.',
+															'ip-location-block'
+														) }
+													</p>
+												) : (
+													<>
+														<p className="ilb-simple__gate-copy">
+															{ __(
+																'State- and city-level blocking needs the “IP Location Block” geolocation provider, the only one that returns state/city data (a premium key is required for that data).',
+																'ip-location-block'
+															) }
+														</p>
+														<Button
+															variant="secondary"
+															onClick={
+																focusProviderSetup
+															}
+															className="ilb-simple__gate-action"
+														>
+															{ __(
+																'Set up Native provider',
+																'ip-location-block'
+															) }
+														</Button>
+													</>
+												) }
 											</div>
 										</div>
 									) : (
 										<>
-											{ rules.precise.map( ( row, i ) => (
+											{ draftPrecise.map( ( row, i ) => (
 												<div
 													className="ilb-simple__precise-row"
 													key={ i }
@@ -351,7 +470,7 @@ export default function SimpleBlocking( {
 														options={ [
 															{
 																label: __(
-																	'State',
+																	'State / Region',
 																	'ip-location-block'
 																),
 																value: 'State',
@@ -370,29 +489,15 @@ export default function SimpleBlocking( {
 															} )
 														}
 													/>
-													<TextControl
-														__nextHasNoMarginBottom
-														label={ __(
-															'Name',
-															'ip-location-block'
-														) }
-														value={ row.value }
-														placeholder={ __(
-															'e.g. California',
-															'ip-location-block'
-														) }
-														onChange={ ( v ) =>
-															updatePrecise( i, {
-																value: v,
-															} )
-														}
-													/>
+													<div className="ilb-simple__name-cell">
+														{ nameField( row, i ) }
+													</div>
 													<Button
 														variant="tertiary"
 														isDestructive
 														onClick={ () =>
-															setPrecise(
-																rules.precise.filter(
+															commitPrecise(
+																draftPrecise.filter(
 																	(
 																		_,
 																		idx
@@ -413,8 +518,8 @@ export default function SimpleBlocking( {
 											<Button
 												variant="secondary"
 												onClick={ () =>
-													setPrecise( [
-														...rules.precise,
+													commitPrecise( [
+														...draftPrecise,
 														{
 															country: 'US',
 															level: 'State',
@@ -428,6 +533,12 @@ export default function SimpleBlocking( {
 													'ip-location-block'
 												) }
 											</Button>
+											<p className="ilb-simple__help">
+												{ __(
+													'Names must exactly match what the provider returns. City is free text — verify the exact spelling on the Search tab.',
+													'ip-location-block'
+												) }
+											</p>
 										</>
 									) }
 								</div>

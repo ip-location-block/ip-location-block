@@ -1080,6 +1080,19 @@ body.toplevel_page_ip-location-block {
 		margin-bottom: 8px;
 	}
 
+	// The Name cell holds either a region dropdown or a free-text field (plus an
+	// optional "choose from list" switch); keep it a single, non-overflowing
+	// grid column.
+	&__name-cell {
+		min-width: 0;
+	}
+
+	&__name-switch.components-button.is-link {
+		margin-top: 4px;
+		height: auto;
+		font-size: 12px;
+	}
+
 	&__gate {
 		display: flex;
 		gap: 8px;

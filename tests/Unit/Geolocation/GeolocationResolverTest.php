@@ -223,6 +223,81 @@ final class GeolocationResolverTest extends TestCase {
 		$this->assertSame( array( 'errorMessage' => 'unknown' ), $out );
 	}
 
+	/** ===== SELF-HEAL: stale pre-precision cache rows ===== */
+
+	/** Native-only provider config that isNativeOnly() reports as native-only. */
+	private const NATIVE_ONLY = array( 'IP Location Block' => 'key', 'IP2Location' => '' );
+
+	public function test_stale_precision_row_refreshed_live_when_native_only_and_rule_present(): void {
+		$this->seedCache( self::PUBLIC_IP, array( 'code' => 'US', 'city' => '', 'state' => '', 'asn' => '' ) );
+
+		$native   = new FakePrecisionProvider( 'IP Location Block', $this->cityStateResult() );
+		$settings = array(
+			'cache_hold' => 1,
+			'white_list' => 'US:State:Washington',
+			'providers'  => self::NATIVE_ONLY,
+		);
+
+		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array( $native ), $this->context( $settings ), true );
+
+		$this->assertSame( 'IP Location Block', $out['provider'], 'stale row must be refreshed by a live lookup' );
+		$this->assertSame( 'Seattle', $out['city'] );
+		$this->assertSame( 'Washington', $out['state'] );
+		$this->assertSame( 1, $native->lookupCalls );
+	}
+
+	public function test_stale_precision_row_replayed_without_a_precision_rule(): void {
+		$this->seedCache( self::PUBLIC_IP, array( 'code' => 'US', 'city' => '', 'state' => '', 'asn' => '' ) );
+
+		$native   = new FakePrecisionProvider( 'IP Location Block', $this->cityStateResult() );
+		$settings = array(
+			'cache_hold' => 1,
+			'white_list' => 'US', // plain country only — no precision entry
+			'providers'  => self::NATIVE_ONLY,
+		);
+
+		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array( $native ), $this->context( $settings ), true );
+
+		$this->assertSame( 'Cache', $out['provider'] );
+		$this->assertNull( $out['city'] );
+		$this->assertSame( 0, $native->lookupCalls, 'no live lookup without a precision rule' );
+	}
+
+	public function test_stale_precision_row_replayed_when_not_native_only(): void {
+		$this->seedCache( self::PUBLIC_IP, array( 'code' => 'US', 'city' => '', 'state' => '', 'asn' => '' ) );
+
+		$native = new FakePrecisionProvider( 'IP Location Block', $this->cityStateResult() );
+		// Native selected but IP2Location stays implicitly enabled => not native-only.
+		$settings = array(
+			'cache_hold' => 1,
+			'white_list' => 'US:State:Washington',
+			'providers'  => array( 'IP Location Block' => 'key' ),
+		);
+
+		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array( $native ), $this->context( $settings ), true );
+
+		$this->assertSame( 'Cache', $out['provider'] );
+		$this->assertSame( 0, $native->lookupCalls, 'self-heal is bounded to native-only mode' );
+	}
+
+	public function test_partial_precision_row_is_not_treated_as_stale(): void {
+		// A row that already carries a state (city empty) is NOT stale.
+		$this->seedCache( self::PUBLIC_IP, array( 'code' => 'US', 'city' => '', 'state' => 'Washington', 'asn' => '' ) );
+
+		$native   = new FakePrecisionProvider( 'IP Location Block', $this->cityStateResult() );
+		$settings = array(
+			'cache_hold' => 1,
+			'white_list' => 'US:State:Washington',
+			'providers'  => self::NATIVE_ONLY,
+		);
+
+		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array( $native ), $this->context( $settings ), true );
+
+		$this->assertSame( 'Cache', $out['provider'] );
+		$this->assertSame( 'Washington', $out['state'] );
+		$this->assertSame( 0, $native->lookupCalls );
+	}
+
 	/**
 	 * Seed the IpCacheRepository in-memory cache without touching the DB layer.
 	 */

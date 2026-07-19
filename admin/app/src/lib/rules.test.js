@@ -4,7 +4,10 @@ describe( 'parseRules', () => {
 	it( 'returns empty for falsy / non-string input', () => {
 		expect( parseRules( '' ) ).toEqual( { countries: [], precise: [] } );
 		expect( parseRules( null ) ).toEqual( { countries: [], precise: [] } );
-		expect( parseRules( undefined ) ).toEqual( { countries: [], precise: [] } );
+		expect( parseRules( undefined ) ).toEqual( {
+			countries: [],
+			precise: [],
+		} );
 	} );
 
 	it( 'parses plain country codes (upper-cased, blanks skipped)', () => {
@@ -34,11 +37,51 @@ describe( 'parseRules', () => {
 	it( 'mixes countries and precise rules', () => {
 		const out = parseRules( 'CN,US:State:California,RU' );
 		expect( out.countries ).toEqual( [ 'CN', 'RU' ] );
-		expect( out.precise ).toEqual( [ { country: 'US', level: 'State', value: 'California' } ] );
+		expect( out.precise ).toEqual( [
+			{ country: 'US', level: 'State', value: 'California' },
+		] );
 	} );
 
 	it( 'keeps multi-word place names', () => {
-		expect( parseRules( 'US:State:New York' ).precise[ 0 ].value ).toBe( 'New York' );
+		expect( parseRules( 'US:State:New York' ).precise[ 0 ].value ).toBe(
+			'New York'
+		);
+	} );
+
+	it( 'parses the Region keyword as a State-level row', () => {
+		expect( parseRules( 'US:Region:Washington' ) ).toEqual( {
+			countries: [],
+			precise: [ { country: 'US', level: 'State', value: 'Washington' } ],
+		} );
+	} );
+
+	it( 'expands a "~" OR place into one row per alternative (3-part)', () => {
+		expect( parseRules( 'FR:City:Paris~Montpellier' ) ).toEqual( {
+			countries: [],
+			precise: [
+				{ country: 'FR', level: 'City', value: 'Paris' },
+				{ country: 'FR', level: 'City', value: 'Montpellier' },
+			],
+		} );
+	} );
+
+	it( 'expands a "~" OR place into rows for the 2-part shorthand', () => {
+		expect( parseRules( 'US:Seattle~Tacoma' ) ).toEqual( {
+			countries: [],
+			precise: [
+				{ country: 'US', level: 'City', value: 'Seattle' },
+				{ country: 'US', level: 'City', value: 'Tacoma' },
+			],
+		} );
+	} );
+
+	it( 'trims and drops blank "~" alternatives, keeps multi-word', () => {
+		expect(
+			parseRules( 'AU:State:Western Australia ~ Victoria ~' ).precise
+		).toEqual( [
+			{ country: 'AU', level: 'State', value: 'Western Australia' },
+			{ country: 'AU', level: 'State', value: 'Victoria' },
+		] );
 	} );
 } );
 
@@ -47,7 +90,9 @@ describe( 'serializeRules', () => {
 		expect(
 			serializeRules( {
 				countries: [ 'CN', 'RU' ],
-				precise: [ { country: 'US', level: 'State', value: 'California' } ],
+				precise: [
+					{ country: 'US', level: 'State', value: 'California' },
+				],
 			} )
 		).toBe( 'CN,RU,US:State:California' );
 	} );
@@ -63,7 +108,10 @@ describe( 'serializeRules', () => {
 
 	it( 'drops precise rules with no value', () => {
 		expect(
-			serializeRules( { countries: [], precise: [ { country: 'US', level: 'State', value: '' } ] } )
+			serializeRules( {
+				countries: [],
+				precise: [ { country: 'US', level: 'State', value: '' } ],
+			} )
 		).toBe( '' );
 	} );
 

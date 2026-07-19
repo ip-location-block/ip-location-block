@@ -55,6 +55,10 @@ final class Plugin
         // Contract-bound legacy identity — do not namespace (see header note).
         \add_action('rest_api_init', array('IP_Location_Block_Rest', 'register_routes'));
 
+        // Clear the IP cache when the precision rule set changes on save, so
+        // stale pre-precision rows can't replay empty city/state forever.
+        Settings\PrecisionCacheGuard::register();
+
         // Dashboard / administrative functionality (classic + React admin).
         if (\is_admin()) {
             // Contract-bound legacy identity — the classic admin class exists

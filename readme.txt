@@ -128,7 +128,15 @@ Yes. You can synchronize the settings with all the sites on the network when you
 
 = Does this plugin allows blocking US States, Country Regions or Cities?
 
-Yes. Please view [City/State Level Matching](https://iplocationblock.com/codex/city-state-level-matching/) for more details.
+Yes, when the geolocation lookup returns that data (the native "IP Location Block" provider is the one that returns city/state, and a premium key is required for it). Add entries to your whitelist / blacklist in one of these forms:
+
+* `US:State:Washington` &mdash; state-level. `Region` is an alias of `State` (`US:Region:Washington` is identical), because the provider returns the full state/region name in that field.
+* `US:City:Seattle` &mdash; city-level. The two-part shorthand `US:Seattle` is treated as a city.
+* `FR:City:Paris~Montpellier` &mdash; the `~` character is an OR: the entry matches when the city (or state) equals **any** of the tilde-separated alternatives. Works for both the state and city forms.
+
+Names are matched case-insensitively but otherwise **exactly** (whole name), using the exact spelling the provider returns &mdash; e.g. `Catalunya`, `Madrid, Comunidad de`, `Tokyo`, `Yerushalayim`. The Simple view offers a state/region dropdown pre-filled with those exact names for the US, Spain, Australia, Japan and Israel. For any other place, use the **Search** tab to look up an IP and copy the exact `region` / `city` string it reports.
+
+Please view [City/State Level Matching](https://iplocationblock.com/codex/city-state-level-matching/) for more details.
 
 = Does this plugin works well with caching? =
 
@@ -250,6 +258,11 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 
 *Release Date - 19 Jul 2026*
 
+* Fix: "Add a precise rule" in the Simple blocking view now works; blank, in-progress rule rows are no longer discarded before you can fill them in, and clearing a rule's name no longer deletes the row.
+* Fix: IP-address cache rows created before a city/state rule existed are refreshed by a live lookup instead of replaying empty city/state forever; saving a change to any precision rule also clears the IP cache.
+* New: `Region` is a working alias of `State` in city/state rules, and the documented `~` OR syntax is now implemented (`US:City:Seattle~Tacoma` matches either city).
+* New: The Simple blocking view offers a searchable State/Region dropdown pre-filled with the exact provider names for the United States, Spain, Australia, Japan and Israel (with a "Custom value" escape hatch); city stays free text, verifiable on the Search tab.
+* New: An "EU (European Union)" shortcut in the country picker expands to all 27 member states.
 * New: Rewritten plugin internals on a modern PSR-4/Composer architecture with scoped ("prefixed") third-party dependencies, so bundled libraries no longer collide with copies shipped by other plugins.
 * Removed: WP-ZEP (Zero-day Exploit Prevention), as announced in 1.3.8. Its nonce-based request tracing is gone; the admin/ajax/plugins/themes targets now use country blocking only, and any WP-ZEP bits left in stored settings are cleaned up automatically on upgrade.
 * Change: Minimum required PHP version raised to 8.1.

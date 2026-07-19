@@ -14,6 +14,7 @@ use IPLocationBlock\Providers\Capability;
 use IPLocationBlock\Providers\LookupContext;
 use IPLocationBlock\Providers\PrecisionLocationSource;
 use IPLocationBlock\Providers\ProviderInterface;
+use IPLocationBlock\Providers\ProviderRegistry;
 use IPLocationBlock\Support\Util;
 
 /**
@@ -51,9 +52,15 @@ final class GeolocationResolver {
 		// native-resolved — city/state. This read precedes the empty-provider
 		// check: a cache hit must replay even when every real provider is
 		// disabled.
+		//
+		// Self-heal: a row cached BEFORE precision was enabled carries empty
+		// city/state and would replay forever. When the active lists hold a
+		// precision rule and the native provider is the sole source, treat such a
+		// row as a miss so the live provider loop below (gate included) refreshes
+		// it.
 		if ( $useCache && ! empty( $settings['cache_hold'] ) ) {
 			$hit = $this->cache->find( $ip );
-			if ( $hit ) {
+			if ( $hit && ! $this->shouldRefreshStalePrecision( $hit, $settings ) ) {
 				return array(
 					'time'     => microtime( true ) - $started,
 					'provider' => 'Cache',
@@ -110,5 +117,60 @@ final class GeolocationResolver {
 		}
 
 		return array( 'errorMessage' => 'unknown' );
+	}
+
+	/**
+	 * Whether a cache hit is a stale pre-precision row that a live lookup should
+	 * refresh instead of replaying.
+	 *
+	 * True only when ALL of: the row carries no precision data (empty city AND
+	 * state); the active lists contain a precision rule; and the native provider
+	 * is the sole active source. The native-only guard prevents repeated futile
+	 * refreshes under providers that can never return city/state.
+	 *
+	 * @param array<string,mixed> $hit
+	 * @param array<string,mixed> $settings
+	 */
+	private function shouldRefreshStalePrecision( array $hit, array $settings ): bool {
+		$city  = isset( $hit['city'] ) ? (string) $hit['city'] : '';
+		$state = isset( $hit['state'] ) ? (string) $hit['state'] : '';
+		if ( '' !== $city || '' !== $state ) {
+			return false;
+		}
+
+		if ( ! $this->activeListsHavePrecisionRule( $settings ) ) {
+			return false;
+		}
+
+		return ProviderRegistry::instance()->isNativeOnly( $settings );
+	}
+
+	/**
+	 * Cheap check: do any of the active country lists (globals + public) contain
+	 * a precision (":"-bearing) entry?
+	 *
+	 * @param array<string,mixed> $settings
+	 */
+	private function activeListsHavePrecisionRule( array $settings ): bool {
+		$lists = array();
+		foreach ( array( 'white_list', 'black_list' ) as $key ) {
+			if ( ! empty( $settings[ $key ] ) ) {
+				$lists[] = (string) $settings[ $key ];
+			}
+		}
+		if ( ! empty( $settings['public'] ) && is_array( $settings['public'] ) ) {
+			foreach ( array( 'white_list', 'black_list' ) as $key ) {
+				if ( ! empty( $settings['public'][ $key ] ) ) {
+					$lists[] = (string) $settings['public'][ $key ];
+				}
+			}
+		}
+		foreach ( $lists as $list ) {
+			if ( false !== strpos( $list, ':' ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

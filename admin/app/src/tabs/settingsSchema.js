@@ -84,7 +84,7 @@ export const SECTIONS = [
 						type: 'text',
 						showIf: ( s ) => Number( s.matching_rule ) === 0,
 						help: __(
-							'Comma-separated codes. XX=private, ZZ=unknown, YY=non-country.',
+							'Comma-separated codes. XX=private, ZZ=unknown, YY=non-country. City/state rules: CC:State:Name or CC:City:Name (Region is an alias of State); use ~ for OR, e.g. FR:City:Paris~Montpellier. Names must match the provider exactly — verify on the Search tab.',
 							'ip-location-block'
 						),
 					},
@@ -96,6 +96,10 @@ export const SECTIONS = [
 						),
 						type: 'text',
 						showIf: ( s ) => Number( s.matching_rule ) === 1,
+						help: __(
+							'Comma-separated codes. Also accepts CC:State:Name / CC:City:Name (Region aliases State) and ~ for OR, e.g. US:City:Seattle~Tacoma. Names must match the provider exactly.',
+							'ip-location-block'
+						),
 					},
 					{
 						path: 'use_asn',
@@ -636,6 +640,10 @@ export const SECTIONS = [
 						type: 'text',
 						showIf: ( s ) =>
 							Number( s.public?.matching_rule ) === 0,
+						help: __(
+							'Comma-separated codes. Also accepts CC:State:Name / CC:City:Name (Region aliases State) and ~ for OR. Names must match the provider exactly — verify on the Search tab.',
+							'ip-location-block'
+						),
 					},
 					{
 						path: 'public.black_list',
@@ -646,6 +654,10 @@ export const SECTIONS = [
 						type: 'text',
 						showIf: ( s ) =>
 							Number( s.public?.matching_rule ) === 1,
+						help: __(
+							'Comma-separated codes. Also accepts CC:State:Name / CC:City:Name (Region aliases State) and ~ for OR. Names must match the provider exactly — verify on the Search tab.',
+							'ip-location-block'
+						),
 					},
 				],
 			},

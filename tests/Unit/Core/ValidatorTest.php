@@ -71,16 +71,107 @@ final class ValidatorTest extends TestCase {
 		);
 	}
 
-	/** ===== validate_list_match(): CC:City:A~B (tilde stays literal) ===== */
+	/** ===== validate_list_match(): CC:City:A~B ('~' is an OR) ===== */
 
-	public function test_city_rule_with_tilde_is_literal(): void {
-		// validate_list_match does NOT expand '~'; the whole value is compared
-		// verbatim (case-insensitively). This pins the legacy behavior.
+	public function test_city_tilde_matches_any_alternative(): void {
+		// '~' is an OR: the entry matches when the city equals ANY alternative.
 		$this->assertTrue(
-			Validator::validate_list_match( 'US:City:Seattle~Tacoma', array( 'code' => 'US', 'city' => 'Seattle~Tacoma' ) )
+			Validator::validate_list_match( 'US:City:Seattle~Tacoma', array( 'code' => 'US', 'city' => 'Seattle' ) )
+		);
+		$this->assertTrue(
+			Validator::validate_list_match( 'US:City:Seattle~Tacoma', array( 'code' => 'US', 'city' => 'Tacoma' ) )
 		);
 		$this->assertFalse(
-			Validator::validate_list_match( 'US:City:Seattle~Tacoma', array( 'code' => 'US', 'city' => 'Seattle' ) )
+			Validator::validate_list_match( 'US:City:Seattle~Tacoma', array( 'code' => 'US', 'city' => 'Portland' ) )
+		);
+		// The literal "A~B" is no longer treated as one verbatim value.
+		$this->assertFalse(
+			Validator::validate_list_match( 'US:City:Seattle~Tacoma', array( 'code' => 'US', 'city' => 'Seattle~Tacoma' ) )
+		);
+	}
+
+	public function test_two_part_tilde_matches_any_alternative(): void {
+		$this->assertTrue(
+			Validator::validate_list_match( 'US:Seattle~Tacoma', array( 'code' => 'US', 'city' => 'Tacoma' ) )
+		);
+		$this->assertFalse(
+			Validator::validate_list_match( 'US:Seattle~Tacoma', array( 'code' => 'US', 'city' => 'Portland' ) )
+		);
+	}
+
+	public function test_state_tilde_matches_any_alternative(): void {
+		$this->assertTrue(
+			Validator::validate_list_match(
+				'US:State:Oregon~Washington',
+				array( 'code' => 'US', 'state' => 'Washington' )
+			)
+		);
+	}
+
+	/** ===== validate_list_match(): Region is an alias of State ===== */
+
+	public function test_region_keyword_matches_state_field(): void {
+		// "Region" reads the same $result['state'] field as "State".
+		$this->assertTrue(
+			Validator::validate_list_match( 'US:Region:Washington', array( 'code' => 'US', 'state' => 'Washington' ) )
+		);
+	}
+
+	public function test_region_keyword_is_case_insensitive(): void {
+		$this->assertTrue(
+			Validator::validate_list_match( 'us:region:washington', array( 'code' => 'US', 'state' => 'Washington' ) )
+		);
+	}
+
+	public function test_uppercase_keyword_matches(): void {
+		$this->assertTrue(
+			Validator::validate_list_match( 'US:STATE:Washington', array( 'code' => 'US', 'state' => 'Washington' ) )
+		);
+		$this->assertTrue(
+			Validator::validate_list_match( 'US:CITY:Seattle', array( 'code' => 'US', 'city' => 'Seattle' ) )
+		);
+	}
+
+	public function test_unsupported_keyword_never_matches(): void {
+		// Only State/Region/City are meaningful 3-part keywords.
+		$this->assertFalse(
+			Validator::validate_list_match(
+				'US:County:King',
+				array( 'code' => 'US', 'city' => 'Seattle', 'state' => 'Washington' )
+			)
+		);
+	}
+
+	/** ===== validate_list_match(): multi-word place names ===== */
+
+	public function test_multi_word_state_matches(): void {
+		$this->assertTrue(
+			Validator::validate_list_match( 'US:State:New York', array( 'code' => 'US', 'state' => 'New York' ) )
+		);
+		$this->assertTrue(
+			Validator::validate_list_match(
+				'AU:State:Western Australia',
+				array( 'code' => 'AU', 'state' => 'Western Australia' )
+			)
+		);
+	}
+
+	public function test_multi_word_city_matches(): void {
+		$this->assertTrue(
+			Validator::validate_list_match(
+				'US:City:San Francisco',
+				array( 'code' => 'US', 'city' => 'San Francisco' )
+			)
+		);
+	}
+
+	public function test_precision_rule_after_spaced_comma_list_matches(): void {
+		// Precision entry following a ", "-separated country list (spaces trimmed).
+		$this->assertTrue(
+			Validator::validate_list_match(
+				'CN, RU, US:State:Washington',
+				array( 'code' => 'US', 'state' => 'Washington' )
+			)
 		);
 	}
 

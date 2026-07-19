@@ -525,34 +525,71 @@ class Validator {
 	}
 
 	/**
-	 * Validate rule
+	 * Match a geolocation result against a comma-separated country / precision
+	 * rule list.
 	 *
-	 * @param string $list - Example lists can be: "MK", "MK,US,FR" or with city precision "FR:City:Paris~Montpellier,US:State:Washington,US:City:Seattle"
-	 * @param array $result - Example result coming from the geolocation API: [code => 'MK', city => Skopje, asn => AS9421]
+	 * Each comma-separated entry is one of:
+	 *   CC                country only              e.g. "US"
+	 *   CC:State:Name     state-level (3 parts)     e.g. "US:State:Washington"
+	 *   CC:Region:Name    alias of State (3 parts)  e.g. "US:Region:Washington"
+	 *   CC:City:Name      city-level  (3 parts)     e.g. "US:City:Seattle"
+	 *   CC:Name           city shorthand (2 parts)  e.g. "US:Seattle"
+	 *
+	 * The place segment may list alternatives separated by "~"; the entry matches
+	 * when ANY of them equals the corresponding result field — e.g.
+	 * "US:City:Seattle~Tacoma" or the 2-part "US:Seattle~Tacoma". All comparisons
+	 * are case-insensitive and require an exact (whole-name) match.
+	 *
+	 * "State" and "Region" are aliases: both read $result['state'] (the native
+	 * provider returns the full region/state name there). Any other 3-part keyword
+	 * never matches. Precision fields the active provider did not supply (null /
+	 * empty city or state) never match a precision entry, so a precision rule
+	 * cannot veto a later plain-country entry for the same code.
+	 *
+	 * @param string $list   Example: "MK,US,FR" or "FR:City:Paris~Montpellier,US:State:Washington"
+	 * @param array  $result Geolocation result, e.g. [ 'code' => 'US', 'city' => 'Seattle', 'state' => 'Washington' ]
 	 *
 	 * @return bool
 	 */
 	public static function validate_list_match( $list, $result ) {
 
-		$parts  = \explode( ',', $list );
-		$parts  = ! empty( $parts ) ? \array_map( 'trim', $parts ) : [];
-		$passes = false;
+		$parts = \explode( ',', $list );
+		$parts = ! empty( $parts ) ? \array_map( 'trim', $parts ) : array();
+		$code  = \strtolower( (string) ( isset( $result['code'] ) ? $result['code'] : '' ) );
 
 		foreach ( $parts as $part ) {
 			$info  = \explode( ':', $part );
 			$total = \count( $info );
+
 			if ( 3 === $total || 2 === $total ) {
-				$key     = 2 === $total ? 'city' : \strtolower( $info[1] );
-				$place   = 2 === $total ? $info[1] : $info[2];
-				$country = $info[0];
-				if ( \strtolower( $country ) === \strtolower( $result['code'] ) && ! empty( $result[ $key ] ) && \strtolower( $place ) === \strtolower( $result[ $key ] ) ) {
-					return true;
+				if ( 2 === $total ) {
+					$field = 'city';
+					$place = $info[1];
+				} else {
+					$keyword = \strtolower( \trim( $info[1] ) );
+					if ( 'state' === $keyword || 'region' === $keyword ) {
+						$field = 'state'; // "Region" is an alias of "State".
+					} elseif ( 'city' === $keyword ) {
+						$field = 'city';
+					} else {
+						continue; // unsupported keyword — never matches
+					}
+					$place = $info[2];
 				}
-			} else {
-				$country = $info[0];
-				if ( \strtolower( $country ) === \strtolower( $result['code'] ) ) {
-					return true;
+
+				if ( \strtolower( \trim( (string) $info[0] ) ) !== $code || empty( $result[ $field ] ) ) {
+					continue;
 				}
+
+				// "~" is an OR: match if any alternative equals the result field.
+				$actual = \strtolower( (string) $result[ $field ] );
+				foreach ( \explode( '~', $place ) as $alt ) {
+					if ( \strtolower( \trim( $alt ) ) === $actual ) {
+						return true;
+					}
+				}
+			} elseif ( \strtolower( \trim( (string) $info[0] ) ) === $code ) {
+				return true;
 			}
 		}
 

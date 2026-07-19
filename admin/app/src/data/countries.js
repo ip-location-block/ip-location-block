@@ -94,8 +94,20 @@ export function countryLabel( code ) {
 
 export const ALL_CODES = [ ...CODES, ...Object.keys( SPECIAL ) ];
 
-/** Labels for FormTokenField suggestions. */
-export const SUGGESTIONS = ALL_CODES.map( countryLabel );
+/**
+ * The 27 EU member-state codes. Selecting the EU token expands to these (there
+ * is no matcher-level "EU" group — the engine matches individual codes).
+ */
+export const EU_CODES =
+	'AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE'.split(
+		' '
+	);
+
+/** The picker suggestion that expands to {@link EU_CODES}. */
+export const EU_TOKEN = 'EU (European Union)';
+
+/** Labels for FormTokenField suggestions (EU shortcut first). */
+export const SUGGESTIONS = [ EU_TOKEN, ...ALL_CODES.map( countryLabel ) ];
 
 /**
  * Map a token back to its code. Accepts a label produced by countryLabel(), a
@@ -123,4 +135,31 @@ export function codeFromToken( token ) {
 		( cc ) => countryName( cc ).toLowerCase() === raw.toLowerCase()
 	);
 	return hit || '';
+}
+
+/**
+ * Resolve a list of picker tokens to a de-duplicated list of country codes,
+ * expanding the "EU" shortcut token (and a bare "EU") to the 27 member codes.
+ * Unrecognized tokens are dropped.
+ *
+ * @param {string[]} tokens
+ * @return {string[]} alpha-2 codes, order-preserving and de-duplicated
+ */
+export function expandTokens( tokens ) {
+	const out = [];
+	const seen = new Set();
+	( tokens || [] ).forEach( ( token ) => {
+		const raw = String( token || '' ).trim();
+		const codes =
+			raw === EU_TOKEN || raw.toUpperCase() === 'EU'
+				? EU_CODES
+				: [ codeFromToken( raw ) ];
+		codes.forEach( ( cc ) => {
+			if ( cc && ! seen.has( cc ) ) {
+				seen.add( cc );
+				out.push( cc );
+			}
+		} );
+	} );
+	return out;
 }
