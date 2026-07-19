@@ -44,11 +44,6 @@ final class Plugin
         \register_deactivation_hook($this->mainFile, 'ip_location_block_deactivate');
         \add_action('upgrader_process_complete', 'ip_location_block_upgrader_process_complete', 10, 2);
 
-        // Still-legacy classes (ported in phase 5). They carry legacy names and
-        // are NOT PSR-4 autoloaded, so require them explicitly.
-        require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-diagnostics.php';
-        require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-rest.php';
-
         // check version and update before instantiation.
         \add_action('plugins_loaded', 'ip_location_block_update');
 
