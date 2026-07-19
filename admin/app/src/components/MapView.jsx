@@ -16,9 +16,14 @@ export default function MapView( { lat, lng, zoom = 6 } ) {
 		}
 		if ( ! map.current ) {
 			map.current = L.map( el.current ).setView( [ lat, lng ], zoom );
-			L.tileLayer( 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '&copy; OpenStreetMap contributors',
-				maxZoom: 18,
+			// CARTO Voyager basemap (OSM data): keyless raster tiles with a much
+			// cleaner cartography than the OSM standard style. {r} serves retina
+			// tiles on high-DPI screens.
+			L.tileLayer( 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+				attribution:
+					'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>',
+				subdomains: 'abcd',
+				maxZoom: 20,
 			} ).addTo( map.current );
 		} else {
 			map.current.setView( [ lat, lng ], zoom );
