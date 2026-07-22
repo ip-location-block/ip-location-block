@@ -1,0 +1,10 @@
+{
+    "Cache": "IPv4, IPv6",
+    "IP2Location": "IPv4, IPv6 / LGPLv3",
+    "GeoLite2": "IPv4, IPv6 / Apache License, Version 2.0",
+    "IP Location Block": "IPv4, IPv6 / free for non-commercial use",
+    "IPInfoDB": "IPv4, IPv6 / free",
+    "ipinfo.io": "IPv4, IPv6 / free for non-commercial use",
+    "ipapi": "IPv4, IPv6 / free for non-commercial use",
+    "ipstack": "IPv4, IPv6 / free for non-commercial use"
+}
