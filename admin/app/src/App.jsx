@@ -119,17 +119,9 @@ function Header() {
 							alt=""
 						/>
 					) }
-					<div className="ilb-topbar__titles">
-						<h1 className="ilb-topbar__title">
-							{ __( 'IP Location Block', 'ip-location-block' ) }
-						</h1>
-						{ boot.version && (
-							<p className="ilb-topbar__sub">
-								{ __( 'Version', 'ip-location-block' ) }{ ' ' }
-								{ boot.version }
-							</p>
-						) }
-					</div>
+					<h1 className="ilb-topbar__title">
+						{ __( 'IP Location Block', 'ip-location-block' ) }
+					</h1>
 				</div>
 				<div className="ilb-topbar__meta">
 					<ModeBadge mode={ mode } />

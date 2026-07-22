@@ -110,7 +110,7 @@ body.toplevel_page_ip-location-block {
 	}
 
 	&__identity {
-		gap: 12px;
+		gap: 13px;
 		min-width: 0;
 	}
 
@@ -122,34 +122,22 @@ body.toplevel_page_ip-location-block {
 	}
 
 	&__logo {
-		width: 38px;
-		height: 38px;
+		width: 42px;
+		height: 42px;
 		flex: none;
-	}
-
-	&__titles {
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-		min-width: 0;
+		border-radius: 12px;
+		box-shadow: 0 3px 10px rgba(37, 99, 235, 0.18);
 	}
 
 	&__title {
-		display: flex;
-		align-items: center;
-		gap: 8px;
 		margin: 0;
 		padding: 0;
-		font-size: 19px;
-		line-height: 1.2;
+		font-size: 20px;
+		line-height: 1.25;
 		font-weight: 600;
+		letter-spacing: -0.01em;
 		color: var(--ilb-text);
-	}
-
-	&__sub {
-		margin: 0;
-		color: var(--ilb-muted);
-		font-size: 12px;
+		white-space: nowrap;
 	}
 
 	&__docs {
@@ -3571,6 +3559,16 @@ body.toplevel_page_ip-location-block {
 		&__identity,
 		&__meta {
 			width: 100%;
+		}
+
+		&__logo {
+			width: 40px;
+			height: 40px;
+			border-radius: 11px;
+		}
+
+		&__title {
+			font-size: 19px;
 		}
 
 		&__meta {
