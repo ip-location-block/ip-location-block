@@ -30,7 +30,7 @@ class IP_Location_Block_Admin_Tab {
 			$section = $plugin_slug . '-logs',
 			array(
 				__( 'Validation logs', 'ip-location-block' ),
-				'<a href="https://iplocationblock.com/codex/validation-logs/" title="Validation logs | IP Location Block">' . __( 'Help', 'ip-location-block' ) . '</a>'
+				'<a href="https://iplocationblock.com/docs/monitoring/validation-logs/" title="Validation logs | IP Location Block">' . __( 'Help', 'ip-location-block' ) . '</a>'
 			),
 			( $options['validation']['reclogs'] ?
 				array( __CLASS__, 'validation_logs' ) :

@@ -192,7 +192,7 @@ final class GeoLite2Provider extends AbstractLocalProvider {
 	 * Attribution HTML required by the MaxMind GeoLite2 CC BY-SA 4.0 license.
 	 */
 	public function getAttribution(): string {
-		return 'This product includes GeoLite2 data created by MaxMind, available from <a class="ip-location-block-link" href="https://www.maxmind.com" rel=noreferrer target=_blank>https://www.maxmind.com</a>. (<a href="https://creativecommons.org/licenses/by-sa/4.0/" title="Creative Commons &mdash; Attribution-ShareAlike 4.0 International &mdash; CC BY-SA 4.0" rel=noreferrer target=_blank>CC BY-SA 4.0</a>)';
+		return 'This product includes GeoLite2 data created by MaxMind, available from <a class="ip-location-block-link" href="https://www.maxmind.com" rel=noreferrer target=_blank>https://www.maxmind.com</a>. (<a href="https://creativecommons.org/licenses/by-sa/4.0/" title="Creative Commons: Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)" rel=noreferrer target=_blank>CC BY-SA 4.0</a>)';
 	}
 
 	/**

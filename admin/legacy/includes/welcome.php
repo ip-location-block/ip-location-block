@@ -24,10 +24,10 @@
  */
 
 // Urls
-$url_docs      = 'https://iplocationblock.com/codex/?utm_source=plugin&utm_medium=welcome&utm_campaign=codex_views';
+$url_docs      = 'https://iplocationblock.com/docs/getting-started/?utm_source=plugin&utm_medium=welcome&utm_campaign=documentation';
 $url_purchase  = 'https://iplocationblock.com/pricing/?utm_source=plugin&utm_medium=welcome&utm_campaign=api_signups';
-$url_prem_docs = 'https://iplocationblock.com/codex/city-state-level-matching/?utm_source=plugin&utm_medium=welcome&utm_campaign=city_state_matching';
-$url_native    = 'https://iplocationblock.com/codex/native-geo-location-provider/?utm_source=plugin&utm_medium=welcome&utm_campaign=codex_views';
+$url_prem_docs = 'https://iplocationblock.com/docs/blocking-rules/state-region/?utm_source=plugin&utm_medium=welcome&utm_campaign=regional_rules';
+$url_native    = 'https://iplocationblock.com/docs/providers/ip-location-block/?utm_source=plugin&utm_medium=welcome&utm_campaign=native_provider';
 $url_github    = 'https://github.com/gdarko/ip-location-block/';
 $url_wordpress = 'https://wordpress.org/support/plugin/ip-location-block/';
 $url_review    = 'https://wordpress.org/support/plugin/ip-location-block/reviews/#new-post';
@@ -48,7 +48,7 @@ $link = static function ( $url, $text ) {
 				<span class="ilb-welcome__version">v<?php echo esc_html( IP_LOCATION_BLOCK_VERSION ); ?></span>
 			</h2>
 			<p class="ilb-welcome__desc">
-				<?php esc_html_e( 'Complete geolocation blocking — keep unwanted visitors off your site. Free blacklisting and whitelisting by country, with optional precision down to state or city.', 'ip-location-block' ); ?>
+				<?php esc_html_e( 'Complete geolocation blocking. Keep unwanted visitors off your site. Free blacklisting and whitelisting by country, with optional state or regional precision.', 'ip-location-block' ); ?>
 			</p>
 			<p class="ilb-welcome__actions">
 				<a class="button button-primary" target="_blank" href="<?php echo esc_url( $url_docs ); ?>">
@@ -67,15 +67,15 @@ $link = static function ( $url, $text ) {
 		<div class="ilb-welcome__card">
 			<h3 class="ilb-welcome__card-title">
 				<span class="dashicons dashicons-location" aria-hidden="true"></span>
-				<?php esc_html_e( 'Precision blocking by state or city', 'ip-location-block' ); ?>
+				<?php esc_html_e( 'State or region precision', 'ip-location-block' ); ?>
 				<span class="ilb-welcome__badge"><?php esc_html_e( 'New in 1.2.0+', 'ip-location-block' ); ?></span>
 			</h3>
 			<p>
 				<?php
 				printf(
 					/* translators: 1: native provider link, 2: pricing page link, 3: setup guide link */
-					esc_html__( 'Match visitors by state or city, not just by country, using the %1$s. Sign up for a %2$s, then %3$s.', 'ip-location-block' ),
-					$link( $url_native, __( 'Native Geo-Location Provider', 'ip-location-block' ) ),
+					esc_html__( 'Match the administrative area returned for each country, such as a state, province, prefecture, or territory, using the %1$s. Sign up for a %2$s, then %3$s.', 'ip-location-block' ),
+					$link( $url_native, __( 'IP Location Block provider', 'ip-location-block' ) ),
 					$link( $url_purchase, __( 'premium plan', 'ip-location-block' ) ),
 					$link( $url_prem_docs, __( 'learn how to set it up', 'ip-location-block' ) )
 				);

@@ -78,11 +78,11 @@ export const getProviders = () => apiFetch( { path: `/${ ns }/providers` } );
 export const getProviderStatus = () =>
 	apiFetch( { path: `/${ ns }/providers/status` } );
 
-export const testProvider = ( provider, credential = '' ) =>
+export const testProvider = ( provider, credential = '', connect = false ) =>
 	apiFetch( {
 		path: `/${ ns }/providers/test`,
 		method: 'POST',
-		data: { provider, credential },
+		data: { provider, credential, connect, scope: settingsScope },
 	} );
 
 export const getDatabaseStatus = () =>

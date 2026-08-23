@@ -41,7 +41,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 		$provider_name = isset($quota['name']) && $quota['name'] !== 'requires-api-key-upgrade' ? $quota['name'] : 'IP Location Block';
 		?>
 		<div class="ip-location-block-provider-meta <?php echo esc_attr($signal_css); ?>">
-			<span class="ip-location-block-sign" title="Native mode gives better precision and city/state level blocking"></span>
+			<span class="ip-location-block-sign" title="Native Mode adds state or region precision"></span>
 			<span class="ip-location-block-name"><?php echo sprintf( '<strong>%s</strong> %s', $provider_name, '(<em>' . ($is_native ? __( 'Native Mode', 'ip-location-block' ) : __( 'Standard Mode', 'ip-location-block' )) .'</em>)'); ?></span>
 			<span class="dashicons dashicons-arrow-down"></span>
 		</div>
@@ -157,11 +157,11 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
                 <div class="ip-location-block-provider-meta-row">
                     <div class="ip-location-block-provider-meta-attention">
                         <p>
-							<?php _e( 'You are running in <strong>Standard Mode</strong>, precision blocking by state/city will not work. To enable <strong>Native Mode</strong> disable the following providers:', 'ip-location-block' ); ?>
+							<?php _e( 'Standard Mode provides country blocking. Connect the <strong>IP Location Block provider</strong> to unlock state or region precision. Other providers can remain available as country-level fallback.', 'ip-location-block' ); ?>
                         </p>
                         <p>
 							<?php
-							echo implode( ', ', array_map( function ( $item ) {
+								echo '<strong>' . esc_html__( 'Other configured providers:', 'ip-location-block' ) . '</strong> ' . implode( ', ', array_map( function ( $item ) {
 								return '<em>' . $item . '</em>';
 							}, IP_Location_Block_Util::array_except( $providers, [
 								'IP Location Block',
@@ -188,7 +188,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 			</ul>
 			<p><strong><?php _e('Native Mode', 'ip-location-block'); ?></strong></p>
 			<ul>
-				<li><?php _e('Country, city, state blocking', 'ip-location-block'); ?> & <a href="https://iplocationblock.com/codex/supported-geo-location-rule-formats/" target="_blank"><?php _e('Advanced patterns', 'ip-location-block'); ?></a></li>
+				<li><?php _e('Country, state or region blocking', 'ip-location-block'); ?> &amp; <a href="https://iplocationblock.com/docs/blocking-rules/state-region/" target="_blank"><?php _e('Regional rules', 'ip-location-block'); ?></a></li>
 				<li><?php _e('Improved data precision', 'ip-location-block'); ?></li>
 				<li><?php _e('Priority support', 'ip-location-block'); ?><br/><em><?php _e('1-5 hr response', 'ip-location-block'); ?></em></li>
 			</ul>

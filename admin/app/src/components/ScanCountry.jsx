@@ -52,7 +52,10 @@ export default function ScanCountry( { source = 'client' } ) {
 						{ source === 'server'
 							? __( 'Server IP:', 'ip-location-block' )
 							: __( 'Your IP:', 'ip-location-block' ) }{ ' ' }
-						<code>{ result.ip || '—' }</code>
+						<code>
+							{ result.ip ||
+								__( 'Unknown', 'ip-location-block' ) }
+						</code>
 					</p>
 					<ul className="ilb-scan__list">
 						{ ( result.providers || [] ).map( ( p ) => (
@@ -61,7 +64,8 @@ export default function ScanCountry( { source = 'client' } ) {
 									{ p.name }
 								</span>
 								<span className="ilb-scan__code">
-									{ p.code || '—' }
+									{ p.code ||
+										__( 'Unknown', 'ip-location-block' ) }
 								</span>
 							</li>
 						) ) }

@@ -56,6 +56,7 @@ export default function SettingsField( {
 	onChange,
 	onReplace,
 	onRefreshSources,
+	providerAction,
 } ) {
 	const [ cidrOpen, setCidrOpen ] = useState( false );
 
@@ -112,6 +113,7 @@ export default function SettingsField( {
 					value={ value }
 					status={ sources.providerStatus }
 					onChange={ set }
+					providerAction={ providerAction }
 				/>
 			</div>
 		);

@@ -357,14 +357,16 @@ final class ReactAdmin {
 		$this->enqueue_switcher_style();
 
 		wp_localize_script( self::SLUG, 'ipLocationBlockAdmin', array(
-			'restNamespace'   => 'ip-location-block/v1',
-			'restRoot'        => esc_url_raw( rest_url() ),
-			'nonce'           => wp_create_nonce( 'wp_rest' ),
-			'isNetwork'       => is_network_admin(),
-			'version'         => IP_LOCATION_BLOCK_VERSION,
-			'logoUrl'         => plugins_url( 'admin/images/logo.svg', IP_LOCATION_BLOCK_BASE ),
-			'docsUrl'         => 'https://iplocationblock.com/codex/?utm_source=plugin&utm_medium=admin&utm_campaign=admin_topbar',
-			'viewSwitchNonce' => wp_create_nonce( self::VIEW_NONCE ),
+			'restNamespace'      => 'ip-location-block/v1',
+			'restRoot'           => esc_url_raw( rest_url() ),
+			'nonce'              => wp_create_nonce( 'wp_rest' ),
+			'isNetwork'          => is_network_admin(),
+			'version'            => IP_LOCATION_BLOCK_VERSION,
+			'homeUrl'            => esc_url_raw( is_network_admin() ? network_home_url( '/' ) : home_url( '/' ) ),
+			'defaultRedirectUrl' => \IPLocationBlock\Settings\Options::DEFAULT_REDIRECT_URL,
+			'logoUrl'            => plugins_url( 'admin/images/logo.svg', IP_LOCATION_BLOCK_BASE ),
+			'docsUrl'            => 'https://iplocationblock.com/docs/?utm_source=plugin&utm_medium=admin&utm_campaign=admin_topbar',
+			'viewSwitchNonce'    => wp_create_nonce( self::VIEW_NONCE ),
 		) );
 
 		wp_set_script_translations( self::SLUG, 'ip-location-block' );

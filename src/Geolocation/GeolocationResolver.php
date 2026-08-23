@@ -39,7 +39,8 @@ final class GeolocationResolver {
 	 * @return array<string,mixed>
 	 */
 	public function resolve( string $ip, array $settings, array $providers, LookupContext $context, bool $useCache = true ): array {
-		$started = microtime( true );
+		$started           = microtime( true );
+		$precision_capable = $this->hasPrecisionProvider( $providers );
 
 		// Loop back / private address. Private IPs short-circuit before the
 		// cache is consulted.
@@ -48,10 +49,11 @@ final class GeolocationResolver {
 		}
 
 		// Cache-first read; emits provider => 'Cache', the value logs and
-		// statistics expect. Replays previously-stored — hence
-		// native-resolved — city/state. This read precedes the empty-provider
-		// check: a cache hit must replay even when every real provider is
-		// disabled.
+		// statistics expect. Country and ASN may replay under any provider
+		// selection. Previously stored city/state replay only while a precision
+		// provider is active, so an old native cache row cannot keep regional
+		// rules running after a switch. This read precedes the empty-provider
+		// check because cached country data remains useful during an outage.
 		//
 		// Self-heal: a row cached BEFORE precision was enabled carries empty
 		// city/state and would replay forever. When the active lists hold a
@@ -66,8 +68,8 @@ final class GeolocationResolver {
 					'provider' => 'Cache',
 					'asn'      => isset( $hit['asn'] ) && '' !== $hit['asn'] ? $hit['asn'] : null,
 					'code'     => isset( $hit['code'] ) ? $hit['code'] : null,
-					'city'     => isset( $hit['city'] ) && '' !== $hit['city'] ? $hit['city'] : null,
-					'state'    => isset( $hit['state'] ) && '' !== $hit['state'] ? $hit['state'] : null,
+					'city'     => $precision_capable && isset( $hit['city'] ) && '' !== $hit['city'] ? $hit['city'] : null,
+					'state'    => $precision_capable && isset( $hit['state'] ) && '' !== $hit['state'] ? $hit['state'] : null,
 				);
 			}
 		}
@@ -116,7 +118,30 @@ final class GeolocationResolver {
 			);
 		}
 
-		return array( 'errorMessage' => 'unknown' );
+		// Every provider failed after the cache miss. Keep the error metadata for
+		// diagnostics, but use the same non-blocking location code as the empty-
+		// provider path. Protection stays configured and resumes automatically when
+		// a provider recovers, without turning an outage into a site-wide lockout.
+		return array( 'errorMessage' => 'unknown', 'code' => 'XX' );
+	}
+
+	/**
+	 * Whether the current provider selection may use cached regional data.
+	 *
+	 * Cache rows can outlive a provider switch. A row created by the native
+	 * provider may contain state/region data, but that precision must not keep
+	 * running after the user switches to a country-only provider.
+	 *
+	 * @param array<int,ProviderInterface> $providers
+	 */
+	private function hasPrecisionProvider( array $providers ): bool {
+		foreach ( $providers as $provider ) {
+			if ( $provider instanceof PrecisionLocationSource ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

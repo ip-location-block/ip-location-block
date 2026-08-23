@@ -85,3 +85,18 @@ export const replaceTabInUrl = ( tab ) => {
 		// URL/history access can be unavailable in embedded admin contexts.
 	}
 };
+
+export const replaceViewInUrl = ( view, hash = '' ) => {
+	try {
+		const url = new window.URL( window.location.href );
+		if ( view ) {
+			url.searchParams.set( 'view', view );
+		} else {
+			url.searchParams.delete( 'view' );
+		}
+		url.hash = hash;
+		window.history.replaceState( {}, '', url.toString() );
+	} catch {
+		// URL/history access can be unavailable in embedded admin contexts.
+	}
+};

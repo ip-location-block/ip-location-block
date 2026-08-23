@@ -12,7 +12,6 @@ import {
 	Button,
 	Notice,
 	Spinner,
-	Flex,
 	Modal,
 } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
@@ -159,7 +158,7 @@ const RankedList = ( { title, rows, sortMode, onToggleSort } ) => {
 						<Button variant="tertiary" onClick={ onToggleSort }>
 							{ sortMode === 'alpha'
 								? __( 'Sort by count', 'ip-location-block' )
-								: __( 'Sort A–Z', 'ip-location-block' ) }
+								: __( 'Sort A to Z', 'ip-location-block' ) }
 						</Button>
 					) }
 				</div>
@@ -539,7 +538,7 @@ export default function Statistics() {
 	const allOpen = Object.values( open ).every( Boolean );
 
 	return (
-		<div className="ilb-stats ilb-stack">
+		<div className="ilb-stats">
 			{ notice && (
 				<Notice
 					status={ notice.status }
@@ -576,12 +575,7 @@ export default function Statistics() {
 						</EmptyPanel>
 					) : (
 						<div className="ilb-stats__section-content">
-							<Flex
-								justify="flex-start"
-								gap={ 3 }
-								wrap
-								className="ilb-stat-tiles"
-							>
+							<div className="ilb-stat-tiles">
 								<Tile
 									label={ __(
 										'Blocked',
@@ -608,10 +602,10 @@ export default function Statistics() {
 									value={ stat.unknown }
 									icon="editor-help"
 								/>
-							</Flex>
+							</div>
 
-							<div className="ilb-stats__chart-grid">
-								<Card>
+							<div className="ilb-stats__dashboard-grid">
+								<Card className="ilb-stats__chart-card ilb-stats__chart-card--country">
 									<CardBody>
 										<h3 className="ilb-section-title">
 											<span
@@ -626,7 +620,7 @@ export default function Statistics() {
 										<CountryBars data={ stat.countries } />
 									</CardBody>
 								</Card>
-								<Card>
+								<Card className="ilb-stats__chart-card ilb-stats__chart-card--daily">
 									<CardBody>
 										<h3 className="ilb-section-title">
 											<span
@@ -637,13 +631,22 @@ export default function Statistics() {
 												'Daily blocked requests',
 												'ip-location-block'
 											) }
+											<span className="ilb-section-title__meta">
+												{ __(
+													'Last 14 days',
+													'ip-location-block'
+												) }
+											</span>
 										</h3>
-										<DailyStacked data={ stat.daily } />
+										<DailyStacked
+											data={ stat.daily }
+											limit={ 14 }
+										/>
 									</CardBody>
 								</Card>
+								<ProviderTable rows={ stat.providers } />
 							</div>
 
-							<ProviderTable rows={ stat.providers } />
 							<div className="ilb-stats__actions">
 								<Button
 									variant="secondary"

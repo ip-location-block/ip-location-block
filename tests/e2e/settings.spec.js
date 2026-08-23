@@ -208,8 +208,8 @@ test.describe.serial("settings", () => {
         "Block badly-behaved bots and crawlers",
         true,
       );
-      await publicSettings.getByLabel("Condition — page views").fill("9");
-      await publicSettings.getByLabel("Condition — seconds").fill("6");
+      await publicSettings.getByLabel("Condition: page views").fill("9");
+      await publicSettings.getByLabel("Condition: seconds").fill("6");
       await setToggle(publicSettings, "Reverse DNS lookup", true);
 
       const recording = page.locator(".ilb-settings-section--recording");
@@ -295,7 +295,7 @@ test.describe.serial("settings", () => {
       await expect(
         page
           .locator(".ilb-settings-section--public")
-          .getByLabel("Public facing pages — block by location"),
+          .getByLabel("Public-facing pages: block by location"),
       ).toBeChecked();
       await page.getByRole("button", { name: "Simple", exact: true }).click();
       await expect(enable).toBeChecked();
@@ -303,5 +303,222 @@ test.describe.serial("settings", () => {
       await saveSettings(page, baseline);
       await clearLocationCache(page);
     }
+  });
+
+  test("Simple mode explains and validates the blocked response", async ({
+    page,
+  }) => {
+    await openAdmin(page, "settings", "&view=simple");
+    const baseline = await getSettings(page);
+    const configured = cloneSettings(baseline);
+    const publicValidation =
+      Number(getPath(configured, "validation.public")) || 0;
+    setPath(
+      configured,
+      "validation.public",
+      publicValidation % 2 === 1 ? publicValidation : publicValidation + 1,
+    );
+    setPath(configured, "public.matching_rule", 1);
+    setPath(configured, "public.response_code", 307);
+    setPath(
+      configured,
+      "public.redirect_uri",
+      "https://blocked.iplocationblock.com/",
+    );
+    setPath(
+      configured,
+      "public.response_msg",
+      "This site is not available in your location.",
+    );
+
+    try {
+      await saveSettings(page, configured);
+      await openAdmin(page, "settings", "&view=simple");
+
+      const response = page.getByLabel("When a visitor is blocked");
+      const destination = page.getByLabel("Send blocked visitors to");
+      const save = page.getByRole("button", { name: "Save Changes" });
+
+      await expect(response).toHaveValue("redirect");
+      await expect(destination).toHaveValue(
+        "https://blocked.iplocationblock.com/",
+      );
+      await expect(
+        page.getByText("IP Location Block hosted page", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByText(
+          "Links back to protected pages on this site will still be blocked.",
+          { exact: false },
+        ),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: /Preview destination/ }),
+      ).toHaveAttribute("href", "https://blocked.iplocationblock.com/");
+
+      await destination.fill(`${new URL(page.url()).origin}/blocked`);
+      await expect(
+        page.getByText(/same hostname as your protected site/i),
+      ).toBeVisible();
+      await expect(save).toBeDisabled();
+
+      await response.selectOption("message");
+      const message = page.getByLabel("Blocked message");
+      await expect(message).toHaveValue(
+        "This site is not available in your location.",
+      );
+      await expect(save).toBeEnabled();
+      await message.fill("Blocked by the site owner.");
+
+      await response.selectOption("redirect");
+      await expect(save).toBeDisabled();
+      await page.getByRole("button", { name: "Use hosted default" }).click();
+      await expect(destination).toHaveValue(
+        "https://blocked.iplocationblock.com/",
+      );
+      await expect(save).toBeEnabled();
+
+      await save.click();
+      await expect(page.locator(".components-snackbar")).toContainText(
+        "Settings saved.",
+      );
+      const saved = await getSettings(page);
+      expect(saved.public.redirect_uri).toBe(
+        "https://blocked.iplocationblock.com/",
+      );
+      expect(saved.public.response_msg).toBe("Blocked by the site owner.");
+    } finally {
+      await saveSettings(page, baseline);
+      await clearLocationCache(page);
+    }
+  });
+
+  test("provider switches preserve blocking and pause regional rules", async ({
+    page,
+  }) => {
+    await openAdmin(page, "settings", "&view=simple");
+    const baseline = await getSettings(page);
+
+    test.skip(
+      !(await page
+        .getByRole("heading", { name: "IP Location Block", exact: true })
+        .count()),
+      "This regression requires the native provider fixture.",
+    );
+
+    const configured = cloneSettings(baseline);
+    const publicValidation =
+      Number(getPath(configured, "validation.public")) || 0;
+    setPath(
+      configured,
+      "validation.public",
+      publicValidation % 2 === 1 ? publicValidation : publicValidation + 1,
+    );
+    setPath(configured, "public.matching_rule", 0);
+    setPath(configured, "public.white_list", "MK,US:State:Kentucky");
+
+    try {
+      await saveSettings(page, configured);
+      await openAdmin(page, "settings", "&view=simple");
+
+      const locationToggle = page.getByLabel("Enable location blocking");
+      await expect(locationToggle).toBeChecked();
+      await expect(locationToggle).toBeEnabled();
+
+      await page
+        .getByRole("button", { name: "Switch provider", exact: true })
+        .click();
+      await page
+        .getByLabel("Provider", { exact: true })
+        .selectOption("IP2Location");
+      await page
+        .getByRole("button", { name: "Use local provider", exact: true })
+        .click();
+      await page
+        .getByRole("dialog", { name: "Switch to IP2Location?" })
+        .getByRole("button", { name: "Continue", exact: true })
+        .click();
+
+      await expect(locationToggle).toBeChecked();
+      await expect(locationToggle).toBeEnabled();
+      await expect(page.getByLabel("Countries")).toBeEnabled();
+      await expect(
+        page.getByText("North Macedonia (MK)").first(),
+      ).toBeVisible();
+      await expect(
+        page.getByText("Regional rules are paused.", { exact: true }),
+      ).toBeVisible();
+
+      const regionalEditor = page.locator(".ilb-simple__precise-editor");
+      await expect(regionalEditor).toHaveAttribute("aria-disabled", "true");
+      await expect(regionalEditor.getByLabel("Country").first()).toBeDisabled();
+      await expect(regionalEditor.getByLabel("Name").first()).toBeDisabled();
+      await expect(
+        regionalEditor.getByRole("button", {
+          name: "Add a regional rule",
+          exact: true,
+        }),
+      ).toBeDisabled();
+      expect(await getSettings(page)).toEqual(configured);
+
+      await page.getByRole("button", { name: "Save Changes" }).click();
+      await expect(page.locator(".components-snackbar")).toContainText(
+        "Settings saved.",
+      );
+
+      const saved = await getSettings(page);
+      expect(Number(saved.validation.public) % 2).toBe(1);
+      expect(saved.public.white_list).toBe("MK,US:State:Kentucky");
+      expect(saved.providers.IP2Location).toBeTruthy();
+      expect(saved.providers["IP Location Block"]).toBeFalsy();
+    } finally {
+      await saveSettings(page, baseline);
+      await clearLocationCache(page);
+    }
+  });
+
+  test("provider disconnect is staged, shared, and undoable", async ({
+    page,
+  }) => {
+    await openAdmin(page, "settings", "&view=simple");
+    const baseline = await getSettings(page);
+    const disconnect = page.getByRole("button", {
+      name: "Disconnect",
+      exact: true,
+    });
+    test.skip(
+      !(await disconnect.count()),
+      "The configured fixture has no connected provider.",
+    );
+
+    await disconnect.click();
+    await expect(
+      page.getByRole("dialog", { name: "Disconnect IP Location Block?" }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Disconnect provider", exact: true })
+      .click();
+
+    await expect(page.locator(".ilb-provider-pending")).toBeVisible();
+    await expect(page.getByLabel("Enable location blocking")).toBeDisabled();
+    expect(await getSettings(page)).toEqual(baseline);
+
+    await page.getByRole("button", { name: "Advanced", exact: true }).click();
+    await expect(page.locator(".ilb-provider-pending")).toBeVisible();
+    await page
+      .getByRole("button", { name: "Geolocation API settings", exact: true })
+      .click();
+    await expect(page.getByLabel("IP Location Block")).not.toBeChecked();
+    await page.getByRole("button", { name: "Simple", exact: true }).click();
+    await expect(
+      page.getByRole("heading", {
+        name: "Block by state or region, not just country.",
+      }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+
+    await expect(page.locator(".ilb-provider-pending")).toHaveCount(0);
+    await expect(disconnect).toBeVisible();
+    expect(await getSettings(page)).toEqual(baseline);
   });
 });

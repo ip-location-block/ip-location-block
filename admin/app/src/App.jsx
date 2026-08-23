@@ -1,13 +1,8 @@
 /**
  * Root of the admin app: a full-width product bar + a contained TabPanel shell.
  */
-import {
-	useCallback,
-	useMemo,
-	useState,
-	useEffect,
-} from '@wordpress/element';
-import { Button, TabPanel } from '@wordpress/components';
+import { useCallback, useMemo, useState, useEffect } from '@wordpress/element';
+import { Button, TabPanel, Tooltip } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 
 import Settings from './tabs/Settings';
@@ -74,10 +69,42 @@ const TABS = [
 
 // Protection is "on" if back-end country blocking is set, or front-end blocking
 // (bit 1 of validation.public) is enabled.
-const isProtected = ( s ) =>
-	!! s &&
-	( Number( s.matching_rule ) !== -1 ||
-		Number( s?.validation?.public ) % 2 === 1 );
+const protectionStatus = ( s ) => {
+	const publicSite = Number( s?.validation?.public ) % 2 === 1;
+	const adminSide = !! s && Number( s.matching_rule ) !== -1;
+
+	return {
+		enabled: publicSite || adminSide,
+		publicSite,
+		adminSide,
+	};
+};
+
+const protectionHint = ( status ) => {
+	if ( status.publicSite && status.adminSide ) {
+		return __(
+			'On because public-site blocking and admin-side location matching are enabled.',
+			'ip-location-block'
+		);
+	}
+	if ( status.publicSite ) {
+		return __(
+			'On because public-site location blocking is enabled.',
+			'ip-location-block'
+		);
+	}
+	if ( status.adminSide ) {
+		return __(
+			'On because admin-side location matching is enabled.',
+			'ip-location-block'
+		);
+	}
+
+	return __(
+		'Off because neither public-site blocking nor admin-side location matching is enabled.',
+		'ip-location-block'
+	);
+};
 
 function Header() {
 	const [ status, setStatus ] = useState( null ); // null = unknown, bool once loaded
@@ -87,10 +114,12 @@ function Header() {
 		let alive = true;
 		const refresh = ( event ) => {
 			if ( event?.detail?.settings && alive ) {
-				setStatus( isProtected( event.detail.settings ) );
+				setStatus( protectionStatus( event.detail.settings ) );
 			} else {
 				getSettings()
-					.then( ( s ) => alive && setStatus( isProtected( s ) ) )
+					.then(
+						( s ) => alive && setStatus( protectionStatus( s ) )
+					)
 					.catch( () => {} );
 			}
 			getMode()
@@ -126,24 +155,27 @@ function Header() {
 				<div className="ilb-topbar__meta">
 					<ModeBadge mode={ mode } />
 					{ status !== null && (
-						<span
-							className={ `ilb-status ilb-status--${
-								status ? 'on' : 'off'
-							}` }
-							title={ __(
-								'Blocking protection status',
-								'ip-location-block'
-							) }
-						>
-							{ status
-								? __( 'Protection on', 'ip-location-block' )
-								: __( 'Protection off', 'ip-location-block' ) }
-						</span>
+						<Tooltip text={ protectionHint( status ) }>
+							<span
+								className={ `ilb-status ilb-status--${
+									status.enabled ? 'on' : 'off'
+								}` }
+								tabIndex={ 0 }
+								aria-label={ protectionHint( status ) }
+							>
+								{ status.enabled
+									? __( 'Protection on', 'ip-location-block' )
+									: __(
+											'Protection off',
+											'ip-location-block'
+									  ) }
+							</span>
+						</Tooltip>
 					) }
 					<a
 						className="ilb-topbar__docs"
 						href={
-							boot.docsUrl || 'https://iplocationblock.com/codex/'
+							boot.docsUrl || 'https://iplocationblock.com/docs/'
 						}
 						target="_blank"
 						rel="noopener noreferrer"
@@ -240,7 +272,9 @@ export default function App() {
 		let alive = true;
 		const loadQuota = () =>
 			getProviderStatus()
-				.then( ( status ) => alive && setQuota( status?.quota || null ) )
+				.then(
+					( status ) => alive && setQuota( status?.quota || null )
+				)
 				.catch( () => {} );
 		loadQuota();
 		window.addEventListener(
@@ -307,10 +341,7 @@ export default function App() {
 			<Header />
 			<main className="ilb-app__content">
 				{ showQuotaBanner && (
-					<QuotaBanner
-						quota={ quota }
-						onDismiss={ onQuotaDismiss }
-					/>
+					<QuotaBanner quota={ quota } onDismiss={ onQuotaDismiss } />
 				) }
 				<CriticalBanner checks={ critical } />
 				<TabPanel

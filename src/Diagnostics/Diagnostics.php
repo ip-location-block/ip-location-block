@@ -226,7 +226,7 @@ class Diagnostics {
 			} elseif ( in_array( $reason, array( 'exhausted', 'rate_limited' ), true ) ) {
 				$reason = __( 'request quota is unavailable', 'ip-location-block' );
 			}
-			$problems[] = sprintf( '%1$s — %2$s', $item['name'], $reason );
+			$problems[] = sprintf( '%1$s: %2$s', $item['name'], $reason );
 		}
 
 		self::add_check(
@@ -260,9 +260,9 @@ class Diagnostics {
 			'providers',
 			__( 'Native provider mode', 'ip-location-block' ),
 			$enforced
-				? __( 'Other providers act as country-level fallback while precision rules exist — the IP Location Block provider is prioritized automatically.', 'ip-location-block' )
+				? __( 'Other providers act as country-level fallback while precision rules exist. The IP Location Block provider is prioritized automatically.', 'ip-location-block' )
 				: ( $mixed
-					? __( 'IP Location Block is enabled with other providers. Disable the other providers to use Native Mode and consistent city/state results.', 'ip-location-block' )
+					? __( 'IP Location Block is enabled with other providers. It is prioritized automatically for regional rules while the other providers remain country-level fallbacks.', 'ip-location-block' )
 					: __( 'The provider selection does not conflict with Native Mode.', 'ip-location-block' ) ),
 			$others,
 			array( $provider_action ),

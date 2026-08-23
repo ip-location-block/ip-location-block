@@ -274,6 +274,18 @@ final class ValidatorTest extends TestCase {
 		);
 	}
 
+	public function test_provider_outage_code_fails_open_in_whitelist_mode(): void {
+		Actions\expectDone( 'ip-location-block-precision-degraded' )->never();
+
+		$settings = array( 'matching_rule' => 0, 'white_list' => 'US', 'black_list' => '' );
+		$validate = array( 'code' => 'XX', 'city' => '', 'state' => '', 'errorMessage' => 'unknown' );
+
+		$this->assertSame(
+			'passed',
+			Validator::validate_lookup_result( false, $validate, $settings, true )
+		);
+	}
+
 	public function test_whitelist_degraded_pass_sets_hook_result(): void {
 		// With a hook name the degraded pass returns the merged 'passed' result.
 		Actions\expectDone( 'ip-location-block-precision-degraded' )->once();

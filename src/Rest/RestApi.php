@@ -174,6 +174,8 @@ class RestApi {
 			'args'                => array(
 				'provider'   => array( 'type' => 'string', 'required' => true ),
 				'credential' => array( 'type' => 'string', 'required' => false ),
+				'connect'    => array( 'type' => 'boolean', 'required' => false, 'default' => false ),
+				'scope'      => array( 'type' => 'string', 'required' => false, 'enum' => array( 'site', 'network' ) ),
 			),
 		) );
 		register_rest_route( self::NS, '/database/status', array(
@@ -1083,8 +1085,9 @@ class RestApi {
 	}
 
 	/**
-	 * Test a candidate provider credential without saving it. A successful test
-	 * is cached for 24 hours and can be consumed after the settings are saved.
+	 * Test a candidate provider credential. A successful test is cached for 24
+	 * hours. When `connect` is true, only the exclusive provider selection is
+	 * persisted; unrelated settings drafts remain untouched.
 	 *
 	 * @param \WP_REST_Request $request
 	 *
@@ -1093,6 +1096,14 @@ class RestApi {
 	public static function test_provider( \WP_REST_Request $request ) {
 		$provider   = sanitize_text_field( (string) $request->get_param( 'provider' ) );
 		$credential = sanitize_text_field( (string) $request->get_param( 'credential' ) );
+		$connect    = rest_sanitize_boolean( $request->get_param( 'connect' ) );
+		$scope      = null;
+		if ( $connect ) {
+			$scope = self::request_scope( $request );
+			if ( is_wp_error( $scope ) ) {
+				return $scope;
+			}
+		}
 		$settings   = Validator::get_option();
 
 		// ProviderTester owns the whole credential-inject / fresh 8.8.8.8 lookup /
@@ -1107,6 +1118,36 @@ class RestApi {
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
+		if ( ! $connect || empty( $result['ok'] ) ) {
+			return rest_ensure_response( $result );
+		}
+
+		$selected = isset( $settings['providers'] ) && is_array( $settings['providers'] )
+			? $settings['providers']
+			: array();
+		foreach ( array_keys( $selected ) as $name ) {
+			if ( 'Cache' !== $name ) {
+				$selected[ $name ] = '';
+			}
+		}
+		foreach ( LegacyMeta::get_providers( 'key', false, false, true ) as $name => $keyfield ) {
+			if ( 'Cache' !== $name ) {
+				$selected[ $name ] = '';
+			}
+		}
+		$selected[ $provider ] = '' !== $credential ? $credential : '@';
+		$settings['providers'] = $selected;
+
+		do_action( 'ip-location-block-settings-updated', $settings, true );
+		$persisted = self::persist_settings( $settings, $scope );
+		if ( is_wp_error( $persisted ) ) {
+			return $persisted;
+		}
+
+		$saved                    = Validator::get_option( false );
+		$result['connected']      = true;
+		$result['settings']       = self::public_settings( $saved );
+		$result['providerStatus'] = self::get_provider_status_data( $saved );
 
 		return rest_ensure_response( $result );
 	}

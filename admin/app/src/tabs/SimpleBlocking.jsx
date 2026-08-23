@@ -18,6 +18,7 @@ import {
 	ToggleControl,
 	SelectControl,
 	TextControl,
+	TextareaControl,
 	ComboboxControl,
 	Button,
 	FormTokenField,
@@ -35,12 +36,19 @@ import {
 	expandTokens,
 } from '../data/countries';
 import { hasRegionList, regionList } from '../data/regions';
+import { quotaBlocksProvider } from '../providerLogic';
+import {
+	isRedirectResponse,
+	redirectDestinationStatus,
+	sameRedirectDestination,
+} from '../lib/blockedResponse';
 
 // Sentinel option value: switches a State row with a bundled region list into
 // free-text entry.
 const CUSTOM_REGION = '__ilb_custom_region__';
 
 const BACKEND_HOOKS = [ 'comment', 'xmlrpc', 'login', 'admin' ];
+const boot = window.ipLocationBlockAdmin || {};
 
 const COUNTRY_OPTIONS = ALL_CODES.map( ( cc ) => ( {
 	label: countryLabel( cc ),
@@ -52,6 +60,7 @@ export default function SimpleBlocking( {
 	providers = [],
 	providerStatus = null,
 	onChange,
+	providerAction,
 } ) {
 	const pub = settings.public || {};
 
@@ -82,18 +91,43 @@ export default function SimpleBlocking( {
 	const alsoBackend = Number( settings.matching_rule ) !== -1;
 
 	const code = Number( pub.response_code );
-	const whenBlocked = code >= 300 && code < 400 ? 'redirect' : 'message';
+	const whenBlocked = isRedirectResponse( code ) ? 'redirect' : 'message';
+	const redirectDestination = String( pub.redirect_uri || '' );
+	const protectedSiteUrl = boot.homeUrl || window.location.origin;
+	const defaultRedirectUrl = String( boot.defaultRedirectUrl || '' );
+	const redirectStatus = redirectDestinationStatus(
+		redirectDestination,
+		protectedSiteUrl
+	);
+	const usesHostedDefault = sameRedirectDestination(
+		redirectDestination,
+		defaultRedirectUrl
+	);
 
 	// `providers` may legitimately be an empty PHP array; never spread an array.
 	const storedProviders =
 		settings.providers && ! Array.isArray( settings.providers )
 			? settings.providers
 			: {};
-	const [ providerReady, setProviderReady ] = useState(
-		!! providerStatus?.ready
-	);
+	const [ providerState, setProviderState ] = useState( () => ( {
+		ready: !! providerStatus?.ready,
+		hasSelection: !! (
+			providerStatus?.active?.length ||
+			providerStatus?.providers?.some( ( item ) => item.active )
+		),
+		transitioning: false,
+		activeNames: providerStatus?.active || [],
+	} ) );
 	useEffect( () => {
-		setProviderReady( !! providerStatus?.ready );
+		setProviderState( ( current ) => ( {
+			...current,
+			ready: !! providerStatus?.ready,
+			hasSelection: !! (
+				providerStatus?.active?.length ||
+				providerStatus?.providers?.some( ( item ) => item.active )
+			),
+			activeNames: providerStatus?.active || [],
+		} ) );
 	}, [ providerStatus ] );
 
 	const nativeSelected = !! storedProviders[ 'IP Location Block' ];
@@ -108,11 +142,12 @@ export default function SimpleBlocking( {
 	// Precision is available when native is the sole (saved) source, when
 	// native-first enforcement is active (a real key + precision rules, other
 	// providers acting as country-level fallback), or in the native-only draft.
-	const enforcedNative = !! providerStatus?.enforcedNative;
+	const enforcedNative = !! providerStatus?.enforcedNative && nativeSelected;
+	const quotaIssue = quotaBlocksProvider( providerStatus?.quota );
 	const preciseAvailable = !! (
-		providerStatus?.native ||
-		enforcedNative ||
-		draftNative
+		nativeSelected &&
+		! quotaIssue &&
+		( providerStatus?.native || enforcedNative || draftNative )
 	);
 
 	// --- writers ------------------------------------------------------------
@@ -189,6 +224,22 @@ export default function SimpleBlocking( {
 		heading?.focus( { preventScroll: true } );
 	};
 
+	useEffect( () => {
+		if ( window.location.hash !== '#ilb-provider-setup' ) {
+			return undefined;
+		}
+		const frame = window.requestAnimationFrame( () => {
+			const heading = document.getElementById(
+				'ilb-provider-setup-title'
+			);
+			document
+				.getElementById( 'ilb-provider-setup' )
+				?.scrollIntoView( { block: 'start' } );
+			heading?.focus( { preventScroll: true } );
+		} );
+		return () => window.cancelAnimationFrame( frame );
+	}, [] );
+
 	const updatePrecise = ( i, patch ) =>
 		commitPrecise(
 			draftPrecise.map( ( r, idx ) =>
@@ -199,7 +250,7 @@ export default function SimpleBlocking( {
 	// The Name cell: a searchable region dropdown for State rows whose country
 	// ships a bundled list (with a "Custom value…" escape hatch), otherwise a
 	// free-text field. Kept to a SINGLE grid cell (see the 4-column grid).
-	const nameField = ( row, i ) => {
+	const nameField = ( row, i, disabled = false ) => {
 		const hasList = row.level === 'State' && hasRegionList( row.country );
 		const inList =
 			hasList && regionList( row.country ).includes( row.value );
@@ -211,16 +262,14 @@ export default function SimpleBlocking( {
 					__nextHasNoMarginBottom
 					label={ __( 'Name', 'ip-location-block' ) }
 					value={ row.value || null }
+					disabled={ disabled }
 					options={ [
 						...regionList( row.country ).map( ( name ) => ( {
 							label: name,
 							value: name,
 						} ) ),
 						{
-							label: __(
-								'Custom value…',
-								'ip-location-block'
-							),
+							label: __( 'Custom value…', 'ip-location-block' ),
 							value: CUSTOM_REGION,
 						},
 					] }
@@ -239,6 +288,7 @@ export default function SimpleBlocking( {
 					__nextHasNoMarginBottom
 					label={ __( 'Name', 'ip-location-block' ) }
 					value={ row.value }
+					disabled={ disabled }
 					placeholder={
 						row.level === 'City'
 							? __( 'e.g. Seattle', 'ip-location-block' )
@@ -250,6 +300,7 @@ export default function SimpleBlocking( {
 					<Button
 						variant="link"
 						className="ilb-simple__name-switch"
+						disabled={ disabled }
 						onClick={ () =>
 							updatePrecise( i, { custom: false, value: '' } )
 						}
@@ -271,7 +322,8 @@ export default function SimpleBlocking( {
 				providers={ providers }
 				status={ providerStatus }
 				onChange={ onChange }
-				onReadyChange={ setProviderReady }
+				onStateChange={ setProviderState }
+				providerAction={ providerAction }
 			/>
 			<Card className="ilb-panel-shell ilb-settings-card ilb-settings-card--simple">
 				<CardHeader className="ilb-panel-shell__header">
@@ -294,10 +346,12 @@ export default function SimpleBlocking( {
 									'ip-location-block'
 								) }
 								checked={ enabled }
-								disabled={ ! enabled && ! providerReady }
+								disabled={
+									! enabled && ! providerState.hasSelection
+								}
 								onChange={ setEnabled }
 							/>
-							{ ! enabled && ! providerReady && (
+							{ ! enabled && ! providerState.hasSelection && (
 								<div className="ilb-simple__provider-required">
 									<p>
 										{ __(
@@ -316,6 +370,42 @@ export default function SimpleBlocking( {
 									</Button>
 								</div>
 							) }
+							{ providerState.hasSelection &&
+								! providerState.ready &&
+								! providerState.transitioning && (
+									<div
+										className="ilb-simple__provider-warning"
+										role="status"
+									>
+										<span
+											className="dashicons dashicons-warning"
+											aria-hidden="true"
+										/>
+										<div>
+											<strong>
+												{ __(
+													'The selected provider is not ready.',
+													'ip-location-block'
+												) }
+											</strong>
+											<p>
+												{ __(
+													'Cached country results can still be used. Visitors without a cached result are allowed until the provider is ready.',
+													'ip-location-block'
+												) }
+											</p>
+											<Button
+												variant="link"
+												onClick={ focusProviderSetup }
+											>
+												{ __(
+													'Review provider',
+													'ip-location-block'
+												) }
+											</Button>
+										</div>
+									</div>
+								) }
 						</div>
 
 						{ enabled && (
@@ -340,7 +430,7 @@ export default function SimpleBlocking( {
 											onClick={ () => setMode( 1 ) }
 										>
 											{ __(
-												'Block these countries',
+												'Block these locations',
 												'ip-location-block'
 											) }
 										</button>
@@ -351,7 +441,7 @@ export default function SimpleBlocking( {
 											onClick={ () => setMode( 0 ) }
 										>
 											{ __(
-												'Allow only these countries',
+												'Allow only these locations',
 												'ip-location-block'
 											) }
 										</button>
@@ -383,7 +473,9 @@ export default function SimpleBlocking( {
 										) }
 										suggestions={ SUGGESTIONS }
 										onChange={ ( tokens ) =>
-											setCountries( expandTokens( tokens ) )
+											setCountries(
+												expandTokens( tokens )
+											)
 										}
 									/>
 									<p className="ilb-simple__help">
@@ -398,154 +490,218 @@ export default function SimpleBlocking( {
 								<div className="ilb-simple__row">
 									<p className="ilb-simple__label">
 										{ __(
-											'Precise rules (state / city)',
+											'Regional rules',
 											'ip-location-block'
 										) }
 									</p>
 
-									{ ! preciseAvailable ? (
-										<div className="ilb-simple__gate">
+									{ ! preciseAvailable && (
+										<div
+											id="ilb-regional-rules-status"
+											className="ilb-simple__gate"
+											role="status"
+										>
 											<span
-												className="dashicons dashicons-lock"
+												className="dashicons dashicons-warning"
 												aria-hidden="true"
 											/>
 											<div>
-												<p className="ilb-simple__gate-copy">
+												<strong>
 													{ __(
-														'State- and city-level blocking needs the “IP Location Block” geolocation provider, the only one that returns state/city data (a premium key is required for that data).',
+														'Regional rules are paused.',
 														'ip-location-block'
 													) }
+												</strong>
+												<p className="ilb-simple__gate-copy">
+													{ quotaIssue
+														? __(
+																'Country rules remain active. Your regional rules stay saved but cannot run until IP Location Block is ready.',
+																'ip-location-block'
+														  )
+														: providerState.ready
+														? __(
+																'Country rules remain active. Your regional rules stay saved, but the current provider supports country-level blocking only.',
+																'ip-location-block'
+														  )
+														: __(
+																'Cached country results can still be used. Your regional rules stay saved until a state/region provider is ready.',
+																'ip-location-block'
+														  ) }
 												</p>
-												<Button
-													variant="secondary"
-													onClick={
-														focusProviderSetup
+												{ quotaIssue &&
+												providerStatus?.quota
+													?.upgradeUrl ? (
+													<Button
+														variant="secondary"
+														href={
+															providerStatus.quota
+																.upgradeUrl
+														}
+														target="_blank"
+														rel="noreferrer"
+														className="ilb-simple__gate-action"
+													>
+														{ providerStatus.quota
+															.status ===
+														'key_upgrade_required'
+															? __(
+																	'Upgrade API key',
+																	'ip-location-block'
+															  )
+															: __(
+																	'View plans',
+																	'ip-location-block'
+															  ) }
+													</Button>
+												) : (
+													<Button
+														variant="secondary"
+														onClick={
+															focusProviderSetup
+														}
+														className="ilb-simple__gate-action"
+													>
+														{ __(
+															'Unlock regional blocking',
+															'ip-location-block'
+														) }
+													</Button>
+												) }
+											</div>
+										</div>
+									) }
+									{ enforcedNative && preciseAvailable && (
+										<p className="ilb-simple__precise-info">
+											<span
+												className="dashicons dashicons-info-outline"
+												aria-hidden="true"
+											/>
+											{ __(
+												'The IP Location Block provider is prioritized automatically for these rules; your other providers act as country-level fallback.',
+												'ip-location-block'
+											) }
+										</p>
+									) }
+									<div
+										className={ `ilb-simple__precise-editor${
+											preciseAvailable ? '' : ' is-paused'
+										}` }
+										aria-disabled={ ! preciseAvailable }
+										aria-describedby={
+											preciseAvailable
+												? undefined
+												: 'ilb-regional-rules-status'
+										}
+									>
+										{ draftPrecise.map( ( row, i ) => (
+											<div
+												className="ilb-simple__precise-row"
+												key={ i }
+											>
+												<SelectControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Country',
+														'ip-location-block'
+													) }
+													value={ row.country }
+													disabled={
+														! preciseAvailable
 													}
-													className="ilb-simple__gate-action"
+													options={ COUNTRY_OPTIONS }
+													onChange={ ( v ) =>
+														updatePrecise( i, {
+															country: v,
+														} )
+													}
+												/>
+												<SelectControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Level',
+														'ip-location-block'
+													) }
+													value={ row.level }
+													disabled={
+														! preciseAvailable
+													}
+													options={ [
+														{
+															label: __(
+																'State / Region',
+																'ip-location-block'
+															),
+															value: 'State',
+														},
+														{
+															label: __(
+																'City',
+																'ip-location-block'
+															),
+															value: 'City',
+														},
+													] }
+													onChange={ ( v ) =>
+														updatePrecise( i, {
+															level: v,
+														} )
+													}
+												/>
+												<div className="ilb-simple__name-cell">
+													{ nameField(
+														row,
+														i,
+														! preciseAvailable
+													) }
+												</div>
+												<Button
+													variant="tertiary"
+													isDestructive
+													disabled={
+														! preciseAvailable
+													}
+													onClick={ () =>
+														commitPrecise(
+															draftPrecise.filter(
+																( _, idx ) =>
+																	idx !== i
+															)
+														)
+													}
 												>
 													{ __(
-														'Set up Native provider',
+														'Remove',
 														'ip-location-block'
 													) }
 												</Button>
 											</div>
-										</div>
-									) : (
-										<>
-											{ enforcedNative && (
-												<p className="ilb-simple__precise-info">
-													<span
-														className="dashicons dashicons-info-outline"
-														aria-hidden="true"
-													/>
-													{ __(
-														'The IP Location Block provider is prioritized automatically for these rules; your other providers act as country-level fallback.',
-														'ip-location-block'
-													) }
-												</p>
+										) ) }
+										<Button
+											variant="secondary"
+											disabled={ ! preciseAvailable }
+											onClick={ () =>
+												commitPrecise( [
+													...draftPrecise,
+													{
+														country: 'US',
+														level: 'State',
+														value: '',
+													},
+												] )
+											}
+										>
+											{ __(
+												'Add a regional rule',
+												'ip-location-block'
 											) }
-											{ draftPrecise.map( ( row, i ) => (
-												<div
-													className="ilb-simple__precise-row"
-													key={ i }
-												>
-													<SelectControl
-														__nextHasNoMarginBottom
-														label={ __(
-															'Country',
-															'ip-location-block'
-														) }
-														value={ row.country }
-														options={
-															COUNTRY_OPTIONS
-														}
-														onChange={ ( v ) =>
-															updatePrecise( i, {
-																country: v,
-															} )
-														}
-													/>
-													<SelectControl
-														__nextHasNoMarginBottom
-														label={ __(
-															'Level',
-															'ip-location-block'
-														) }
-														value={ row.level }
-														options={ [
-															{
-																label: __(
-																	'State / Region',
-																	'ip-location-block'
-																),
-																value: 'State',
-															},
-															{
-																label: __(
-																	'City',
-																	'ip-location-block'
-																),
-																value: 'City',
-															},
-														] }
-														onChange={ ( v ) =>
-															updatePrecise( i, {
-																level: v,
-															} )
-														}
-													/>
-													<div className="ilb-simple__name-cell">
-														{ nameField( row, i ) }
-													</div>
-													<Button
-														variant="tertiary"
-														isDestructive
-														onClick={ () =>
-															commitPrecise(
-																draftPrecise.filter(
-																	(
-																		_,
-																		idx
-																	) =>
-																		idx !==
-																		i
-																)
-															)
-														}
-													>
-														{ __(
-															'Remove',
-															'ip-location-block'
-														) }
-													</Button>
-												</div>
-											) ) }
-											<Button
-												variant="secondary"
-												onClick={ () =>
-													commitPrecise( [
-														...draftPrecise,
-														{
-															country: 'US',
-															level: 'State',
-															value: '',
-														},
-													] )
-												}
-											>
-												{ __(
-													'Add a precise rule',
-													'ip-location-block'
-												) }
-											</Button>
-											<p className="ilb-simple__help">
-												{ __(
-													'Names must exactly match what the provider returns. City is free text — verify the exact spelling on the Search tab.',
-													'ip-location-block'
-												) }
-											</p>
-										</>
-									) }
+										</Button>
+										<p className="ilb-simple__help">
+											{ __(
+												'Names must exactly match the administrative area returned by the provider. Verify the exact spelling on the Search tab.',
+												'ip-location-block'
+											) }
+										</p>
+									</div>
 								</div>
 
 								{ /* Scope ----------------------------------------- */ }
@@ -597,6 +753,136 @@ export default function SimpleBlocking( {
 											)
 										}
 									/>
+
+									<div className="ilb-simple__blocked-response">
+										{ whenBlocked === 'redirect' ? (
+											<>
+												<TextControl
+													__next40pxDefaultSize
+													__nextHasNoMarginBottom
+													type="url"
+													label={ __(
+														'Send blocked visitors to',
+														'ip-location-block'
+													) }
+													value={
+														redirectDestination
+													}
+													onChange={ ( value ) =>
+														onChange(
+															'public.redirect_uri',
+															value
+														)
+													}
+													aria-invalid={
+														! redirectStatus.valid
+													}
+													aria-describedby={
+														redirectStatus.valid
+															? 'ilb-simple-redirect-help'
+															: 'ilb-simple-redirect-error ilb-simple-redirect-help'
+													}
+												/>
+
+												{ usesHostedDefault && (
+													<span className="ilb-simple__hosted-label">
+														{ __(
+															'IP Location Block hosted page',
+															'ip-location-block'
+														) }
+													</span>
+												) }
+
+												{ ! redirectStatus.valid && (
+													<p
+														id="ilb-simple-redirect-error"
+														className="ilb-simple__field-error"
+														role="alert"
+													>
+														{ redirectStatus.reason ===
+														'same_host'
+															? __(
+																	'This URL uses the same hostname as your protected site. Use a separate domain or subdomain.',
+																	'ip-location-block'
+															  )
+															: __(
+																	'Enter a full http or https URL on a separate domain or subdomain.',
+																	'ip-location-block'
+															  ) }
+													</p>
+												) }
+
+												<p
+													id="ilb-simple-redirect-help"
+													className="ilb-simple__help"
+												>
+													{ __(
+														'Use a separate domain or subdomain that is not protected by this plugin. Links back to protected pages on this site will still be blocked.',
+														'ip-location-block'
+													) }
+												</p>
+
+												<div className="ilb-simple__response-actions">
+													{ redirectStatus.valid && (
+														<Button
+															variant="link"
+															href={
+																redirectStatus
+																	.url.href
+															}
+															target="_blank"
+															rel="noopener noreferrer"
+														>
+															{ __(
+																'Preview destination',
+																'ip-location-block'
+															) }
+															<span
+																className="dashicons dashicons-external"
+																aria-hidden="true"
+															/>
+														</Button>
+													) }
+													{ ! usesHostedDefault &&
+														defaultRedirectUrl && (
+															<Button
+																variant="link"
+																onClick={ () =>
+																	onChange(
+																		'public.redirect_uri',
+																		defaultRedirectUrl
+																	)
+																}
+															>
+																{ __(
+																	'Use hosted default',
+																	'ip-location-block'
+																) }
+															</Button>
+														) }
+												</div>
+											</>
+										) : (
+											<TextareaControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Blocked message',
+													'ip-location-block'
+												) }
+												value={ pub.response_msg || '' }
+												help={ __(
+													'Shown with a 403 Forbidden response. Leave blank to use the standard Forbidden message.',
+													'ip-location-block'
+												) }
+												onChange={ ( value ) =>
+													onChange(
+														'public.response_msg',
+														value
+													)
+												}
+											/>
+										) }
+									</div>
 								</div>
 
 								{ /* Cache ----------------------------------------- */ }

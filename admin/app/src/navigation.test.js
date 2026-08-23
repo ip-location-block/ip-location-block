@@ -2,6 +2,7 @@ import {
 	queryParam,
 	betaUrl,
 	replaceTabInUrl,
+	replaceViewInUrl,
 	resolveTabName,
 	switchViewUrl,
 } from './navigation';
@@ -34,6 +35,13 @@ describe( 'admin navigation', () => {
 		replaceTabInUrl( 'search' );
 		expect( queryParam( 'tab' ) ).toBe( 'search' );
 		expect( queryParam( 's' ) ).toBe( '' );
+	} );
+
+	it( 'keeps the URL synchronized with the settings view', () => {
+		window.history.replaceState( {}, '', `${ window.location.href }#old` );
+		replaceViewInUrl( 'advanced', 'provider' );
+		expect( queryParam( 'view' ) ).toBe( 'advanced' );
+		expect( window.location.hash ).toBe( '#provider' );
 	} );
 } );
 

@@ -559,7 +559,7 @@ export default function Logs() {
 					</h2>
 					<a
 						className="ilb-panel-shell__help"
-						href="https://iplocationblock.com/codex/validation-logs/"
+						href="https://iplocationblock.com/docs/monitoring/validation-logs/"
 						target="_blank"
 						rel="noopener noreferrer"
 					>
@@ -749,7 +749,7 @@ export default function Logs() {
 										: sprintf(
 												/* translators: %d: seconds until live session ends */
 												__(
-													'Live capture paused — session ends in %d seconds',
+													'Live capture paused. Session ends in %d seconds',
 													'ip-location-block'
 												),
 												pauseRemaining

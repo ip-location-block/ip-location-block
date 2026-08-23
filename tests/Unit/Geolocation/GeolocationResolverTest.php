@@ -72,7 +72,7 @@ final class GeolocationResolverTest extends TestCase {
 
 	/** ===== CACHE REPLAY ===== */
 
-	public function test_cache_replay_returns_stored_city_and_state(): void {
+	public function test_country_only_provider_strips_precision_from_cache(): void {
 		$this->seedCache(
 			self::PUBLIC_IP,
 			array( 'code' => 'US', 'city' => 'Seattle', 'state' => 'Washington', 'asn' => 'AS15169' )
@@ -80,6 +80,25 @@ final class GeolocationResolverTest extends TestCase {
 
 		// A live provider is present but must NOT be consulted on a cache hit.
 		$provider = new FakeProvider( 'Standard', LocationResult::error( 'should not run' ) );
+		$settings = array( 'cache_hold' => 1 );
+
+		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array( $provider ), $this->context( $settings ), true );
+
+		$this->assertSame( 'Cache', $out['provider'] );
+		$this->assertSame( 'US', $out['code'] );
+		$this->assertNull( $out['city'] );
+		$this->assertNull( $out['state'] );
+		$this->assertSame( 'AS15169', $out['asn'] );
+		$this->assertSame( 0, $provider->lookupCalls );
+	}
+
+	public function test_precision_provider_replays_cached_city_and_state(): void {
+		$this->seedCache(
+			self::PUBLIC_IP,
+			array( 'code' => 'US', 'city' => 'Seattle', 'state' => 'Washington', 'asn' => 'AS15169' )
+		);
+
+		$provider = new FakePrecisionProvider( 'IP Location Block', LocationResult::error( 'should not run' ) );
 		$settings = array( 'cache_hold' => 1 );
 
 		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array( $provider ), $this->context( $settings ), true );
@@ -197,8 +216,8 @@ final class GeolocationResolverTest extends TestCase {
 	}
 
 	/**
-	 * A cache hit must replay even when every real provider is disabled. The
-	 * cache read must therefore run BEFORE the empty-provider short-circuit.
+	 * A cached country must replay even when every real provider is disabled.
+	 * Precision is stripped because no active provider can supply it.
 	 */
 	public function test_cache_replays_even_with_empty_provider_list(): void {
 		$this->seedCache( self::PUBLIC_IP, array( 'code' => 'DE', 'city' => 'Berlin', 'state' => '', 'asn' => '' ) );
@@ -209,7 +228,7 @@ final class GeolocationResolverTest extends TestCase {
 
 		$this->assertSame( 'Cache', $out['provider'] );
 		$this->assertSame( 'DE', $out['code'] );
-		$this->assertSame( 'Berlin', $out['city'] );
+		$this->assertNull( $out['city'] );
 		$this->assertNull( $out['state'] );
 		$this->assertNull( $out['asn'] );
 	}
@@ -220,7 +239,7 @@ final class GeolocationResolverTest extends TestCase {
 
 		$out = $this->resolver()->resolve( self::PUBLIC_IP, $settings, array( $provider ), $this->context( $settings ), false );
 
-		$this->assertSame( array( 'errorMessage' => 'unknown' ), $out );
+		$this->assertSame( array( 'errorMessage' => 'unknown', 'code' => 'XX' ), $out );
 	}
 
 	/** ===== SELF-HEAL: stale pre-precision cache rows ===== */

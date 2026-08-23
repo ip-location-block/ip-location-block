@@ -19,11 +19,7 @@ import {
 } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 
-import {
-	parseUaList,
-	serializeUaList,
-	serializeRow,
-} from '../lib/uaRules';
+import { parseUaList, serializeUaList, serializeRow } from '../lib/uaRules';
 import { syncUaDraft } from '../lib/uaDraft';
 import {
 	PRESETS,
@@ -70,7 +66,7 @@ const PRESET_LABELS = {
 	'ai-training': {
 		label: __( 'Block AI training crawlers', 'ip-location-block' ),
 		help: __(
-			'GPTBot, ClaudeBot, CCBot, Bytespider, Meta AI. Blocked by User-Agent — no verification needed.',
+			'GPTBot, ClaudeBot, CCBot, Bytespider, Meta AI. Blocked by User-Agent; no verification needed.',
 			'ip-location-block'
 		),
 	},
@@ -82,7 +78,10 @@ const PRESET_LABELS = {
 		),
 	},
 	'ai-agents': {
-		label: __( 'Block AI agents (user-triggered fetchers)', 'ip-location-block' ),
+		label: __(
+			'Block AI agents (user-triggered fetchers)',
+			'ip-location-block'
+		),
 		help: __(
 			'ChatGPT-User, Claude-User, Perplexity-User, Meta fetcher. Live reads made on a user’s request.',
 			'ip-location-block'
@@ -116,10 +115,22 @@ const QUAL_VALUES = new Set( QUAL_OPTIONS.map( ( o ) => o.value ) );
 const rowForToken = ( token ) => {
 	const bot = botByToken( token );
 	if ( ! bot ) {
-		return { ua: token, action: 'block', qualType: 'any', qualValue: '', negate: false };
+		return {
+			ua: token,
+			action: 'block',
+			qualType: 'any',
+			qualValue: '',
+			negate: false,
+		};
 	}
 	if ( bot.disposition === 'block' ) {
-		return { ua: bot.token, action: 'block', qualType: 'any', qualValue: '', negate: false };
+		return {
+			ua: bot.token,
+			action: 'block',
+			qualType: 'any',
+			qualValue: '',
+			negate: false,
+		};
 	}
 	return {
 		ua: bot.token,
@@ -157,7 +168,9 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 	};
 
 	const updateRow = ( i, patch ) =>
-		commit( draft.map( ( r, idx ) => ( idx === i ? { ...r, ...patch } : r ) ) );
+		commit(
+			draft.map( ( r, idx ) => ( idx === i ? { ...r, ...patch } : r ) )
+		);
 
 	const removeRow = ( i ) =>
 		commit( draft.filter( ( _, idx ) => idx !== i ) );
@@ -165,7 +178,13 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 	const addRow = () =>
 		commit( [
 			...draft,
-			{ ua: '', action: 'block', qualType: 'any', qualValue: '', negate: false },
+			{
+				ua: '',
+				action: 'block',
+				qualType: 'any',
+				qualValue: '',
+				negate: false,
+			},
 		] );
 
 	const onPresetToggle = ( preset, on ) =>
@@ -197,7 +216,8 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 			.finally( () => setDetecting( false ) );
 	};
 
-	const addDetected = ( token ) => commit( [ ...draft, rowForToken( token ) ] );
+	const addDetected = ( token ) =>
+		commit( [ ...draft, rowForToken( token ) ] );
 
 	// --- UA tester ----------------------------------------------------------
 	const testResult = testUa ? evaluateUa( testUa, draft ) : null;
@@ -225,10 +245,7 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 					</p>
 					<div className="ilb-bot-rules__offer-actions">
 						<Button variant="primary" onClick={ applyMigration }>
-							{ __(
-								'Apply modern rules',
-								'ip-location-block'
-							) }
+							{ __( 'Apply modern rules', 'ip-location-block' ) }
 						</Button>
 						<Button variant="tertiary" onClick={ dismissMigration }>
 							{ __( 'Keep mine', 'ip-location-block' ) }
@@ -249,10 +266,7 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 			{ raw ? (
 				<TextareaControl
 					__nextHasNoMarginBottom
-					label={ __(
-						'User-Agent rules',
-						'ip-location-block'
-					) }
+					label={ __( 'User-Agent rules', 'ip-location-block' ) }
 					help={ help }
 					rows={ 6 }
 					value={ stored }
@@ -263,10 +277,7 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 					{ /* Presets ------------------------------------------- */ }
 					<div className="ilb-bot-rules__presets">
 						<p className="ilb-bot-rules__section-title">
-							{ __(
-								'Recommended presets',
-								'ip-location-block'
-							) }
+							{ __( 'Recommended presets', 'ip-location-block' ) }
 						</p>
 						{ PRESETS.map( ( preset ) => {
 							const copy = PRESET_LABELS[ preset.id ] || {
@@ -295,7 +306,7 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 							className="ilb-bot-rules__dns-warning"
 						>
 							{ __(
-								'Reverse DNS lookup is off, so “verified host (HOST)” allow-rules are NOT verified — they pass any request whose User-Agent contains the token, from any country. Turn on Reverse DNS lookup (below) to actually verify search-engine allow-rules. Block rules are unaffected.',
+								'Reverse DNS lookup is off, so “verified host (HOST)” allow-rules are NOT verified. They pass any request whose User-Agent contains the token, from any country. Turn on Reverse DNS lookup (below) to actually verify search-engine allow-rules. Block rules are unaffected.',
 								'ip-location-block'
 							) }
 						</Notice>
@@ -304,10 +315,7 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 					{ /* Advanced rows ------------------------------------- */ }
 					<div className="ilb-bot-rules__rows">
 						<p className="ilb-bot-rules__section-title">
-							{ __(
-								'Rules',
-								'ip-location-block'
-							) }
+							{ __( 'Rules', 'ip-location-block' ) }
 						</p>
 						{ draft.length === 0 && (
 							<p className="ilb-bot-rules__empty">
@@ -364,10 +372,7 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 								<SelectControl
 									__nextHasNoMarginBottom
 									className="ilb-bot-rules__qual"
-									label={ __(
-										'When',
-										'ip-location-block'
-									) }
+									label={ __( 'When', 'ip-location-block' ) }
 									value={
 										QUAL_VALUES.has( row.qualType )
 											? row.qualType
@@ -517,10 +522,7 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 										isDestructive
 										onClick={ () => removeRow( i ) }
 									>
-										{ __(
-											'Remove',
-											'ip-location-block'
-										) }
+										{ __( 'Remove', 'ip-location-block' ) }
 									</Button>
 								</div>
 								<code className="ilb-bot-rules__preview">
@@ -612,7 +614,7 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 												'ip-location-block'
 										  )
 										: __(
-												'No User-Agent rule decides this — country blocking applies.',
+												'No User-Agent rule decides this. Country blocking applies.',
 												'ip-location-block'
 										  ) }
 								</p>
@@ -628,7 +630,7 @@ export default function BotRuleEditor( { value, settings, onChange, help } ) {
 									<ul className="ilb-bot-rules__tester-matches">
 										{ testResult.matches.map( ( m ) => (
 											<li key={ m.index }>
-												<code>{ m.rule }</code> —{ ' ' }
+												<code>{ m.rule }</code>:{ ' ' }
 												{ m.note }
 											</li>
 										) ) }

@@ -1,15 +1,11 @@
 /**
- * Compact Native/Standard status control. Its anchored panel shows either the
- * current mode guidance or a short upgrade path without leaving the header.
+ * Compact Native/Standard status control. The provider card owns the full
+ * product story; this panel only explains the current state and points there.
  */
 import { useState, useRef, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
-import {
-	PrecisionBenefits,
-	PrecisionLearnLink,
-	UpgradeButton,
-} from './PrecisionContent';
+import { ProviderJourneyLink } from './PrecisionContent';
 
 const PANEL_ID = 'ilb-mode-panel';
 
@@ -21,13 +17,13 @@ export default function ModeBadge( { mode } ) {
 		if ( ! open ) {
 			return undefined;
 		}
-		const onDown = ( e ) => {
-			if ( ref.current && ! ref.current.contains( e.target ) ) {
+		const onDown = ( event ) => {
+			if ( ref.current && ! ref.current.contains( event.target ) ) {
 				setOpen( false );
 			}
 		};
-		const onKey = ( e ) => {
-			if ( e.key === 'Escape' ) {
+		const onKey = ( event ) => {
+			if ( event.key === 'Escape' ) {
 				setOpen( false );
 				ref.current?.querySelector( '.ilb-mode' )?.focus();
 			}
@@ -44,8 +40,6 @@ export default function ModeBadge( { mode } ) {
 		return null;
 	}
 	const native = !! mode.native;
-	// Enforced: native is prioritized automatically alongside other providers
-	// (precision rules + a real key). A distinct state between Native and Standard.
 	const enforced = ! native && !! mode.enforced;
 
 	const panel = () => {
@@ -62,7 +56,7 @@ export default function ModeBadge( { mode } ) {
 						</strong>
 						<p>
 							{ __(
-								'City and state rules are available.',
+								'State/region rules are available.',
 								'ip-location-block'
 							) }
 						</p>
@@ -86,31 +80,9 @@ export default function ModeBadge( { mode } ) {
 						</strong>
 						<p>
 							{ __(
-								'City and state rules are enforced: the IP Location Block provider is used first while precision rules exist, and your other providers act as country-level fallback.',
+								'Regional rules use IP Location Block first; other providers remain country-level fallbacks.',
 								'ip-location-block'
 							) }
-						</p>
-					</div>
-				</div>
-			);
-		}
-		if ( mode.apiEnabled && mode.others && mode.others.length ) {
-			return (
-				<div className="ilb-mode-panel__status ilb-mode-panel__status--warning">
-					<span
-						className="dashicons dashicons-warning"
-						aria-hidden="true"
-					/>
-					<div>
-						<strong>
-							{ __( 'Standard Mode', 'ip-location-block' ) }
-						</strong>
-						<p>
-							{ __(
-								'Disable these providers to use Native Mode:',
-								'ip-location-block'
-							) }{ ' ' }
-							<em>{ mode.others.join( ', ' ) }</em>
 						</p>
 					</div>
 				</div>
@@ -121,14 +93,12 @@ export default function ModeBadge( { mode } ) {
 				<h2>{ __( 'Standard Mode', 'ip-location-block' ) }</h2>
 				<p>
 					{ __(
-						'Standard Mode supports country-level rules. Native Mode adds city and state rules with more precise location data.',
+						'Go beyond country rules with the state, province, or equivalent region returned for each country.',
 						'ip-location-block'
 					) }
 				</p>
-				<PrecisionBenefits compact />
 				<div className="ilb-mode-panel__actions">
-					<UpgradeButton />
-					<PrecisionLearnLink />
+					<ProviderJourneyLink onClick={ () => setOpen( false ) } />
 				</div>
 			</div>
 		);
@@ -141,11 +111,11 @@ export default function ModeBadge( { mode } ) {
 				className={ `ilb-mode ilb-mode--${
 					native ? 'native' : enforced ? 'enforced' : 'standard'
 				}` }
-				onClick={ () => setOpen( ( v ) => ! v ) }
+				onClick={ () => setOpen( ( value ) => ! value ) }
 				aria-expanded={ open }
 				aria-controls={ PANEL_ID }
 				title={ __(
-					'Native mode gives better precision and city/state level blocking.',
+					'View geolocation mode details.',
 					'ip-location-block'
 				) }
 			>
@@ -153,7 +123,7 @@ export default function ModeBadge( { mode } ) {
 				{ native
 					? __( 'Native Mode', 'ip-location-block' )
 					: enforced
-					? __( 'Native — enforced', 'ip-location-block' )
+					? __( 'Native (enforced)', 'ip-location-block' )
 					: __( 'Standard Mode', 'ip-location-block' ) }
 				<span
 					className={ `dashicons dashicons-arrow-${

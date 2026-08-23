@@ -32,6 +32,7 @@ export const SECTIONS = [
 	{
 		key: 'validation-rule',
 		title: __( 'Validation rules and behavior', 'ip-location-block' ),
+		docsPath: 'advanced-settings/validation-rules/',
 		groups: [
 			{
 				key: 'location-matching',
@@ -44,7 +45,10 @@ export const SECTIONS = [
 						type: 'select',
 						options: [
 							{
-								label: __( '— select —', 'ip-location-block' ),
+								label: __(
+									'Select a rule',
+									'ip-location-block'
+								),
 								value: '-1',
 							},
 							{
@@ -84,7 +88,7 @@ export const SECTIONS = [
 						type: 'text',
 						showIf: ( s ) => Number( s.matching_rule ) === 0,
 						help: __(
-							'Comma-separated codes. XX=private, ZZ=unknown, YY=non-country. City/state rules: CC:State:Name or CC:City:Name (Region is an alias of State); use ~ for OR, e.g. FR:City:Paris~Montpellier. Names must match the provider exactly — verify on the Search tab.',
+							'Comma-separated codes. XX=private, ZZ=unknown, YY=non-country. State or region rules use CC:State:Name (Region is an alias of State); use ~ for OR, e.g. US:State:Alabama~Kentucky. Names must match the provider exactly. Verify them on the Search tab.',
 							'ip-location-block'
 						),
 					},
@@ -97,7 +101,7 @@ export const SECTIONS = [
 						type: 'text',
 						showIf: ( s ) => Number( s.matching_rule ) === 1,
 						help: __(
-							'Comma-separated codes. Also accepts CC:State:Name / CC:City:Name (Region aliases State) and ~ for OR, e.g. US:City:Seattle~Tacoma. Names must match the provider exactly.',
+							'Comma-separated codes. Also accepts CC:State:Name (Region aliases State) and ~ for OR, e.g. US:State:Alabama~Kentucky. Names must match the provider exactly.',
 							'ip-location-block'
 						),
 					},
@@ -317,11 +321,11 @@ export const SECTIONS = [
 						),
 						optionDesc: {
 							0: __(
-								'Runs on the “init” hook — compatible with most setups.',
+								'Runs on the “init” hook. Compatible with most setups.',
 								'ip-location-block'
 							),
 							1: __(
-								'Runs earlier as a mu-plugin — blocks before other plugins load, but is more invasive.',
+								'Runs earlier as a mu-plugin. Blocks before other plugins load, but is more invasive.',
 								'ip-location-block'
 							),
 						},
@@ -334,7 +338,7 @@ export const SECTIONS = [
 						),
 						type: 'toggle',
 						tip: __(
-							'Records what would be blocked without actually blocking — use to test rules safely.',
+							'Records what would be blocked without actually blocking. Use this to test rules safely.',
 							'ip-location-block'
 						),
 					},
@@ -345,6 +349,7 @@ export const SECTIONS = [
 	{
 		key: 'validation-target',
 		title: __( 'Back-end target settings', 'ip-location-block' ),
+		docsPath: 'advanced-settings/back-end-targets/',
 		groups: [
 			{
 				key: 'entry-points',
@@ -489,7 +494,7 @@ export const SECTIONS = [
 					{
 						path: 'validation.admin',
 						label: __(
-							'Admin area — block by location',
+							'Admin area: block by location',
 							'ip-location-block'
 						),
 						type: 'bitmask',
@@ -497,7 +502,7 @@ export const SECTIONS = [
 					{
 						path: 'validation.ajax',
 						label: __(
-							'Admin ajax/post — block by location',
+							'Admin Ajax/post: block by location',
 							'ip-location-block'
 						),
 						type: 'bitmask',
@@ -581,6 +586,7 @@ export const SECTIONS = [
 	{
 		key: 'public',
 		title: __( 'Front-end target settings', 'ip-location-block' ),
+		docsPath: 'advanced-settings/front-end-targets/',
 		groups: [
 			{
 				key: 'public-access',
@@ -589,7 +595,7 @@ export const SECTIONS = [
 					{
 						path: 'validation.public',
 						label: __(
-							'Public facing pages — block by location',
+							'Public-facing pages: block by location',
 							'ip-location-block'
 						),
 						type: 'toggle',
@@ -641,7 +647,7 @@ export const SECTIONS = [
 						showIf: ( s ) =>
 							Number( s.public?.matching_rule ) === 0,
 						help: __(
-							'Comma-separated codes. Also accepts CC:State:Name / CC:City:Name (Region aliases State) and ~ for OR. Names must match the provider exactly — verify on the Search tab.',
+							'Comma-separated codes. Also accepts CC:State:Name (Region aliases State) and ~ for OR. Names must match the provider exactly. Verify them on the Search tab.',
 							'ip-location-block'
 						),
 					},
@@ -655,7 +661,7 @@ export const SECTIONS = [
 						showIf: ( s ) =>
 							Number( s.public?.matching_rule ) === 1,
 						help: __(
-							'Comma-separated codes. Also accepts CC:State:Name / CC:City:Name (Region aliases State) and ~ for OR. Names must match the provider exactly — verify on the Search tab.',
+							'Comma-separated codes. Also accepts CC:State:Name (Region aliases State) and ~ for OR. Names must match the provider exactly. Verify them on the Search tab.',
 							'ip-location-block'
 						),
 					},
@@ -770,14 +776,14 @@ export const SECTIONS = [
 					{
 						path: 'behavior.view',
 						label: __(
-							'Condition — page views',
+							'Condition: page views',
 							'ip-location-block'
 						),
 						type: 'number',
 					},
 					{
 						path: 'behavior.time',
-						label: __( 'Condition — seconds', 'ip-location-block' ),
+						label: __( 'Condition: seconds', 'ip-location-block' ),
 						type: 'number',
 					},
 					{
@@ -808,6 +814,7 @@ export const SECTIONS = [
 	{
 		key: 'recording',
 		title: __( 'Privacy and record settings', 'ip-location-block' ),
+		docsPath: 'advanced-settings/privacy-records/',
 		groups: [
 			{
 				key: 'privacy-controls',
@@ -998,6 +1005,7 @@ export const SECTIONS = [
 	{
 		key: 'provider',
 		title: __( 'Geolocation API settings', 'ip-location-block' ),
+		docsPath: 'advanced-settings/geolocation-api/',
 		groups: [
 			{
 				key: 'provider-configuration',
@@ -1028,6 +1036,7 @@ export const SECTIONS = [
 	{
 		key: 'database',
 		title: __( 'Local database settings', 'ip-location-block' ),
+		docsPath: 'advanced-settings/local-databases/',
 		groups: [
 			{
 				key: 'local-database',
@@ -1055,6 +1064,7 @@ export const SECTIONS = [
 	{
 		key: 'others',
 		title: __( 'Plugin settings', 'ip-location-block' ),
+		docsPath: 'advanced-settings/plugin-settings/',
 		groups: [
 			{
 				key: 'plugin-settings',

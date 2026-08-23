@@ -4,9 +4,8 @@
  * REST save honors this map directly (see class-rest.php).
  *
  * Also the free->paid surface: the IP Location Block provider gets an
- * understated recommendation marker, City/State support is shown, and a
- * registration link points to sign-up. City/State data only comes from that
- * provider.
+ * understated recommendation marker and regional support is shown without
+ * duplicating the full Native Mode product story from Simple settings.
  */
 /* eslint-disable no-nested-ternary */
 import {
@@ -16,11 +15,12 @@ import {
 	Button,
 } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
+import { useState } from '@wordpress/element';
 import { quotaSummary } from '../providerLogic';
 
 const formatRequests = ( r ) => {
 	if ( ! r || ! r.total ) {
-		return '—';
+		return __( 'Not available', 'ip-location-block' );
 	}
 	if ( r.total < 0 ) {
 		return __( 'Unlimited', 'ip-location-block' );
@@ -33,8 +33,7 @@ const capabilityLabels = () => [
 	[ 'ipv4', __( 'IPv4', 'ip-location-block' ) ],
 	[ 'ipv6', __( 'IPv6', 'ip-location-block' ) ],
 	[ 'asn', __( 'ASN', 'ip-location-block' ) ],
-	[ 'city', __( 'City', 'ip-location-block' ) ],
-	[ 'state', __( 'State', 'ip-location-block' ) ],
+	[ 'state', __( 'State/region', 'ip-location-block' ) ],
 ];
 
 const LiveQuota = ( { quota } ) => {
@@ -54,8 +53,14 @@ const LiveQuota = ( { quota } ) => {
 
 	return (
 		<div className={ `ilb-provider-live-quota is-${ quota.status }` }>
-			<strong>{ summary }</strong>
-			{ quota.planName && <span>{ quota.planName }</span> }
+			<span
+				className="ilb-provider-live-quota__indicator"
+				aria-hidden="true"
+			/>
+			<span className="ilb-provider-live-quota__content">
+				<strong>{ summary }</strong>
+				{ quota.planName && <span>{ quota.planName }</span> }
+			</span>
 		</div>
 	);
 };
@@ -65,7 +70,9 @@ export default function ProviderTable( {
 	value,
 	status,
 	onChange,
+	providerAction,
 } ) {
+	const [ editingKeys, setEditingKeys ] = useState( {} );
 	if ( ! providers || ! providers.length ) {
 		return (
 			<em>{ __( 'No providers available.', 'ip-location-block' ) }</em>
@@ -74,10 +81,17 @@ export default function ProviderTable( {
 	const map = value || {};
 	const setProvider = ( name, next ) =>
 		onChange( { ...map, [ name ]: next } );
+	const requestDisconnect = ( name ) => {
+		if ( providerAction?.requestDisconnect ) {
+			providerAction.requestDisconnect( name );
+			return;
+		}
+		setProvider( name, '' );
+	};
 
 	return (
 		<>
-			<table className="wp-list-table widefat ilb-provider-table">
+			<table className="widefat ilb-provider-table">
 				<thead>
 					<tr>
 						<th scope="col">
@@ -90,7 +104,10 @@ export default function ProviderTable( {
 							{ __( 'Capabilities', 'ip-location-block' ) }
 						</th>
 						<th scope="col">
-							{ __( 'Status / allowance', 'ip-location-block' ) }
+							{ __( 'Availability', 'ip-location-block' ) }
+						</th>
+						<th scope="col">
+							{ __( 'Actions', 'ip-location-block' ) }
 						</th>
 					</tr>
 				</thead>
@@ -106,6 +123,7 @@ export default function ProviderTable( {
 							: '';
 						const enabled = !! cur;
 						const key = cur === '@' ? '' : cur;
+						const editingKey = !! editingKeys[ p.name ];
 						const liveQuota =
 							p.name === 'IP Location Block' &&
 							enabled &&
@@ -118,36 +136,39 @@ export default function ProviderTable( {
 						return (
 							<tr
 								key={ p.name }
-								className={
-									p.recommended ? 'is-recommended' : undefined
-								}
+								className={ [
+									p.recommended ? 'is-recommended' : '',
+									enabled ? 'is-enabled' : '',
+								]
+									.filter( Boolean )
+									.join( ' ' ) }
 							>
 								<td
 									data-colname={ __(
 										'Provider',
 										'ip-location-block'
 									) }
+									className="ilb-provider-table__provider"
 								>
-									<div className="ilb-provider-name">
+									<div className="ilb-provider-identity">
 										<CheckboxControl
 											__nextHasNoMarginBottom
 											label={ p.name }
 											checked={ enabled }
 											onChange={ ( on ) =>
-												setProvider(
-													p.name,
-													on ? key || '@' : ''
-												)
+												on
+													? setProvider(
+															p.name,
+															key || '@'
+													  )
+													: requestDisconnect(
+															p.name
+													  )
+											}
+											disabled={
+												!! providerAction?.pending
 											}
 										/>
-										{ p.recommended && (
-											<span className="ilb-provider-recommended">
-												{ __(
-													'Recommended',
-													'ip-location-block'
-												) }
-											</span>
-										) }
 										{ p.type && (
 											<Tooltip text={ p.type }>
 												<span
@@ -158,24 +179,36 @@ export default function ProviderTable( {
 											</Tooltip>
 										) }
 									</div>
-									{ p.link && (
-										<Button
-											variant="link"
-											href={ p.link }
-											target="_blank"
-											rel="noreferrer"
-											className="ilb-provider-register"
-										>
-											{ p.recommended
-												? __(
-														'Get an API key',
+									{ ( p.recommended || p.link ) && (
+										<div className="ilb-provider-table__provider-meta">
+											{ p.recommended && (
+												<span className="ilb-provider-recommended">
+													{ __(
+														'Recommended',
 														'ip-location-block'
-												  )
-												: __(
-														'Register',
-														'ip-location-block'
-												  ) }
-										</Button>
+													) }
+												</span>
+											) }
+											{ p.link && (
+												<Button
+													variant="link"
+													href={ p.link }
+													target="_blank"
+													rel="noreferrer"
+													className="ilb-provider-register"
+												>
+													{ p.recommended
+														? __(
+																'Plans & API key',
+																'ip-location-block'
+														  )
+														: __(
+																'Register',
+																'ip-location-block'
+														  ) }
+												</Button>
+											) }
+										</div>
 									) }
 								</td>
 								<td
@@ -186,14 +219,57 @@ export default function ProviderTable( {
 								>
 									{ p.auth === 'none' ? (
 										<span className="ilb-provider-no-key">
+											<span
+												className="dashicons dashicons-yes-alt"
+												aria-hidden="true"
+											/>
 											{ __(
 												'No API key required',
 												'ip-location-block'
 											) }
 										</span>
+									) : enabled && ! editingKey && key ? (
+										<div className="ilb-provider-saved-key">
+											<span className="ilb-provider-saved-key__status">
+												<span
+													className="dashicons dashicons-yes-alt"
+													aria-hidden="true"
+												/>
+												<span>
+													{ __(
+														'Credential saved',
+														'ip-location-block'
+													) }
+												</span>
+											</span>
+											<Button
+												variant="link"
+												disabled={
+													!! providerAction?.pending
+												}
+												onClick={ () =>
+													setEditingKeys(
+														( current ) => ( {
+															...current,
+															[ p.name ]: true,
+														} )
+													)
+												}
+											>
+												{ __(
+													'Replace key',
+													'ip-location-block'
+												) }
+											</Button>
+										</div>
 									) : (
 										<TextControl
 											__nextHasNoMarginBottom
+											type="password"
+											className="ilb-provider-key-control"
+											disabled={
+												!! providerAction?.pending
+											}
 											hideLabelFromVision
 											label={ sprintf(
 												/* translators: %s: geolocation provider name. */
@@ -224,13 +300,37 @@ export default function ProviderTable( {
 									) }
 									className="ilb-provider-capabilities"
 								>
-									{ capabilities.length
-										? capabilities.join( ' · ' )
-										: '—' }
+									{ capabilities.length ? (
+										<div className="ilb-provider-capability-list">
+											{ capabilities.map(
+												( capability ) => (
+													<span
+														className={ `ilb-provider-capability${
+															capability ===
+															__(
+																'State/region',
+																'ip-location-block'
+															)
+																? ' is-precision'
+																: ''
+														}` }
+														key={ capability }
+													>
+														{ capability }
+													</span>
+												)
+											) }
+										</div>
+									) : (
+										__(
+											'Not available',
+											'ip-location-block'
+										)
+									) }
 								</td>
 								<td
 									data-colname={ __(
-										'Status / allowance',
+										'Availability',
 										'ip-location-block'
 									) }
 									className="ilb-provider-quota"
@@ -238,11 +338,16 @@ export default function ProviderTable( {
 									{ p.local ? (
 										<span
 											className={
-												p.databaseReady
+												'ilb-provider-availability ' +
+												( p.databaseReady
 													? 'is-ready'
-													: 'is-warning'
+													: 'is-warning' )
 											}
 										>
+											<span
+												className="ilb-provider-availability__indicator"
+												aria-hidden="true"
+											/>
 											{ p.databaseReady
 												? __(
 														'Database ready',
@@ -257,7 +362,43 @@ export default function ProviderTable( {
 									  enabled ? (
 										<LiveQuota quota={ liveQuota } />
 									) : (
-										formatRequests( p.requests )
+										<span className="ilb-provider-allowance">
+											{ formatRequests( p.requests ) }
+										</span>
+									) }
+								</td>
+								<td
+									data-colname={ __(
+										'Actions',
+										'ip-location-block'
+									) }
+									className={ `ilb-provider-table__actions${
+										enabled ? '' : ' is-empty'
+									}` }
+								>
+									{ enabled ? (
+										<Button
+											variant="link"
+											isDestructive
+											disabled={
+												!! providerAction?.pending
+											}
+											onClick={ () =>
+												requestDisconnect( p.name )
+											}
+										>
+											{ __(
+												'Disconnect',
+												'ip-location-block'
+											) }
+										</Button>
+									) : (
+										<span className="screen-reader-text">
+											{ __(
+												'No action available',
+												'ip-location-block'
+											) }
+										</span>
 									) }
 								</td>
 							</tr>
@@ -272,7 +413,7 @@ export default function ProviderTable( {
 				/>
 				<p>
 					{ __(
-						'City and state rules require the IP Location Block provider and cannot be combined with other providers.',
+						'IP Location Block is prioritized automatically for regional rules. Other selected providers remain available as country-level fallbacks.',
 						'ip-location-block'
 					) }
 				</p>

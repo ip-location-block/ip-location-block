@@ -26,9 +26,17 @@
  * see PATTERNS_URL for the aggregated reference list used while curating this.
  */
 
-export const PATTERNS_URL = 'https://iplocationblock.com/docs/bot-catalog/';
+export const PATTERNS_URL =
+	'https://iplocationblock.com/docs/advanced-settings/bot-catalog/';
 
-export const CATEGORIES = [ 'search', 'ai', 'social', 'seo', 'feed', 'archive' ];
+export const CATEGORIES = [
+	'search',
+	'ai',
+	'social',
+	'seo',
+	'feed',
+	'archive',
+];
 export const PURPOSES = [ 'train', 'search', 'agent', 'social', 'seo', 'feed' ];
 
 export const BOTS = [

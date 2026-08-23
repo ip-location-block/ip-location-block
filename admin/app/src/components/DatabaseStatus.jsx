@@ -178,7 +178,7 @@ export default function DatabaseStatus( { rows, schedule, onRefresh } ) {
 									'ip-location-block'
 								) }
 							>
-								{ r.last || '—' }
+								{ r.last || __( 'Never', 'ip-location-block' ) }
 							</td>
 						</tr>
 					) ) }

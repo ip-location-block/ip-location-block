@@ -433,7 +433,7 @@ export default function DataTable( {
 				<span className="ilb-datatable__count">
 					{ sprintf(
 						/* translators: 1: first row, 2: last row, 3: total rows */
-						__( '%1$d–%2$d of %3$d', 'ip-location-block' ),
+						__( '%1$d to %2$d of %3$d', 'ip-location-block' ),
 						from,
 						to,
 						total

@@ -95,7 +95,7 @@ if ( ! class_exists( 'IP_Location_Block', false ) ) {
 		echo sprintf(
 			__( 'Can\'t find IP Location Block in your plugins directory. Please remove <code>%s</code> or re-install %s.', 'ip-location-block' ),
 			__FILE__,
-			'<a href="https://wordpress.org/plugins/ip-location-block/" title="IP Location Block &mdash; WordPress Plugins">IP Location Block</a>'
+			'<a href="https://wordpress.org/plugins/ip-location-block/" title="IP Location Block: WordPress Plugins">IP Location Block</a>'
 		);
 		echo '</p></div>' . "\n";
 	}
