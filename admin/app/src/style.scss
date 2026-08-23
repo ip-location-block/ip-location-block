@@ -1170,6 +1170,27 @@ body.toplevel_page_ip-location-block {
 	// grid column.
 	&__name-cell {
 		min-width: 0;
+		position: relative;
+
+		&:focus-within {
+			z-index: 20;
+		}
+
+		// ComboboxControl renders its suggestions in normal flow. Anchor the list
+		// to the input instead so opening it does not grow the grid row and move
+		// the other precise-rule controls.
+		.components-combobox-control__suggestions-container {
+			position: relative;
+		}
+
+		.components-form-token-field__suggestions-list {
+			position: absolute;
+			z-index: 10;
+			top: 100%;
+			right: 0;
+			left: 0;
+			background: var(--ilb-surface, #fff);
+		}
 	}
 
 	&__name-switch.components-button.is-link {

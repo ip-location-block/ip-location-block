@@ -296,6 +296,14 @@ final class ReactAdmin {
 			return; // assets not built (npm run build)
 		}
 		$asset = require $asset_path;
+		$style_path = IP_LOCATION_BLOCK_PATH . 'admin/app/build/style-index.css';
+		$style_version = file_exists( $style_path )
+			? (string) filemtime( $style_path )
+			: $asset['version'];
+		$components_style_path = IP_LOCATION_BLOCK_PATH . 'admin/app/build/index.css';
+		$components_style_version = file_exists( $components_style_path )
+			? (string) filemtime( $components_style_path )
+			: $asset['version'];
 
 		// Bundled Leaflet for the Search tab map (exposes window.L).
 		wp_enqueue_style(
@@ -331,14 +339,14 @@ final class ReactAdmin {
 			self::SLUG,
 			plugins_url( 'admin/app/build/style-index.css', IP_LOCATION_BLOCK_BASE ),
 			array( 'wp-components' ),
-			$asset['version']
+			$style_version
 		);
-		if ( file_exists( IP_LOCATION_BLOCK_PATH . 'admin/app/build/index.css' ) ) {
+		if ( file_exists( $components_style_path ) ) {
 			wp_enqueue_style(
 				self::SLUG . '-components',
 				plugins_url( 'admin/app/build/index.css', IP_LOCATION_BLOCK_BASE ),
 				array( self::SLUG ),
-				$asset['version']
+				$components_style_version
 			);
 		}
 
