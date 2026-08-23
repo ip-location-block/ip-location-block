@@ -28,6 +28,7 @@
 /package-lock.json
 /admin/app/src
 /webpack.config.js
+/playwright.config.js
 /composer.json
 /composer.lock
 /phpcs.xml

@@ -14,7 +14,7 @@
 #      so the post-autoload-dump "scope" script must not attempt to re-run.
 #   5. Grep-guards: fail the build if any unscoped/unprefixed vendor
 #      namespace leaked into the parts of the tree that ship.
-#   6. npm build of the React (Beta) admin.
+#   6. npm unit tests and production build of the React admin.
 #   7. Zip the release tree, honoring .distignore (rsync --exclude-from
 #      semantics — see .distignore's own header comment).
 #   8. Restore the working tree to dev state (`composer install`).
@@ -66,9 +66,9 @@ step "[5/8] Grep-guards: unscoped vendor namespaces must never leak into the rel
 # exact same checks.
 bash "$SCRIPT_DIR/verify_scoped_build.sh"
 
-step "[6/8] npm build (React admin)"
+step "[6/8] npm tests and production build (React admin)"
 if [[ -f "$PLUGIN_DIR/package.json" ]]; then
-	( cd "$PLUGIN_DIR" && npm ci && npm run build )
+	( cd "$PLUGIN_DIR" && npm ci && npm run test:unit && npm run build )
 fi
 
 step "[7/8] Building the release zip (rsync --exclude-from=.distignore staging, then zip)"
