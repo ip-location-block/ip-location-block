@@ -11,7 +11,7 @@ use IPLocationBlock\Tests\Unit\TestCase;
 /**
  * The single view resolver (current_view / is_react_screen) that every
  * notice/enqueue guard keys on once the two admin slugs merge. Exercises the
- * param / nonce / meta / default decision matrix and the WP < 5.0 fallback.
+ * param / nonce / meta / default decision matrix and the WP < 6.6 fallback.
  */
 final class ReactAdminTest extends TestCase {
 
@@ -25,8 +25,8 @@ final class ReactAdminTest extends TestCase {
 		$this->metaWrites = array();
 		$this->resetViewMemo();
 
-		// WordPress is 5.0+ (React-capable) unless a test overrides this.
-		Functions\when( 'get_bloginfo' )->justReturn( '6.4' );
+		// WordPress is 6.6+ (react-jsx-runtime capable) unless overridden.
+		Functions\when( 'get_bloginfo' )->justReturn( '6.6' );
 		Functions\when( 'wp_unslash' )->returnArg();
 		Functions\when( 'sanitize_key' )->alias(
 			static fn( $v ) => strtolower( (string) preg_replace( '/[^a-z0-9_\-]/i', '', (string) $v ) )
@@ -150,8 +150,8 @@ final class ReactAdminTest extends TestCase {
 		$this->assertFalse( ReactAdmin::is_react_screen() );
 	}
 
-	public function test_wp_below_5_0_forces_classic(): void {
-		Functions\when( 'get_bloginfo' )->justReturn( '4.9' );
+	public function test_wp_below_6_6_forces_classic(): void {
+		Functions\when( 'get_bloginfo' )->justReturn( '6.5.10' );
 		$_GET = array( 'page' => 'ip-location-block', 'view' => 'new' );
 
 		$this->assertSame( 'classic', ReactAdmin::current_view() );

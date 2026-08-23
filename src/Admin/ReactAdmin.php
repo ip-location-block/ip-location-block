@@ -15,8 +15,9 @@
  * keys on, and it emits the classic-side switcher + deprecation bar additively
  * (no edits to the frozen admin file for that part).
  *
- * Requires WordPress 5.0+ (wp-element / React). On older WP the resolver always
- * returns 'classic' so the classic admin remains the only interface.
+ * Requires WordPress 6.6+ because the generated asset manifest depends on
+ * Core's react-jsx-runtime handle. On older WP the resolver always returns
+ * 'classic' so the classic admin remains the only interface.
  *
  * The legacy class name IP_Location_Block_Beta is kept working via class_alias
  * in compat/legacy-aliases.php. Unlike the frozen classic admin, this class is
@@ -85,10 +86,11 @@ final class ReactAdmin {
 	}
 
 	/**
-	 * The React UI needs the wp-element (React) runtime shipped since WP 5.0.
+	 * The generated React bundle needs Core's react-jsx-runtime handle, which is
+	 * available from WordPress 6.6 onward. Earlier versions use Classic view.
 	 */
 	public static function is_supported(): bool {
-		return version_compare( get_bloginfo( 'version' ), '5.0', '>=' );
+		return version_compare( get_bloginfo( 'version' ), '6.6', '>=' );
 	}
 
 	/* ---------------------------------------------------------------------

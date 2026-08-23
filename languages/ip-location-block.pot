@@ -1789,7 +1789,7 @@ msgid ""
 msgstr ""
 
 #: admin/class-ip-location-block-admin.php:613
-msgid "You need WordPress 3.7+."
+msgid "You need WordPress 5.9+."
 msgstr ""
 
 #: classes/class-ip-location-block-file.php:70

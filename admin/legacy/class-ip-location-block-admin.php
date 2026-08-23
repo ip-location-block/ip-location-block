@@ -176,7 +176,23 @@ class IP_Location_Block_Admin {
 		} elseif ( isset( $quota['name'] ) && $quota['name'] !== 'requires-api-key-upgrade' ) {
 			// API key is valid and doesn't need upgrade, mark as completed so we don't check again
 			$settings['api_key_upgraded'] = true;
-			IP_Location_Block::update_option( $settings );
+
+			// This is an internal state update while the classic settings screen is
+			// rendering, not an options.php form submission. register_setting() has
+			// attached validate_settings() to sanitize_option_*; leaving it attached
+			// here both demands the unrelated form nonce and applies the classic
+			// presence-based provider sanitizer to a complete settings object (which
+			// can erase an explicit empty value that disables an implicit provider).
+			$filter   = 'sanitize_option_' . IP_Location_Block::OPTION_NAME;
+			$callback = array( $this, 'validate_settings' );
+			$removed  = remove_filter( $filter, $callback, 10 );
+			try {
+				IP_Location_Block::update_option( $settings );
+			} finally {
+				if ( $removed ) {
+					add_filter( $filter, $callback, 10, 1 );
+				}
+			}
 		}
 	}
 
@@ -739,8 +755,8 @@ class IP_Location_Block_Admin {
 		$network  = $this->dashboard_url( $settings['network_wide'] );
 
 		// Check version and compatibility
-		if ( version_compare( get_bloginfo( 'version' ), '3.7.0' ) < 0 ) {
-			self::add_admin_notice( 'error', __( 'You need WordPress 3.7+.', 'ip-location-block' ) );
+		if ( version_compare( get_bloginfo( 'version' ), '5.9' ) < 0 ) {
+			self::add_admin_notice( 'error', __( 'You need WordPress 5.9+.', 'ip-location-block' ) );
 		}
 
 		// Check providers

@@ -1,7 +1,7 @@
 === IP Location Block ===
 Contributors: darkog
 Tags: country, block, ip address, ip geo block, geolocation
-Requires at least: 3.7
+Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
 Stable tag: 1.4.0
@@ -272,6 +272,8 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 
 *Release Date - 19 Jul 2026*
 
+* Compatibility: WordPress 5.9 through 6.5 use the Classic interface; the redesigned interface requires WordPress 6.6 because its generated bundle depends on Core's `react-jsx-runtime` handle. This prevents a blank settings page on WordPress 6.5 and earlier.
+* Fix: Switching to the Classic interface no longer fails with "The link you followed has expired" when the legacy API-key notice records its completed state. That internal update also preserves explicit provider-disable values.
 * Fix: "Add a precise rule" in the Simple blocking view now works; blank, in-progress rule rows are no longer discarded before you can fill them in, and clearing a rule's name no longer deletes the row.
 * Fix: IP-address cache rows created before a city/state rule existed are refreshed by a live lookup instead of replaying empty city/state forever; saving a change to any precision rule also clears the IP cache.
 * New: A redesigned bot-rule builder for the *User-Agent (bot) rules* (Bot protection). One-click purpose presets compiled from a bundled catalog of ~36 known crawlers &mdash; allow verified search engines & feeds, allow social / link-preview bots, block AI-training crawlers (GPTBot, ClaudeBot, CCBot, Bytespider, Meta AI), block aggressive SEO scrapers, plus opt-in toggles to block AI agents or allow AI-search crawlers &mdash; alongside a per-rule editor, a "Test a User-Agent" checker, a "scan recent logs for bots" helper, and a raw-list mode. The rule grammar (`:` allow / `#` block, `HOST`/`FEED`/country/ASN/IP/`REF=` qualifiers, `!` negation) is now documented in the FAQ.
@@ -282,6 +284,7 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 * New: Rewritten plugin internals on a modern PSR-4/Composer architecture with scoped ("prefixed") third-party dependencies, so bundled libraries no longer collide with copies shipped by other plugins.
 * Removed: WP-ZEP (Zero-day Exploit Prevention), as announced in 1.3.8. Its nonce-based request tracing is gone; the admin/ajax/plugins/themes targets now use country blocking only, and any WP-ZEP bits left in stored settings are cleaned up automatically on upgrade.
 * Change: Minimum required PHP version raised to 8.1.
+* Change: Minimum required WordPress version raised to the tested WordPress 5.9 compatibility floor for the required PHP 8.1 runtime.
 * Change: The geolocation provider registry is now sealed. External/third-party geolocation providers are no longer supported: `IP_Location_Block_Provider::register_addon()` is now a deprecated no-op and the uploads `apis/` directory is no longer scanned for add-on providers.
 * New: `ip-location-block-deprecated` action fires whenever a deprecated integration point is used, so integrators can detect and update legacy code.
 * Compat: Legacy global class names remain available as aliases throughout the 1.x release series.
