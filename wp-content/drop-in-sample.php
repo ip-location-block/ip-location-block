@@ -2,7 +2,16 @@
 /**
  * Drop-in for IP Location Block custom filters
  *
- * This file should be renamed to `drop-in.php`.
+ * This file should be renamed to `drop-in.php` and placed in
+ * `wp-content/uploads/ip-location-block/dropins/`.
+ *
+ * Since 1.4.0 the plugin internals are namespaced (IPLocationBlock\), but the
+ * `IP_Location_Block` class used below IS the supported public API and is
+ * guaranteed through all 1.x releases. Note: registering custom geolocation
+ * providers (IP_Location_Block_Provider::register_addon) is no longer
+ * supported as of 1.4.0; hook usage like the examples below is unaffected.
+ * Integrators can hook the `ip-location-block-deprecated` action to audit
+ * deprecated API usage.
  *
  * @package   IP_Location_Block
  * @author    darkog <dg@darkog.com>

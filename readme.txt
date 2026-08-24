@@ -1,32 +1,33 @@
 === IP Location Block ===
 Contributors: darkog
-Tags: country, block, ip address, ip geo block, geolocation
-Requires at least: 3.7
-Tested up to: 7.0
-Stable tag: 1.3.9
+Tags: country block, state block, region block, geolocation, ip blocker
+Requires at least: 6.5
+Tested up to: 7.1
+Requires PHP: 8.1
+Stable tag: 1.4.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
-Easily block visitors by country, state or ISP provider. Also, protects your site from spam, login attempts, malicious access & more.
+Block visitors by country, state, or region. Add regional precision, bot controls, login protection, and request logs.
 
 == Description ==
 
-IP Location Block plugin that allows you to block access to your site based on the visitor location while also keeping your site safe from malicious attacks. The plugin brings a smart and powerful protection methods such as "**WP Metadata Exploit Protection**".
+IP Location Block lets you block or allow visitors by country, IP address, CIDR range, or ASN. Connect the IP Location Block provider to add state or region precision using the administrative area returned for each country.
 
-Combined with those methods and IP address geolocation, you'll be surprised to find a bunch of malicious or undesirable access blocked in the logs of this plugin after several days of installation.
+Simple view covers the common setup in a few controls. Advanced view adds login protection, bot rules, validation targets, privacy controls, request logs, statistics, provider fallbacks, and diagnostics.
 
-**Note:** This plugin is based on the now abandoned "IP Geo Block" plugin by tokkonopapa. I fixed various issues and improved the overall codebase.
+**Note:** This plugin is based on the abandoned "IP Geo Block" plugin by tokkonopapa and is now independently maintained.
 
 = Features =
 
-* **Native Geo-Location Provider**
-  IP Location Block provides [Native Geo-Location Provider](https://iplocationblock.com/codex/native-geo-location-provider/?utm_source=plugin&utm_medium=wporgpage&utm_campaign=readme) that is faster, more secure and provides the needed **precision** for matching **CITY** and **STATE** besides the standard COUNTRY matching.
+* **State or region precision:**
+  The [IP Location Block provider](https://iplocationblock.com/docs/providers/ip-location-block/?utm_source=plugin&utm_medium=wporgpage&utm_campaign=readme) provides managed geolocation data with **state or region precision**, IPv6, and ASN support in addition to standard country matching.
 
 * **Privacy by design:**
-  IP address is always encrypted on recording in logs/cache. Moreover, it can be anonymized and restricted on sending to the 3rd parties such as geolocation APIs or whois service.
+  IP address is always encrypted on recording in logs/cache. Moreover, it can be anonymized.
 
-* **Immigration control:**
-  Access to the basic and important entrances into back-end such as `wp-comments-post.php`, `xmlrpc.php`, `wp-login.php`, `wp-signup.php`, `wp-admin/admin.php`, `wp-admin/admin-ajax.php`, `wp-admin/admin-post.php` will be validated by means of a country code based on IP address. It allows you to configure either whitelist or blacklist to [specify the countires](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements "ISO 3166-1 alpha-2 - Wikipedia"), [CIDR notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing "Classless Inter-Domain Routing - Wikipedia") for a range of IP addresses and [AS number](https://en.wikipedia.org/wiki/Autonomous_system_(Internet) "Autonomous system (Internet) - Wikipedia") for a group of IP networks.
+* **Location rules:**
+  Validate public pages, comments, XML-RPC, login, registration, and selected administrative endpoints. Configure a blocklist or allowlist using [country codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements "ISO 3166-1 alpha-2 - Wikipedia"), [CIDR notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing "Classless Inter-Domain Routing - Wikipedia"), and [AS numbers](https://en.wikipedia.org/wiki/Autonomous_system_(Internet) "Autonomous system - Wikipedia").
 
 * **Guard against login attempts:**
   In order to prevent hacking through the login form and XML-RPC by brute-force and the reverse-brute-force attacks, the number of login attempts will be limited per IP address even from the permitted countries.
@@ -46,9 +47,8 @@ Combined with those methods and IP address geolocation, you'll be surprised to f
 * **Referrer suppressor for external links:**
   When you click an external hyperlink on admin screens, http referrer will be eliminated to hide a footprint of your site.
 
-* **Multiple source of IP Geolocation databases:**
-  Besides the [Native Geo-Location provider](https://iplocationblock.com/codex/native-geo-location-provider/?utm_source=plugin&utm_medium=wporgpage&utm_campaign=readme), this plugin supports [MaxMind GeoLite2 free databases](https://www.maxmind.com "MaxMind - IP Geolocation and Online Fraud Prevention") and [IP2Location LITE databases](https://www.ip2location.com/ "IP Address Geolocation to Identify Website Visitor's Geographical Location"). Also free Geolocation REST APIs and whois information can be available for audit purposes.
-  Father more, [dedicated API class libraries](https://iplocationblock.com/cloudflare-cloudfront-api-class-library/ "CloudFlare & CloudFront API class library | IP Location Block") can be installed for CloudFlare and CloudFront as a reverse proxy service.
+* **Multiple geolocation providers:**
+  Besides the [IP Location Block provider](https://iplocationblock.com/docs/providers/ip-location-block/?utm_source=plugin&utm_medium=wporgpage&utm_campaign=readme), the plugin supports [MaxMind GeoLite2](https://www.maxmind.com "MaxMind - IP Geolocation and Online Fraud Prevention"), [IP2Location LITE](https://www.ip2location.com/ "IP Address Geolocation to Identify Website Visitor's Geographical Location"), and selected remote APIs. Country blocking remains available when regional precision is unsupported.
 
 * **Customizing response:**
   HTTP response code can be selectable as `403 Forbidden` to deny access pages, `404 Not Found` to hide pages or even `200 OK` to redirect to the top page.
@@ -60,12 +60,14 @@ Combined with those methods and IP address geolocation, you'll be surprised to f
 * **Cooperation with full spec security plugin:**
   This plugin is lite enough to be able to cooperate with other full spec security plugin such as [Wordfence Security](https://wordpress.org/plugins/wordfence/ "Wordfence Security &mdash; WordPress Plugins"). See [this report](https://iplocationblock.com/codex/page-speed-performance/ "Page speed performance | IP Location Block") about page speed performance.
 
-* **Extendability:**
-  You can customize the behavior of this plugin via `add_filter()` with [pre-defined filter hook](https://iplocationblock.com/codex/ "Codex | IP Location Block"). See various use cases in [samples.php](https://iplocationblock.com/codex/example-use-cases-for-the-developer-hooks/) bundled within this package.
-  You can also get the extension [IP Geo Allow](https://github.com/ddur/WordPress-IP-Geo-Allow "GitHub - ddur/WordPress-IP-Geo-Allow: WordPress Plugin Exension for WordPress-IP-Geo-Block Plugin") by [Dragan](https://github.com/ddur "ddur (Dragan) - GitHub"). It makes admin screens strictly private with more flexible way than specifying IP addresses.
+* **Extension hooks:**
+  Existing public validation filters remain available for integrations and custom blocking behavior. See the [documentation](https://iplocationblock.com/docs/) for current setup guidance and the Legacy Codex for historical developer examples.
+
+* **Deprecations (1.4.0):**
+  Registration of external/third-party geolocation providers has been removed: `IP_Location_Block_Provider::register_addon()` is now a deprecated no-op and the uploads `apis/` directory is no longer scanned for add-on providers. The `ip-location-block-api-dir` filter has been removed. A new `ip-location-block-deprecated` action fires whenever a deprecated integration point is used, so integrators can detect and update legacy code. Legacy global class names (`IP_Location_Block`, `IP_Location_Block_Provider`, `IP_Location_Block_API`, etc.) are guaranteed to remain available as aliases throughout the 1.x release series.
 
 * **Self blocking prevention and easy rescue:**
-  Website owners do not prefer themselves to be blocked. This plugin prevents such a sad thing unless you force it. And futhermore, if such a situation occurs, you can [rescue yourself](https://iplocationblock.com/codex/what-should-i-do-when-im-locked-out/ "What should I do when I'm locked out? | IP Location Block") easily.
+  Website owners do not prefer themselves to be blocked. This plugin prevents such a sad thing unless you force it. If such a situation occurs, follow the [troubleshooting guide](https://iplocationblock.com/docs/troubleshooting/) and use the private emergency access link.
 
 * **Clean uninstallation:**
   Nothing is left in your precious mySQL database after uninstallation. So you can feel free to install and activate to make a trial of this plugin's functionality.
@@ -73,7 +75,7 @@ Combined with those methods and IP address geolocation, you'll be surprised to f
 
 = Documentation =
 
-Documentation and more information can always be found on our [plugin website](https://iplocationblock.com/ "IP Location Block").
+Current setup guides are available in the [IP Location Block documentation](https://iplocationblock.com/docs/ "IP Location Block documentation").
 
 = Attribution =
 
@@ -89,7 +91,7 @@ Also thanks for providing the following services and REST APIs for free.
 
 = Development =
 
-Development of this plugin happens at [IP Location Block - GitHub](https://github.com/gdarko/ip-location-block "gdarko/ip-location-block - GitHub")
+Development of this plugin happens at [IP Location Block on GitHub](https://github.com/ip-location-block/ip-location-block "IP Location Block - GitHub").
 
 All contributions will always be welcome.
 
@@ -97,14 +99,15 @@ All contributions will always be welcome.
 
 = Using The WordPress Dashboard =
 
-1. Navigate to the 'Add New' in the plugins dashboard
-2. Search for 'IP Location Block'
-3. Click 'Install Now'
-4. Activate the plugin on the Plugin dashboard
-5. Stay cool for a while and go to 'Settings' &raquo; 'IP Location Block'
-6. Try 'Best for Back-end' button for easy setup at the bottom of this plugin's setting page.
+1. In WordPress, open **Plugins > Add New Plugin**.
+2. Search for **IP Location Block**, then select **Install Now**.
+3. Activate the plugin and open **Settings > IP Location Block**.
+4. Use **Simple** view to choose whether to block or allow selected locations and where protection should apply.
+5. Connect a geolocation provider. Country rules work with the bundled local provider; connect the IP Location Block provider for managed data, improved accuracy, and state or region precision.
+6. Use **Search** to verify a representative IP address, then save your changes.
+7. Switch to **Advanced** view when you need login protection, bot rules, individual validation targets, provider fallbacks, privacy controls, or other detailed settings.
 
-Please refer to [the document](https://iplocationblock.com/codex/ "Codex | IP Location Block") for your best setup.
+Follow the current [getting started guide](https://iplocationblock.com/docs/getting-started/ "IP Location Block documentation") for the recommended setup.
 
 == Frequently Asked Questions ==
 
@@ -122,15 +125,35 @@ Yes, if "IP Geo Block" settings are detected, you will see migrate option in the
 
 Yes. You can synchronize the settings with all the sites on the network when you activate on network and enable "**Network wide settings**" in "**Plugin settings**" section.
 
-= Does this plugin allows blocking US States, Country Regions or Cities?
+= Does this plugin allow blocking US states or equivalent country regions?
 
-Yes. Please view [City/State Level Matching](https://iplocationblock.com/codex/city-state-level-matching/) for more details.
+Yes. The IP Location Block provider supports rules for the administrative area returned in each country, such as a state, province, prefecture, territory, or region.
+
+Create the country rule first, then add a row under **Regional rules** in Simple view. Choose the country and select the exact administrative-area name returned by the provider. Use the **Search** tab to verify the spelling for a representative IP address.
+
+Country blocking remains active when another provider is selected. If that provider does not support regional precision, the saved regional controls are unavailable and a warning explains the limitation.
+
+See [State or region rules](https://iplocationblock.com/docs/blocking-rules/state-region/) for the current interface and behavior.
+
+= How do the bot / User-Agent rules work? =
+
+Under **Bot protection**, the *User-Agent (bot) rules* let you allow or block requests by their User-Agent string. The redesigned interface gives you one-click presets (allow verified search engines & feeds, allow social / link-preview bots, block AI-training crawlers, block aggressive SEO scrapers, and opt-in toggles to block AI agents or allow AI-search crawlers), a per-rule editor, a "Test a User-Agent" box, and a raw-list mode for hand-tuning. The rules are stored as a flat list you can also edit directly:
+
+* Entries are separated by a comma or a newline (they are equivalent). Each entry is `UA<sep>qualifier`.
+* The separator sets the action: `:` **allows** (passes) the request, `#` **blocks** it. An entry that contains a `#` anywhere is a block.
+* `UA` is matched as a **case-sensitive substring** of the request's User-Agent header, so `Googlebot` also matches `Googlebot-Image`. Use `*` to match any User-Agent.
+* The `qualifier` is one of: `*` (any country), a 2-letter **country code** (e.g. `US`), `HOST` or `HOST=name` (**verified reverse DNS**), `FEED` (a feed request), `AS12345` (an **ASN**), `REF=text` (the referer contains *text*), or an **IP address / CIDR**.
+* A leading `!` **negates** the qualifier, e.g. `GPTBot#!US` blocks GPTBot everywhere except the US.
+
+Examples: `GPTBot#*` blocks any request whose UA contains `GPTBot`; `Googlebot:HOST` allows Googlebot **only** after verifying its reverse DNS; `*:FEED` allows any feed request; `Twitterbot:*` allows Twitter's card fetcher from any country.
+
+**Important:** an **allow-rule with `HOST` only verifies when "Reverse DNS lookup" is turned on.** With it off (the default), `HOST` is treated as "any", so a `Name:HOST` allow-rule passes *any* request whose User-Agent contains *Name*, from any country &mdash; a spoofed User-Agent can bypass country blocking. **Block**-rules (`#`) need no verification and are unaffected. New installs ship a modern default (verified search engines, feeds, social previews allowed; AI-training and aggressive SEO crawlers blocked); existing sites keep their rules and are offered a one-click update.
 
 = Does this plugin works well with caching? =
 
 The short answer is **YES**, especially for the purpose of security e.g. blocking malicious access both on the back-end and on the front-end.
 
-You can find the long answer and the compatibility list of cache plugins at "[Compatibility with cache plugins](https://iplocationblock.com/codex/compatibility-with-cache-plugins/ 'Compatibility with cache plugins | IP Location Block')".
+Use [location blocking with page cache](https://iplocationblock.com/docs/blocking-rules/page-cache/) and consult the Legacy Codex compatibility notes for provider-specific details.
 
 = I still have access from blacklisted country. Does it work correctly? =
 
@@ -154,7 +177,7 @@ See more details at "[How to test prevention of attacks](https://iplocationblock
 
 = I'm locked out! What shall I do? =
 
-Please find the solution in [Quick recovery from blocking on your login page](https://iplocationblock.com/codex/quick-recovery-from-blocking-on-login-page/ "Quick recovery from blocking on your login page | IP Location Block") at first.
+Start with the [admin access troubleshooting steps](https://iplocationblock.com/docs/troubleshooting/#admin-access-problem) and use the private emergency access link configured in Diagnostics.
 
 You can also find another solution by editing "**Emergent Functionality**" code section near the bottom of `ip-location-block.php`. This code block can be activated by replacing `/*` (opening multi-line comment) at the top of the line to `//` (single line comment), or `*` at the end of the line to `*/` (closing multi-line comment).
 
@@ -178,7 +201,7 @@ After saving and uploading it to `/wp-content/plugins/ip-location-block/` on you
 
 Remember that you should upload the original one after re-configuration to deactivate this feature.
 
-[This document](https://iplocationblock.com/codex/what-should-i-do-when-im-locked-out/ "What should I do when I'm locked out? | IP Location Block") can also help you.
+The [troubleshooting guide](https://iplocationblock.com/docs/troubleshooting/) also covers provider, cache, and rule problems.
 
 = Do I have to turn on all the selection to enhance security? =
 
@@ -193,7 +216,7 @@ Yes. Roughly speaking, the strategy of this plugin has been constructed as follo
 - **Bad signatures in query**
   It blocks the request which has not been covered in the above three.
 
-Please try "**Best for Back-end**" button at the bottom of this plugin's setting page for easy setup. And also see more details in "[The best practice of target settings](https://iplocationblock.com/codex/the-best-practice-for-target-settings/ 'The best practice of target settings | IP Location Block')".
+Use Simple view for the common public-site and admin-side targets. See [Protect wp-admin and login](https://iplocationblock.com/docs/blocking-rules/protect-admin-login/) before applying a location rule to admin access.
 
 = Does this plugin validate all the requests? =
 
@@ -203,7 +226,7 @@ But there's exceptions: When you enable "**Force to load WP core**" for **Plugin
 
 = How to resolve "Sorry, your request cannot be accepted."? =
 
-If you encounter this message, please refer to [this document](https://iplocationblock.com/codex/why-sorry-your-request-cannot-be-accepted/ "Why &ldquo;Sorry, your request cannot be accepted&rdquo; ? | IP Location Block") to resolve your blocking issue.
+If you encounter this message, review [Choose the blocked response](https://iplocationblock.com/docs/blocking-rules/blocked-response/) and the [troubleshooting guide](https://iplocationblock.com/docs/troubleshooting/).
 
 If you can't solve your issue, please let me know about it on the [support forum](https://wordpress.org/support/plugin/ip-location-block/ "View: Plugin Support &laquo;  WordPress.org Forums"). Your logs in this plugin and "**Installation information**" at "**Plugin settings**" will be a great help to resolve the issue.
 
@@ -228,19 +251,31 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 
 == Screenshots ==
 
-1. **IP Location Plugin** - Settings tab
-2. **IP Location Plugin** - Validation rules and behavior
-3. **IP Location Plugin** - Back-end target settings
-4. **IP Location Plugin** - Front-end target settings
-5. **IP Location Plugin** - Geolocation API settings
-6. **IP Location Plugin** - IP address cache settings
-7. **IP Location Plugin** - Statistics tab
-8. **IP Location Plugin** - Logs tab
-9. **IP Location Plugin** - Search tab
-10. **IP Location Plugin** - Attribution tab
-11. **IP Location Plugin** - Multisite list on network
+1. Country blocking includes a searchable picker with country and European Union shortcuts.
+2. Block selected United States states or regions alongside country rules.
+3. Provider management shows precision, IPv6, ASN, quota, and connection status at a glance.
+4. Bot protection includes curated presets plus full control over individual crawler rules.
+5. Advanced settings expose every validation target and security control when needed.
+6. Statistics summarize blocked requests, countries, IP versions, and provider performance.
+7. Validation logs make blocked and allowed requests easy to filter, inspect, and export.
+8. Search IP Location Block to preview country, state or region, ASN, and map results.
+9. Diagnostics checks configuration, provider health, compatibility, and emergency access.
 
 == Changelog ==
+
+= 1.4.0 =
+
+*Release Date - 24 Aug 2026*
+
+* New: A redesigned admin with Simple and Advanced views, clearer provider setup, improved statistics, logs and search, and built-in diagnostics. The Classic interface remains available.
+* Improvement: A redesigned welcome panel now presents free and Native Mode setup paths, including premium-data accuracy and regional precision, with a site-wide dismissal that stays closed for the current campaign.
+* New: State or region blocking through the IP Location Block provider, with searchable regional rules, an EU country shortcut, a working `Region` alias, and `~` alternatives.
+* Improvement: The IP Location Block provider is prioritized for regional rules, while other selected providers remain available as country-level fallbacks. Provider limits and unsupported precision are now explained clearly.
+* New: A modern bot-rule builder with presets for verified search engines, social previews, AI crawlers, and aggressive SEO bots. Existing custom rules are preserved.
+* Change: Rebuilt the plugin internals with PSR-4 and scoped Composer dependencies to prevent library conflicts.
+* Compatibility: Requires PHP 8.1 and WordPress 6.5 or newer. WordPress 6.5 uses the Classic interface; the redesigned admin requires WordPress 6.6 or newer.
+* Removed: WP-ZEP, the `restrict_api` setting, and custom geolocation provider add-on registration. Legacy global classes remain available throughout the 1.x series.
+* Fixes: Improved precision-rule editing and cache refreshes, provider switching, local database updates, filesystem warnings, uninstall behavior, and Classic-view switching.
 
 = 1.3.9 =
 
@@ -442,4 +477,6 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 
 == Upgrade Notice ==
 
-As of version 1.2.0, the plugin supports <a href="https://iplocationblock.com/codex/city-state-level-matching/">City/State Level Matching</a>.
+= 1.4.0 =
+
+Requires WordPress 6.5 or newer and PHP 8.1 or newer. This release introduces Simple and Advanced views and removes third-party geolocation provider add-on registration. Existing settings and legacy global classes remain compatible throughout the 1.x series.

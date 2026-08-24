@@ -1,0 +1,109 @@
+/**
+ * Shared, dependency-free styles for the admin view switcher and the classic
+ * deprecation bar. Enqueued on BOTH views (React and classic) so the floating
+ * switcher looks identical whichever interface renders it. Self-contained: it
+ * must not rely on the React app's design tokens (absent on the classic view).
+ */
+
+/* Floating edge switcher — pinned to the right edge of the window. */
+.ilb-view-switcher {
+	position: fixed;
+	top: 130px;
+	right: 0;
+	z-index: 99998;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	box-sizing: border-box;
+	height: 40px;
+	padding: 0 14px 0 12px;
+	background: #1d2327;
+	color: #fff;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1;
+	text-decoration: none;
+	border: 0;
+	border-radius: 6px 0 0 6px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+	cursor: pointer;
+	transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ilb-view-switcher:hover,
+.ilb-view-switcher:focus {
+	background: #008a73;
+	color: #fff;
+	transform: translateX(-2px);
+	box-shadow: 0 3px 14px rgba(0, 0, 0, 0.28);
+	outline: none;
+}
+
+.ilb-view-switcher:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: -3px;
+}
+
+.ilb-view-switcher .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+	line-height: 18px;
+	flex: none;
+}
+
+.ilb-view-switcher__label {
+	white-space: nowrap;
+}
+
+/* Slim deprecation bar above the classic content. */
+.ilb-deprecation-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	box-sizing: border-box;
+	margin: 12px 20px 0 2px;
+	padding: 9px 14px;
+	background: #fcf9e8;
+	border: 1px solid #f0e6b8;
+	border-left: 4px solid #dba617;
+	border-radius: 4px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #1d2327;
+}
+
+.ilb-deprecation-bar .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+	line-height: 18px;
+	color: #996800;
+	flex: none;
+}
+
+.ilb-deprecation-bar__text {
+	flex: 1 1 auto;
+}
+
+.ilb-deprecation-bar__link {
+	flex: none;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.ilb-deprecation-bar__link:hover,
+.ilb-deprecation-bar__link:focus {
+	text-decoration: underline;
+}
+
+@media (max-width: 782px) {
+	.ilb-view-switcher {
+		top: auto;
+		bottom: 20px;
+	}
+
+	.ilb-view-switcher__label {
+		display: none;
+	}
+}

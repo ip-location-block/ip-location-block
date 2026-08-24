@@ -1,6 +1,0 @@
-{
-    "require": {
-        "ip2location/ip2location-php": "8.3.0",
-        "phpseclib/bcmath_compat": "^2.0"
-    }
-}

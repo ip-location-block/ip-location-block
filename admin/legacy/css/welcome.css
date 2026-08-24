@@ -1,0 +1,297 @@
+/**
+ * IP Location Block welcome and onboarding notice.
+ */
+
+.ip-location-block-notice-intro.notice {
+	position: relative;
+	overflow: hidden;
+	padding: 0 !important;
+	border-left-color: #3f8f7d;
+}
+
+.ip-location-block-notice-intro .notice-dismiss {
+	top: 10px;
+	right: 10px;
+}
+
+.ilb-welcome {
+	box-sizing: border-box;
+	max-width: 980px;
+	padding: 16px 48px 15px 20px;
+	color: #1d2327;
+}
+
+.ilb-welcome__hero {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.ilb-welcome__logo {
+	width: 44px;
+	height: 44px;
+	flex: none;
+}
+
+.ilb-welcome__intro {
+	min-width: 0;
+}
+
+.ilb-welcome__title {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0 0 3px;
+	padding: 0;
+	font-size: 16px;
+	font-weight: 600;
+	line-height: 1.35;
+	color: #1d2327;
+}
+
+.ilb-welcome__version {
+	font-size: 12px;
+	font-weight: 400;
+	color: #646970;
+}
+
+.ilb-welcome__desc {
+	margin: 0;
+	max-width: 800px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #50575e;
+}
+
+.ilb-welcome__choices {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 410px));
+	gap: 12px;
+	margin-top: 14px;
+}
+
+.ilb-welcome__choice {
+	display: flex;
+	min-width: 0;
+	min-height: 166px;
+	box-sizing: border-box;
+	flex-direction: column;
+	padding: 13px 15px 14px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+}
+
+.ilb-welcome__choice--recommended {
+	border-color: #b8d5f5;
+	background: #f3f8fe;
+}
+
+.ilb-welcome__choice-heading {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	min-height: 24px;
+}
+
+.ilb-welcome__choice-heading > .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+	line-height: 18px;
+	color: #3f8f7d;
+}
+
+.ilb-welcome__choice-heading h3 {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.35;
+	color: #1d2327;
+}
+
+.ilb-welcome__badge {
+	margin-left: auto;
+	padding: 2px 7px;
+	border: 1px solid #b8d5f5;
+	border-radius: 999px;
+	background: #fff;
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 1.5;
+	color: #315f9d;
+}
+
+.ilb-welcome__benefits {
+	display: grid;
+	gap: 5px;
+	margin: 9px 0 12px;
+	padding: 0;
+	list-style: none;
+	font-size: 12px;
+	line-height: 1.4;
+	color: #50575e;
+}
+
+.ilb-welcome__benefits li {
+	position: relative;
+	margin: 0;
+	padding-left: 17px;
+}
+
+.ilb-welcome__benefits li::before {
+	position: absolute;
+	top: 0;
+	left: 0;
+	content: "\2713";
+	font-weight: 700;
+	color: #3f8f7d;
+}
+
+.ilb-welcome__choice-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: auto;
+}
+
+.ilb-welcome__choice-actions .button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 36px;
+}
+
+.ilb-welcome__choice-actions .dashicons-external {
+	width: 14px;
+	height: 14px;
+	margin-left: 5px;
+	font-size: 14px;
+	line-height: 14px;
+}
+
+.ilb-welcome__choice-actions > a:not(.button) {
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.ilb-welcome__lower {
+	max-width: 832px;
+	margin-top: 14px;
+	padding-top: 12px;
+	border-top: 1px solid #dcdcde;
+}
+
+.ilb-welcome__steps {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 7px;
+}
+
+.ilb-welcome__steps-label {
+	margin-right: 2px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #50575e;
+}
+
+.ilb-welcome__steps a {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 30px;
+	box-sizing: border-box;
+	padding: 3px 9px 3px 5px;
+	border: 1px solid #dcdcde;
+	border-radius: 999px;
+	background: #fff;
+	font-size: 12px;
+	font-weight: 500;
+	text-decoration: none;
+}
+
+.ilb-welcome__steps a:hover,
+.ilb-welcome__steps a:focus {
+	border-color: #8c8f94;
+}
+
+.ilb-welcome__steps a > span {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: #edf4fc;
+	font-size: 11px;
+	color: #315f9d;
+}
+
+.ilb-welcome__step-arrow {
+	color: #8c8f94;
+}
+
+.ilb-welcome__links {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 5px 14px;
+	margin-top: 10px;
+	font-size: 12px;
+}
+
+.ilb-welcome__rate {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.ilb-welcome__rate span {
+	color: #996800;
+}
+
+@media (max-width: 782px) {
+	.ilb-welcome {
+		padding-left: 16px;
+	}
+
+	.ilb-welcome__choices {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 680px) {
+	.ilb-welcome__choices {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.ilb-welcome__choice {
+		min-height: 0;
+	}
+
+	.ilb-welcome__step-arrow {
+		display: none;
+	}
+}
+
+@media (max-width: 480px) {
+	.ilb-welcome {
+		padding: 14px 42px 14px 12px;
+	}
+
+	.ilb-welcome__hero {
+		align-items: flex-start;
+	}
+
+	.ilb-welcome__choice-actions {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.ilb-welcome__choice-actions .button {
+		width: 100%;
+	}
+}

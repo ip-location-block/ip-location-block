@@ -12,12 +12,12 @@
 // If uninstall not called from WordPress, then exit
 defined( 'WP_UNINSTALL_PLUGIN' ) or die;
 
-define( 'IP_LOCATION_BLOCK_PATH', plugin_dir_path( __FILE__ ) ); // @since  0.2.8
-
-require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block.php';
-require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-util.php';
-require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-opts.php';
-require IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-logs.php';
+// Boot the backward-compatibility layer: defines the three plugin constants
+// (notably IP_LOCATION_BLOCK_VERSION — the main file never runs during
+// uninstall, and Opts::$option_table references it: this fixes the historic
+// fatal when the settings row was already deleted), loads the autoloaders and
+// registers the legacy class aliases.
+require __DIR__ . '/compat/bootstrap.php';
 
 class IP_Location_Block_Uninstall {
 

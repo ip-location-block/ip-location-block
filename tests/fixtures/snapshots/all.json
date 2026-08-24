@@ -1,0 +1,127 @@
+{
+    "IP Location Block": {
+        "key": "",
+        "type": "IPv4, IPv6 / free for non-commercial use",
+        "link": "https://iplocationblock.com/pricing",
+        "supports": [
+            "ipv4",
+            "ipv6",
+            "asn",
+            "city",
+            "state"
+        ],
+        "requests": {
+            "total": 15000,
+            "term": "month"
+        },
+        "api_auth": 1,
+        "local": false
+    },
+    "IPInfoDB": {
+        "key": "",
+        "type": "IPv4, IPv6 / free",
+        "link": "https://ipinfodb.com/",
+        "supports": [
+            "ipv4",
+            "ipv6"
+        ],
+        "limits": [
+            "Up to 2 requests / second"
+        ],
+        "requests": {
+            "total": -1,
+            "term": "month"
+        },
+        "api_auth": 2,
+        "local": false
+    },
+    "ipinfo.io": {
+        "key": "",
+        "type": "IPv4, IPv6 / free for non-commercial use",
+        "link": "https://ipinfo.io/pricing",
+        "supports": [
+            "ipv4",
+            "ipv6"
+        ],
+        "requests": {
+            "total": 50000,
+            "term": "month"
+        },
+        "api_auth": 2,
+        "local": false
+    },
+    "ipapi": {
+        "key": "",
+        "type": "IPv4, IPv6 / free for non-commercial use",
+        "link": "https://ipapi.com/",
+        "supports": [
+            "ipv4",
+            "ipv6"
+        ],
+        "requests": {
+            "total": 1000,
+            "term": "month"
+        },
+        "api_auth": 2,
+        "local": false
+    },
+    "ipstack": {
+        "key": "",
+        "type": "IPv4, IPv6 / free for non-commercial use",
+        "link": "https://ipstack.com/",
+        "supports": [
+            "ipv4",
+            "ipv6"
+        ],
+        "requests": {
+            "total": 100,
+            "term": "month"
+        },
+        "api_auth": 2,
+        "local": false
+    },
+    "Cache": {
+        "key": null,
+        "type": "IPv4, IPv6",
+        "link": null,
+        "supports": []
+    },
+    "IP2Location": {
+        "key": null,
+        "type": "IPv4, IPv6 / LGPLv3",
+        "link": "https://lite.ip2location.com/",
+        "supports": [
+            "ipv4",
+            "ipv6"
+        ],
+        "limits": [
+            "System memory"
+        ],
+        "requests": {
+            "total": -1,
+            "term": ""
+        },
+        "api_auth": 3,
+        "local": true
+    },
+    "GeoLite2": {
+        "key": "",
+        "type": "IPv4, IPv6 / Apache License, Version 2.0",
+        "link": "https://dev.maxmind.com/geoip/geolite2-free-geolocation-data",
+        "supports": [
+            "ipv4",
+            "ipv6",
+            "asn",
+            "asn_database"
+        ],
+        "limits": [
+            "System memory"
+        ],
+        "requests": {
+            "total": -1,
+            "term": ""
+        },
+        "api_auth": 2,
+        "local": true
+    }
+}

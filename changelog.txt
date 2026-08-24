@@ -1,3 +1,19 @@
+= 1.4.0 =
+
+*Release Date - 24 Aug 2026*
+
+* New: A redesigned admin with Simple and Advanced views, clearer provider setup, improved statistics, logs and search, and built-in diagnostics. The Classic interface remains available.
+* Improvement: A redesigned welcome panel now presents free and Native Mode setup paths, including premium-data accuracy and regional precision, with a site-wide dismissal that stays closed for the current campaign.
+* New: State or region blocking through the IP Location Block provider, with searchable regional rules, an EU country shortcut, a working `Region` alias, and `~` alternatives.
+* Improvement: The IP Location Block provider is prioritized for regional rules, while other selected providers remain available as country-level fallbacks. Provider limits and unsupported precision are now explained clearly.
+* New: A modern bot-rule builder with presets for verified search engines, social previews, AI crawlers, and aggressive SEO bots. Existing custom rules are preserved.
+* Change: Rebuilt the plugin internals with PSR-4 and scoped Composer dependencies to prevent library conflicts.
+* Compatibility: Requires PHP 8.1 and WordPress 6.5 or newer. WordPress 6.5 uses the Classic interface; the redesigned admin requires WordPress 6.6 or newer.
+* Removed: WP-ZEP, the `restrict_api` setting, and custom geolocation provider add-on registration. Legacy global classes remain available throughout the 1.x series.
+* Fixes: Improved precision-rule editing and cache refreshes, provider switching, local database updates, filesystem warnings, uninstall behavior, and Classic-view switching.
+
+(See readme.txt for the full 1.0.0-1.3.9 changelog; this file predates that switch and is retained for historical reference.)
+
 = 0.3.0.17.4 =
 * **Fix issue:** Add an option "Metadata Exploit Protection" in "Validation rules and behavior" section and make it disabled by default because it potentially caused "Sorry, your request cannot be accepted".
 * **Fix issue:** Fix the issue that direct request to PHP files under plugins/themes directory was "404 Not found" when WP-ZEP enabled.
