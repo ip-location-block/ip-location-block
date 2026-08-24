@@ -21,9 +21,8 @@ final class WelcomeNotice {
 	const OPTION          = 'ip_location_block_welcome_notice';
 
 	/**
-	 * Whether this request is on a WordPress core screen or this plugin's screen.
-	 * Plugin-created screens normally contain `_page_` in their hook suffix or a
-	 * `page` query argument. Our own screen is the explicit exception.
+	 * Whether this request is on a WordPress core screen. Plugin-created screens
+	 * normally contain `_page_` in their hook suffix or a `page` query argument.
 	 *
 	 * @param string      $hook_suffix Current admin hook suffix.
 	 * @param string|null $page        Sanitized page query value, or null to read it.
@@ -32,10 +31,6 @@ final class WelcomeNotice {
 	public static function is_eligible_screen( $hook_suffix, $page = null ) {
 		if ( null === $page ) {
 			$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-		}
-
-		if ( 'ip-location-block' === $page ) {
-			return true;
 		}
 
 		if ( '' !== $page ) {

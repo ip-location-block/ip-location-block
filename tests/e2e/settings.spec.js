@@ -520,7 +520,7 @@ test.describe.serial("settings", () => {
     ).toBeVisible();
     await expect(
       page.getByText(
-        "Premium, frequently updated geolocation data improves country accuracy and unlocks state or region precision.",
+        "Frequently updated premium data improves country accuracy and adds state or region precision.",
       ),
     ).toBeVisible();
     await expect(

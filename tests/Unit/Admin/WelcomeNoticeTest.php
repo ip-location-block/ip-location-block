@@ -55,13 +55,13 @@ final class WelcomeNoticeTest extends TestCase {
 		$property->setValue( null, null );
 	}
 
-	public function test_core_and_own_screens_are_eligible(): void {
+	public function test_core_screens_are_eligible(): void {
 		$this->assertTrue( WelcomeNotice::is_eligible_screen( 'plugins.php', '' ) );
 		$this->assertTrue( WelcomeNotice::is_eligible_screen( 'edit.php', '' ) );
-		$this->assertTrue( WelcomeNotice::is_eligible_screen( 'settings_page_ip-location-block', 'ip-location-block' ) );
 	}
 
-	public function test_other_plugin_screens_are_not_eligible(): void {
+	public function test_plugin_screens_are_not_eligible(): void {
+		$this->assertFalse( WelcomeNotice::is_eligible_screen( 'settings_page_ip-location-block', 'ip-location-block' ) );
 		$this->assertFalse( WelcomeNotice::is_eligible_screen( 'toplevel_page_woocommerce', 'woocommerce' ) );
 		$this->assertFalse( WelcomeNotice::is_eligible_screen( 'settings_page_other-plugin', 'other-plugin' ) );
 		$this->assertFalse( WelcomeNotice::is_eligible_screen( 'vendor_page_reports', '' ) );

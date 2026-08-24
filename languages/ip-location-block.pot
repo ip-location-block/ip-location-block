@@ -3047,7 +3047,7 @@ msgid "Better accuracy, down to state or region."
 msgstr ""
 
 #: admin/app/src/components/ProviderSetup.jsx:709
-msgid "Premium, frequently updated geolocation data improves country accuracy and unlocks state or region precision."
+msgid "Frequently updated premium data improves country accuracy and adds state or region precision."
 msgstr ""
 
 #. translators: %s: comma-separated provider names.

@@ -706,7 +706,7 @@ export default function ProviderSetup( {
 							</h3>
 							<p>
 								{ __(
-									'Premium, frequently updated geolocation data improves country accuracy and unlocks state or region precision.',
+									'Frequently updated premium data improves country accuracy and adds state or region precision.',
 									'ip-location-block'
 								) }
 							</p>
