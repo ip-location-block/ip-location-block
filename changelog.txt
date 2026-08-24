@@ -3,7 +3,7 @@
 *Release Date - 24 Aug 2026*
 
 * New: A redesigned admin with Simple and Advanced views, clearer provider setup, improved statistics, logs and search, and built-in diagnostics. The Classic interface remains available.
-* Improvement: A redesigned welcome panel now presents free and Native Mode setup paths, including premium-data accuracy and regional precision, with a site-wide dismissal that stays closed for the current campaign.
+* Improvement: A redesigned welcome panel now highlights the IP Location Block Cloud provider's premium-data accuracy and regional precision, with a site-wide dismissal that stays closed for the current campaign.
 * New: State or region blocking through the IP Location Block provider, with searchable regional rules, an EU country shortcut, a working `Region` alias, and `~` alternatives.
 * Improvement: The IP Location Block provider is prioritized for regional rules, while other selected providers remain available as country-level fallbacks. Provider limits and unsupported precision are now explained clearly.
 * New: A modern bot-rule builder with presets for verified search engines, social previews, AI crawlers, and aggressive SEO bots. Existing custom rules are preserved.
@@ -12,7 +12,205 @@
 * Removed: WP-ZEP, the `restrict_api` setting, and custom geolocation provider add-on registration. Legacy global classes remain available throughout the 1.x series.
 * Fixes: Improved precision-rule editing and cache refreshes, provider switching, local database updates, filesystem warnings, uninstall behavior, and Classic-view switching.
 
-(See readme.txt for the full 1.0.0-1.3.9 changelog; this file predates that switch and is retained for historical reference.)
+= 1.3.9 =
+
+*Release Date - 5 Jul 2026*
+
+* Fix: Admin scripts and styles were enqueued on unrelated wp-admin pages. Assets now load only on IP Location Block screens.
+* Fix: Front-end location blocking no longer disables page caching by default. A new opt-in setting controls page-cache bypassing.
+
+= 1.3.8 =
+
+*Release Date - 13 Mar 2026*
+
+* Fixed PHP warnings and deprecated jQuery calls.
+* Added Kinsta and WP Engine support.
+* Deprecated WP-ZEP ahead of its removal in 1.4.0.
+* Tested with WordPress 7.0.
+
+= 1.3.7 =
+
+*Release Date - 7 Nov 2025*
+
+* Added instructions for migrating to the latest IP Location Block platform.
+* Tested with the latest WordPress release.
+
+= 1.3.6 =
+
+*Release Date - 6 Aug 2025*
+
+* Fixed `IP_LOCATION_BLOCK_AUTH` JavaScript errors.
+* Fixed logged-in user detection in certain cases.
+* Fixed behavior when WordPress hash constants are unavailable.
+
+= 1.3.5 =
+
+*Release Date - 20 Jul 2025*
+
+* Fixed string-translation warnings.
+* Fixed fatal errors caused by undefined WordPress security constants.
+
+= 1.3.4 =
+
+*Release Date - 7 Mar 2025*
+
+* Fixed PHP warnings.
+* Tested with PHP 8.4 and WordPress 6.7 and 6.8 beta.
+
+= 1.3.3 =
+
+*Release Date - 24 Sep 2024*
+
+* Fixed admin POST and AJAX allowlisting, PHP warnings, and Divi support.
+* Added more WordPress AJAX actions to the default allowlist.
+* Removed unused files from the MaxMind library.
+
+= 1.3.2 =
+
+*Release Date - 1 Aug 2024*
+
+* Fixed PHP 8.2 deprecation warnings.
+* Tested with WordPress 6.6.
+
+= 1.3.1 =
+
+*Release Date - 3 Apr 2024*
+
+* Removed the discontinued GeoIPLookup API.
+* Tested with WordPress 6.5.
+
+= 1.3.0 =
+
+*Release Date - 20 Feb 2024*
+
+* Fixed empty redirect handling for front-end blocklists.
+* Set `blocked.iplocationblock.com` as the default blocked redirect.
+* Added provider quota and mode status information.
+* Improved settings copy.
+
+= 1.2.3 =
+
+*Release Date - 12 Nov 2023*
+
+* Fixed CSS conflicts, Divi AJAX allowlisting, and cron warnings.
+* Improved warnings for unsupported ASN rules and misconfigured blocking rules.
+
+= 1.2.2 =
+
+*Release Date - 1 Nov 2023*
+
+* Fixed logs, statistics, non-administrator notices, and GeoLite2 download warnings.
+* Added state and locality columns to logs for the IP Location Block provider.
+* Improved the interface and internal code.
+
+= 1.2.1 =
+
+*Release Date - 31 Oct 2023*
+
+* Fixed SQLite logging errors.
+
+= 1.2.0 =
+
+*Release Date - 30 Oct 2023*
+
+* Added precision location rules through the native IP Location Block provider.
+* Fixed PHP 8.2 warnings.
+* Improved external provider integrations.
+* Tested with WordPress 6.4.
+
+= 1.1.5 =
+
+*Release Date - 28 May 2023*
+
+* Fixed the deployment procedure.
+
+= 1.1.4 =
+
+*Release Date - 28 May 2023*
+
+* Improved provider and search internals.
+* Temporarily removed IP-API.com pending provider-settings improvements.
+* Fixed IPInfoDB response handling.
+
+= 1.1.3 =
+
+*Release Date - 24 Jul 2022*
+
+* Improved database downloads, logged-in user detection, validation timing, and provider defaults.
+
+= 1.1.2 =
+
+*Release Date - 3 May 2022*
+
+* Fixed local database downloads.
+
+= 1.1.1 =
+
+*Release Date - 2 May 2022*
+
+* Fixed a fatal error caused by a removed constant.
+
+= 1.1.0 =
+
+*Release Date - 1 May 2022*
+
+* Introduced the IP Location Block REST API and redesigned provider settings.
+* Improved developer tooling, uninstall behavior, and PHP 8 compatibility.
+
+= 1.0.7 =
+
+*Release Date - 21 Dec 2021*
+
+* Added PHP 7.4 compatibility to the IPv6 library.
+
+= 1.0.6 =
+
+*Release Date - 21 Nov 2021*
+
+* Fixed broken plugin settings and statistics screens.
+
+= 1.0.5 =
+
+*Release Date - 20 Nov 2021*
+
+* Fixed redirect loops, cron information, PHP 8 warnings, and missing constants.
+
+= 1.0.4 =
+
+*Release Date - 8 Jun 2021*
+
+* Fixed ASN blocking and database downloads.
+* Improved migration from the legacy plugin.
+
+= 1.0.3 =
+
+*Release Date - 18 May 2021*
+
+* Added migration from IP Geo Block settings.
+* Replaced deprecated jQuery calls and fixed emergency-link deletion.
+
+= 1.0.2 =
+
+*Release Date - 18 May 2021*
+
+* Fixed the must-use plugin option.
+
+= 1.0.1 =
+
+*Release Date - 17 May 2021*
+
+* Removed ipdata.co and fixed the search tool.
+
+= 1.0.0 =
+
+*Release Date - 17 May 2021*
+
+* Added PHP 8 compatibility and MaxMind GeoLite2 support.
+* Replaced Google Maps with OpenStreetMap and Leaflet.
+* Updated DNS and IP2Location libraries.
+* Fixed provider and PHP compatibility issues.
+
+Earlier 0.x release history follows.
 
 = 0.3.0.17.4 =
 * **Fix issue:** Add an option "Metadata Exploit Protection" in "Validation rules and behavior" section and make it disabled by default because it potentially caused "Sorry, your request cannot be accepted".
