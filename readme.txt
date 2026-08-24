@@ -99,12 +99,13 @@ All contributions will always be welcome.
 
 = Using The WordPress Dashboard =
 
-1. Navigate to the 'Add New' in the plugins dashboard
-2. Search for 'IP Location Block'
-3. Click 'Install Now'
-4. Activate the plugin on the Plugin dashboard
-5. Stay cool for a while and go to 'Settings' &raquo; 'IP Location Block'
-6. Try 'Best for Back-end' button for easy setup at the bottom of this plugin's setting page.
+1. In WordPress, open **Plugins > Add New Plugin**.
+2. Search for **IP Location Block**, then select **Install Now**.
+3. Activate the plugin and open **Settings > IP Location Block**.
+4. Use **Simple** view to choose whether to block or allow selected locations and where protection should apply.
+5. Connect a geolocation provider. Country rules work with the bundled local provider; connect the IP Location Block provider for managed data, improved accuracy, and state or region precision.
+6. Use **Search** to verify a representative IP address, then save your changes.
+7. Switch to **Advanced** view when you need login protection, bot rules, individual validation targets, provider fallbacks, privacy controls, or other detailed settings.
 
 Follow the current [getting started guide](https://iplocationblock.com/docs/getting-started/ "IP Location Block documentation") for the recommended setup.
 
@@ -476,4 +477,6 @@ Please refer to "[How can I fix permission troubles?](https://iplocationblock.co
 
 == Upgrade Notice ==
 
-As of version 1.2.0, the plugin supports <a href="https://iplocationblock.com/docs/blocking-rules/state-region/">state or region matching</a>.
+= 1.4.0 =
+
+Requires WordPress 6.5 or newer and PHP 8.1 or newer. This release introduces Simple and Advanced views and removes third-party geolocation provider add-on registration. Existing settings and legacy global classes remain compatible throughout the 1.x series.
