@@ -16,8 +16,9 @@ use IPLocationBlock\Core\Validator;
  */
 final class WelcomeNotice {
 
-	const CAMPAIGN = 'welcome-1.4-onboarding';
-	const OPTION   = 'ip_location_block_welcome_notice';
+	const CAMPAIGN        = 'welcome-1.4-native-accuracy';
+	const LEGACY_CAMPAIGN = 'welcome-legacy-dismissal';
+	const OPTION          = 'ip_location_block_welcome_notice';
 
 	/**
 	 * Whether this request is on a WordPress core screen or this plugin's screen.
@@ -47,9 +48,9 @@ final class WelcomeNotice {
 	/**
 	 * Whether the current campaign has been dismissed on this site.
 	 *
-	 * The old boolean setting is migrated lazily so an administrator who already
-	 * dismissed the pre-campaign banner is not shown the same welcome message
-	 * again after upgrading.
+	 * The old boolean setting is migrated lazily as a previous campaign. This
+	 * allows a materially different campaign to appear once without losing the
+	 * administrator's earlier dismissal history.
 	 *
 	 * @return bool
 	 */
@@ -62,8 +63,8 @@ final class WelcomeNotice {
 
 		$settings = Validator::get_option();
 		if ( ! empty( $settings['welcome'] ) ) {
-			self::store_campaign();
-			return true;
+			self::store_campaign( self::LEGACY_CAMPAIGN );
+			return false;
 		}
 
 		return false;
@@ -93,11 +94,11 @@ final class WelcomeNotice {
 	 *
 	 * @return void
 	 */
-	private static function store_campaign() {
+	private static function store_campaign( $campaign = self::CAMPAIGN ) {
 		update_option(
 			self::OPTION,
 			array(
-				'campaign'     => self::CAMPAIGN,
+				'campaign'     => (string) $campaign,
 				'dismissed_at' => time(),
 			),
 			false

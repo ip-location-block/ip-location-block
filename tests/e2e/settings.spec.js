@@ -515,9 +515,25 @@ test.describe.serial("settings", () => {
     await page.getByRole("button", { name: "Simple", exact: true }).click();
     await expect(
       page.getByRole("heading", {
-        name: "Block by state or region, not just country.",
+        name: "Better accuracy, down to state or region.",
       }),
     ).toBeVisible();
+    await expect(
+      page.getByText(
+        "Premium, frequently updated geolocation data improves country accuracy and unlocks state or region precision.",
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Better accuracy", { exact: true }),
+    ).toBeVisible();
+    const upgradeLink = page.getByRole("link", {
+      name: "Upgrade to Native Mode",
+    });
+    await expect(upgradeLink).toBeVisible();
+    await expect(upgradeLink).toHaveAttribute(
+      "href",
+      /utm_source=wordpress.*utm_medium=plugin.*utm_campaign=native_mode.*utm_content=provider-card/,
+    );
     await page.getByRole("button", { name: "Undo", exact: true }).click();
 
     await expect(page.locator(".ilb-provider-pending")).toHaveCount(0);

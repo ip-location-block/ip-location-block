@@ -531,8 +531,13 @@ msgstr ""
 msgid "illegal format at %s. Please delete the corresponding line and try again."
 msgstr ""
 
+#: admin/legacy/includes/status.php:44
+msgid "Native Mode uses premium geolocation data for better accuracy and state or region precision."
+msgstr ""
+
 #: admin/legacy/includes/status.php:45
 #: admin/legacy/includes/status.php:189
+#: admin/legacy/includes/welcome.php:62
 #: admin/app/src/components/ModeBadge.jsx:124
 #: admin/app/src/components/ProviderSetup.jsx:699
 #: admin/app/src/components/ProviderSetup.jsx:762
@@ -622,12 +627,11 @@ msgid "Looks like your account is out of balance! IP Location Block will NOT WOR
 msgstr ""
 
 #: admin/legacy/includes/status.php:144
-#: admin/legacy/includes/status.php:205
 msgid "Upgrade"
 msgstr ""
 
 #: admin/legacy/includes/status.php:160
-msgid "Standard Mode provides country blocking. Connect the <strong>IP Location Block provider</strong> to unlock state or region precision. Other providers can remain available as country-level fallback."
+msgid "Standard Mode uses country-level data. Connect the <strong>IP Location Block provider</strong> for premium, frequently updated data, better country accuracy, and state or region precision. Other providers can remain available as country-level fallback."
 msgstr ""
 
 #: admin/legacy/includes/status.php:164
@@ -635,7 +639,7 @@ msgid "Other configured providers:"
 msgstr ""
 
 #: admin/legacy/includes/status.php:178
-msgid "Use standard mode if you don't want improved precision or fast support."
+msgid "Standard Mode uses free country-level data."
 msgstr ""
 
 #: admin/legacy/includes/status.php:185
@@ -643,7 +647,7 @@ msgid "Country blocking"
 msgstr ""
 
 #: admin/legacy/includes/status.php:186
-msgid "Normal data precision"
+msgid "Free country-level geolocation data"
 msgstr ""
 
 #: admin/legacy/includes/status.php:187
@@ -659,13 +663,14 @@ msgid "Country, state or region blocking"
 msgstr ""
 
 #: admin/legacy/includes/status.php:191
-#: admin/app/src/components/PrecisionContent.jsx:33
-#: admin/app/src/tabs/SimpleBlocking.jsx:492
+#: admin/app/src/components/PrecisionContent.jsx:34
+#: admin/app/src/tabs/SimpleBlocking.jsx:496
 msgid "Regional rules"
 msgstr ""
 
 #: admin/legacy/includes/status.php:192
-msgid "Improved data precision"
+#: admin/legacy/includes/welcome.php:66
+msgid "Premium, frequently updated geolocation data"
 msgstr ""
 
 #: admin/legacy/includes/status.php:193
@@ -677,13 +682,16 @@ msgid "1-5 hr response"
 msgstr ""
 
 #: admin/legacy/includes/status.php:198
-msgid ""
-"To upgrade to <strong>Native Mode</strong>, please sign up for a key and set up the \"IP Location Block\" provider\n"
-"\t\t\t\t\t\tin the settings."
+msgid "Upgrade to <strong>Native Mode</strong> for better country accuracy and state or region precision. Sign up for a key and connect the \"IP Location Block\" provider in settings."
 msgstr ""
 
-#: admin/legacy/includes/status.php:202
-msgid "Make sure to also <strong>disable</strong> the other providers as well."
+#: admin/legacy/includes/status.php:201
+msgid "Native Mode is prioritized automatically for regional rules. Other providers can remain available as country-level fallbacks."
+msgstr ""
+
+#: admin/legacy/includes/status.php:204
+#: admin/app/src/components/PrecisionContent.jsx:87
+msgid "Upgrade to Native Mode"
 msgstr ""
 
 #: admin/legacy/includes/tab-accesslog.php:32
@@ -1760,27 +1768,19 @@ msgid "Welcome to IP Location Block"
 msgstr ""
 
 #: admin/legacy/includes/welcome.php:53
-msgid "Block unwanted visitors by country, or add state or region precision when you need finer control."
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:62
-msgid "State or region blocking"
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:66
-msgid "Block states, provinces, prefectures, or territories"
+msgid "Start with free country blocking, or use Native Mode for better accuracy and state or region precision."
 msgstr ""
 
 #: admin/legacy/includes/welcome.php:67
-msgid "IPv6 and ASN lookups included"
+msgid "Better country accuracy and state or region precision"
 msgstr ""
 
 #: admin/legacy/includes/welcome.php:68
-msgid "Managed provider built for this plugin"
+msgid "IPv6 and ASN lookups included"
 msgstr ""
 
 #: admin/legacy/includes/welcome.php:72
-msgid "See regional plans"
+msgid "See Native Mode plans"
 msgstr ""
 
 #: admin/legacy/includes/welcome.php:82
@@ -2979,25 +2979,26 @@ msgstr ""
 msgid "Native Mode active"
 msgstr ""
 
-#: admin/app/src/components/ModeBadge.jsx:58
-msgid "State/region rules are available."
+#: admin/app/src/components/ModeBadge.jsx:59
+#: admin/app/src/components/PrecisionUpsell.jsx:19
+msgid "Premium geolocation data and state/region rules are active."
 msgstr ""
 
-#: admin/app/src/components/ModeBadge.jsx:76
+#: admin/app/src/components/ModeBadge.jsx:77
 #: admin/app/src/components/PrecisionUpsell.jsx:27
 msgid "Native provider prioritized"
 msgstr ""
 
-#: admin/app/src/components/ModeBadge.jsx:82
-#: admin/app/src/components/PrecisionUpsell.jsx:28
-msgid "Regional rules use IP Location Block first; other providers remain country-level fallbacks."
+#: admin/app/src/components/ModeBadge.jsx:83
+#: admin/app/src/components/PrecisionUpsell.jsx:29
+msgid "Native Mode provides premium data and powers regional rules first; other providers remain country-level fallbacks."
 msgstr ""
 
-#: admin/app/src/components/ModeBadge.jsx:95
-msgid "Go beyond country rules with the state, province, or equivalent region returned for each country."
+#: admin/app/src/components/ModeBadge.jsx:96
+msgid "Upgrade to premium geolocation data for better country accuracy and state or region precision."
 msgstr ""
 
-#: admin/app/src/components/ModeBadge.jsx:117
+#: admin/app/src/components/ModeBadge.jsx:118
 msgid "View geolocation mode details."
 msgstr ""
 
@@ -3013,41 +3014,40 @@ msgstr ""
 msgid "Benefits"
 msgstr ""
 
-#: admin/app/src/components/PrecisionContent.jsx:34
-msgid "IPv6 + ASN"
+#: admin/app/src/components/PrecisionContent.jsx:33
+msgid "Better accuracy"
 msgstr ""
 
 #: admin/app/src/components/PrecisionContent.jsx:35
-msgid "Built for this plugin"
+msgid "IPv6 + ASN"
 msgstr ""
 
 #: admin/app/src/components/PrecisionContent.jsx:41
-msgid "See Native Mode"
+msgid "Explore Native Mode"
 msgstr ""
 
 #: admin/app/src/components/PrecisionContent.jsx:79
 msgid "Learn about advanced rules"
 msgstr ""
 
-#: admin/app/src/components/PrecisionContent.jsx:87
-#: admin/app/src/tabs/SimpleBlocking.jsx:564
+#: admin/app/src/tabs/SimpleBlocking.jsx:568
 msgid "Unlock regional blocking"
 msgstr ""
 
-#: admin/app/src/components/PrecisionUpsell.jsx:18
-msgid "State/region rules are available through IP Location Block."
+#: admin/app/src/components/PrecisionUpsell.jsx:37
+msgid "Better accuracy and regional precision are available"
 msgstr ""
 
-#: admin/app/src/components/PrecisionUpsell.jsx:36
-msgid "Regional blocking is available"
+#: admin/app/src/components/PrecisionUpsell.jsx:41
+msgid "Native Mode uses premium, frequently updated geolocation data for better country accuracy and state, province, or equivalent regional precision."
 msgstr ""
 
-#: admin/app/src/components/PrecisionUpsell.jsx:40
-msgid "Native Mode adds rules for the state, province, or equivalent region returned for each country."
+#: admin/app/src/components/ProviderSetup.jsx:703
+msgid "Better accuracy, down to state or region."
 msgstr ""
 
-#: admin/app/src/components/PrecisionUpsell.jsx:60
-msgid "Compare Native Mode"
+#: admin/app/src/components/ProviderSetup.jsx:709
+msgid "Premium, frequently updated geolocation data improves country accuracy and unlocks state or region precision."
 msgstr ""
 
 #. translators: %s: comma-separated provider names.

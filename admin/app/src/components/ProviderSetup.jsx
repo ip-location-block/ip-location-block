@@ -22,7 +22,7 @@ import {
 	quotaBlocksProvider,
 	quotaSummary,
 } from '../providerLogic';
-import { RegionalBenefits, UpgradeButton } from './PrecisionContent';
+import { NativeBenefits, UpgradeButton } from './PrecisionContent';
 
 const NATIVE = 'IP Location Block';
 const boot = window.ipLocationBlockAdmin || {};
@@ -700,17 +700,17 @@ export default function ProviderSetup( {
 							</span>
 							<h3>
 								{ __(
-									'Block by state or region, not just country.',
+									'Better accuracy, down to state or region.',
 									'ip-location-block'
 								) }
 							</h3>
 							<p>
 								{ __(
-									'Use the administrative area returned for each country, such as a state, province, prefecture, or region.',
+									'Premium, frequently updated geolocation data improves country accuracy and unlocks state or region precision.',
 									'ip-location-block'
 								) }
 							</p>
-							<RegionalBenefits />
+							<NativeBenefits />
 							<div className="ilb-provider-promo__actions">
 								<UpgradeButton content="provider-card" />
 								<Button

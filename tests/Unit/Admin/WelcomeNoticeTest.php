@@ -91,12 +91,12 @@ final class WelcomeNoticeTest extends TestCase {
 		$this->assertFalse( WelcomeNotice::is_dismissed() );
 	}
 
-	public function test_legacy_boolean_dismissal_migrates_to_current_campaign(): void {
+	public function test_legacy_boolean_dismissal_migrates_as_a_previous_campaign(): void {
 		$this->options[ Validator::OPTION_NAME ]['welcome'] = true;
 
-		$this->assertTrue( WelcomeNotice::is_dismissed() );
+		$this->assertFalse( WelcomeNotice::is_dismissed() );
 		$this->assertSame(
-			WelcomeNotice::CAMPAIGN,
+			WelcomeNotice::LEGACY_CAMPAIGN,
 			$this->options[ WelcomeNotice::OPTION ]['campaign']
 		);
 		$this->assertFalse( $this->writes[0][2], 'campaign state must not autoload' );

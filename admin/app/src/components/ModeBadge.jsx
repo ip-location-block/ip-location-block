@@ -56,7 +56,7 @@ export default function ModeBadge( { mode } ) {
 						</strong>
 						<p>
 							{ __(
-								'State/region rules are available.',
+								'Premium geolocation data and state/region rules are active.',
 								'ip-location-block'
 							) }
 						</p>
@@ -80,7 +80,7 @@ export default function ModeBadge( { mode } ) {
 						</strong>
 						<p>
 							{ __(
-								'Regional rules use IP Location Block first; other providers remain country-level fallbacks.',
+								'Native Mode provides premium data and powers regional rules first; other providers remain country-level fallbacks.',
 								'ip-location-block'
 							) }
 						</p>
@@ -93,7 +93,7 @@ export default function ModeBadge( { mode } ) {
 				<h2>{ __( 'Standard Mode', 'ip-location-block' ) }</h2>
 				<p>
 					{ __(
-						'Go beyond country rules with the state, province, or equivalent region returned for each country.',
+						'Upgrade to premium geolocation data for better country accuracy and state or region precision.',
 						'ip-location-block'
 					) }
 				</p>

@@ -6,7 +6,7 @@
  */
 
 $url_docs      = 'https://iplocationblock.com/docs/getting-started/?utm_source=plugin&utm_medium=welcome&utm_campaign=documentation';
-$url_purchase  = 'https://iplocationblock.com/pricing/?utm_source=plugin&utm_medium=welcome&utm_campaign=regional_rules';
+$url_purchase  = 'https://iplocationblock.com/pricing/?utm_source=wordpress&utm_medium=plugin&utm_campaign=native_mode&utm_content=welcome';
 $url_github    = 'https://github.com/ip-location-block/ip-location-block/';
 $url_wordpress = 'https://wordpress.org/support/plugin/ip-location-block/';
 $url_review    = 'https://wordpress.org/support/plugin/ip-location-block/reviews/#new-post';
@@ -50,26 +50,26 @@ $url_search = add_query_arg(
 				<span class="ilb-welcome__version">v<?php echo esc_html( IP_LOCATION_BLOCK_VERSION ); ?></span>
 			</h2>
 			<p class="ilb-welcome__desc">
-				<?php esc_html_e( 'Block unwanted visitors by country, or add state or region precision when you need finer control.', 'ip-location-block' ); ?>
+				<?php esc_html_e( 'Start with free country blocking, or use Native Mode for better accuracy and state or region precision.', 'ip-location-block' ); ?>
 			</p>
 		</div>
 	</div>
 
 	<div class="ilb-welcome__choices">
-		<section class="ilb-welcome__choice ilb-welcome__choice--recommended" aria-labelledby="ilb-welcome-regional-title">
+		<section class="ilb-welcome__choice ilb-welcome__choice--recommended" aria-labelledby="ilb-welcome-native-title">
 			<div class="ilb-welcome__choice-heading">
 				<span class="dashicons dashicons-location-alt" aria-hidden="true"></span>
-				<h3 id="ilb-welcome-regional-title"><?php esc_html_e( 'State or region blocking', 'ip-location-block' ); ?></h3>
+				<h3 id="ilb-welcome-native-title"><?php esc_html_e( 'Native Mode', 'ip-location-block' ); ?></h3>
 				<span class="ilb-welcome__badge"><?php esc_html_e( 'Recommended', 'ip-location-block' ); ?></span>
 			</div>
 			<ul class="ilb-welcome__benefits">
-				<li><?php esc_html_e( 'Block states, provinces, prefectures, or territories', 'ip-location-block' ); ?></li>
+				<li><?php esc_html_e( 'Premium, frequently updated geolocation data', 'ip-location-block' ); ?></li>
+				<li><?php esc_html_e( 'Better country accuracy and state or region precision', 'ip-location-block' ); ?></li>
 				<li><?php esc_html_e( 'IPv6 and ASN lookups included', 'ip-location-block' ); ?></li>
-				<li><?php esc_html_e( 'Managed provider built for this plugin', 'ip-location-block' ); ?></li>
 			</ul>
 			<div class="ilb-welcome__choice-actions">
 				<a class="button button-primary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( $url_purchase ); ?>">
-					<?php esc_html_e( 'See regional plans', 'ip-location-block' ); ?>
+					<?php esc_html_e( 'See Native Mode plans', 'ip-location-block' ); ?>
 					<span class="dashicons dashicons-external" aria-hidden="true"></span>
 				</a>
 				<a href="<?php echo esc_url( $url_provider ); ?>"><?php esc_html_e( 'I already have a key', 'ip-location-block' ); ?></a>

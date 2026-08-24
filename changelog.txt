@@ -3,7 +3,7 @@
 *Release Date - 24 Aug 2026*
 
 * New: A redesigned admin with Simple and Advanced views, clearer provider setup, improved statistics, logs and search, and built-in diagnostics. The Classic interface remains available.
-* Improvement: A redesigned welcome panel now presents country and regional setup paths, quick onboarding steps, and a site-wide dismissal that stays closed for the current campaign.
+* Improvement: A redesigned welcome panel now presents free and Native Mode setup paths, including premium-data accuracy and regional precision, with a site-wide dismissal that stays closed for the current campaign.
 * New: State or region blocking through the IP Location Block provider, with searchable regional rules, an EU country shortcut, a working `Region` alias, and `~` alternatives.
 * Improvement: The IP Location Block provider is prioritized for regional rules, while other selected providers remain available as country-level fallbacks. Provider limits and unsupported precision are now explained clearly.
 * New: A modern bot-rule builder with presets for verified search engines, social previews, AI crawlers, and aggressive SEO bots. Existing custom rules are preserved.

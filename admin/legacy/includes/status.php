@@ -41,7 +41,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 		$provider_name = isset($quota['name']) && $quota['name'] !== 'requires-api-key-upgrade' ? $quota['name'] : 'IP Location Block';
 		?>
 		<div class="ip-location-block-provider-meta <?php echo esc_attr($signal_css); ?>">
-			<span class="ip-location-block-sign" title="Native Mode adds state or region precision"></span>
+			<span class="ip-location-block-sign" title="<?php esc_attr_e( 'Native Mode uses premium geolocation data for better accuracy and state or region precision.', 'ip-location-block' ); ?>"></span>
 			<span class="ip-location-block-name"><?php echo sprintf( '<strong>%s</strong> %s', $provider_name, '(<em>' . ($is_native ? __( 'Native Mode', 'ip-location-block' ) : __( 'Standard Mode', 'ip-location-block' )) .'</em>)'); ?></span>
 			<span class="dashicons dashicons-arrow-down"></span>
 		</div>
@@ -157,7 +157,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
                 <div class="ip-location-block-provider-meta-row">
                     <div class="ip-location-block-provider-meta-attention">
                         <p>
-							<?php _e( 'Standard Mode provides country blocking. Connect the <strong>IP Location Block provider</strong> to unlock state or region precision. Other providers can remain available as country-level fallback.', 'ip-location-block' ); ?>
+							<?php _e( 'Standard Mode uses country-level data. Connect the <strong>IP Location Block provider</strong> for premium, frequently updated data, better country accuracy, and state or region precision. Other providers can remain available as country-level fallback.', 'ip-location-block' ); ?>
                         </p>
                         <p>
 							<?php
@@ -175,7 +175,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 		</div>
 	<?php else: ?>
 		<div class="ip-location-block-provider-meta standard-mode">
-            <span class="ip-location-block-sign" title="<?php _e('Use standard mode if you don\'t want improved precision or fast support.', 'ip-location-block'); ?>"></span>
+			<span class="ip-location-block-sign" title="<?php esc_attr_e( 'Standard Mode uses free country-level data.', 'ip-location-block' ); ?>"></span>
 			<span class="ip-location-block-name"><?php _e( 'Standard Mode', 'ip-location-block' ); ?></span>
 			<span class="dashicons dashicons-arrow-down"></span>
 		</div>
@@ -183,26 +183,25 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 			<p><strong><?php _e('Standard Mode', 'ip-location-block'); ?></strong></p>
 			<ul>
 				<li><?php _e('Country blocking', 'ip-location-block'); ?></li>
-				<li><?php _e('Normal data precision', 'ip-location-block'); ?></li>
+				<li><?php _e('Free country-level geolocation data', 'ip-location-block'); ?></li>
 				<li><?php _e('Normal support', 'ip-location-block'); ?><br/><em><?php _e('1-3 day response', 'ip-location-block'); ?></em></li>
 			</ul>
 			<p><strong><?php _e('Native Mode', 'ip-location-block'); ?></strong></p>
 			<ul>
 				<li><?php _e('Country, state or region blocking', 'ip-location-block'); ?> &amp; <a href="https://iplocationblock.com/docs/blocking-rules/state-region/" target="_blank"><?php _e('Regional rules', 'ip-location-block'); ?></a></li>
-				<li><?php _e('Improved data precision', 'ip-location-block'); ?></li>
+				<li><?php _e('Premium, frequently updated geolocation data', 'ip-location-block'); ?></li>
 				<li><?php _e('Priority support', 'ip-location-block'); ?><br/><em><?php _e('1-5 hr response', 'ip-location-block'); ?></em></li>
 			</ul>
 			<div class="ip-location-block-provider-meta-upgrade">
 				<div class="ip-location-block-provider-meta-account">
 					<p>
-						<?php _e('To upgrade to <strong>Native Mode</strong>, please sign up for a key and set up the "IP Location Block" provider
-						in the settings.', 'ip-location-block'); ?>
+						<?php _e('Upgrade to <strong>Native Mode</strong> for better country accuracy and state or region precision. Sign up for a key and connect the "IP Location Block" provider in settings.', 'ip-location-block'); ?>
 					</p>
 					<p>
-						<?php _e('Make sure to also <strong>disable</strong> the other providers as well.', 'ip-location-block'); ?>
+						<?php _e('Native Mode is prioritized automatically for regional rules. Other providers can remain available as country-level fallbacks.', 'ip-location-block'); ?>
 					</p>
 					<p class="ilb-text-center">
-						<a target="_blank" class="button button-primary button-small" href="https://iplocationblock.com/pricing/?utm_source=wordpress&utm_medium=site&utm_campaign=cloud"><?php _e( 'Upgrade', 'ip-location-block' ); ?></a>
+						<a target="_blank" class="button button-primary button-small" href="https://iplocationblock.com/pricing/?utm_source=wordpress&utm_medium=plugin&utm_campaign=native_mode&utm_content=classic-status"><?php _e( 'Upgrade to Native Mode', 'ip-location-block' ); ?></a>
 					</p>
 				</div>
 			</div>
