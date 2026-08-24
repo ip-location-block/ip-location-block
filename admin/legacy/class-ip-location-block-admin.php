@@ -1025,7 +1025,7 @@ class IP_Location_Block_Admin {
 	private function render_diagnostic_notice( $check ) {
 		$message = '<strong>' . esc_html( $check['title'] ) . ':</strong> ' . esc_html( $check['message'] );
 		if ( ! empty( $check['details'] ) ) {
-			$message .= '<br />' . esc_html( implode( '; ', $check['details'] ) );
+			$message .= ' <br />' . esc_html( implode( '; ', $check['details'] ) );
 		}
 		if ( ! empty( $check['actions'] ) ) {
 			$links = array();
@@ -1033,8 +1033,17 @@ class IP_Location_Block_Admin {
 				if ( empty( $action['url'] ) || empty( $action['label'] ) ) {
 					continue;
 				}
+				$url = $action['url'];
+				if (
+					isset( $action['type'] ) &&
+					'internal' === $action['type'] &&
+					'classic' === \IPLocationBlock\Admin\ReactAdmin::current_view() &&
+					! empty( $action['classicUrl'] )
+				) {
+					$url = $action['classicUrl'];
+				}
 				$external = isset( $action['type'] ) && 'external' === $action['type'];
-				$links[]  = '<a href="' . esc_url( $action['url'] ) . '"' . ( $external ? ' target="_blank" rel="noopener noreferrer"' : '' ) . '>' . esc_html( $action['label'] ) . '</a>';
+				$links[]  = '<a href="' . esc_url( $url ) . '"' . ( $external ? ' target="_blank" rel="noopener noreferrer"' : '' ) . '>' . esc_html( $action['label'] ) . '</a>';
 			}
 			if ( $links ) {
 				$message .= ' ' . implode( ' &middot; ', $links );

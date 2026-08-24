@@ -152,4 +152,40 @@ final class DiagnosticsTest extends TestCase {
 	public function test_native_mixed_is_warning_when_not_enforced(): void {
 		$this->assertSame( 'warning', $this->run_native_mixed_check( false )['status'] );
 	}
+
+	public function test_settings_action_has_new_and_classic_deep_links(): void {
+		Functions\when( 'get_option' )->justReturn( array( 'network_wide' => 0 ) );
+		Functions\when( 'is_multisite' )->justReturn( false );
+		Functions\when( 'admin_url' )->alias(
+			static fn( $path ) => 'http://example.test/wp-admin/' . ltrim( (string) $path, '/' )
+		);
+		Functions\when( 'network_admin_url' )->alias(
+			static fn( $path ) => 'http://example.test/wp-admin/network/' . ltrim( (string) $path, '/' )
+		);
+		Functions\when( 'add_query_arg' )->alias(
+			static fn( $args, $url ) => (string) $url . '?' . http_build_query( $args )
+		);
+		Functions\when( 'esc_url_raw' )->returnArg();
+
+		$method = new \ReflectionMethod( Diagnostics::class, 'settings_action' );
+		$method->setAccessible( true );
+		$action = $method->invoke( null, 'Review providers', 'provider', 4 );
+
+		$this->assertSame(
+			array(
+				'tab'     => 'settings',
+				'view'    => 'advanced',
+				'section' => 'provider',
+			),
+			$action['target']
+		);
+		$this->assertSame(
+			'http://example.test/wp-admin/options-general.php?page=ip-location-block&tab=settings&view=advanced&section=provider#provider',
+			$action['url']
+		);
+		$this->assertSame(
+			'http://example.test/wp-admin/options-general.php?page=ip-location-block&tab=0&sec=4#ip-location-block-section-4',
+			$action['classicUrl']
+		);
+	}
 }

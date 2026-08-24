@@ -699,27 +699,33 @@ class Diagnostics {
 	}
 
 	private static function settings_action( $label, $section, $classic_section ) {
+		$target = array(
+			'tab'     => 'settings',
+			'view'    => 'advanced',
+			'section' => $section,
+		);
+
 		return array(
-			'type'   => 'internal',
-			'label'  => $label,
-			'target' => array(
-				'tab'     => 'settings',
-				'view'    => 'advanced',
-				'section' => $section,
-			),
-			'url'    => self::classic_url( 0, $classic_section ),
+			'type'       => 'internal',
+			'label'      => $label,
+			'target'     => $target,
+			'url'        => self::modern_url( $target ),
+			'classicUrl' => self::classic_url( 0, $classic_section ),
 		);
 	}
 
 	private static function statistics_action( $label ) {
+		$target = array(
+			'tab' => 'statistics',
+			's'   => Validator::get_ip_address(),
+		);
+
 		return array(
-			'type'   => 'internal',
-			'label'  => $label,
-			'target' => array(
-				'tab' => 'statistics',
-				's'   => Validator::get_ip_address(),
-			),
-			'url'    => self::classic_url( 1, 2 ),
+			'type'       => 'internal',
+			'label'      => $label,
+			'target'     => $target,
+			'url'        => self::modern_url( $target ),
+			'classicUrl' => self::classic_url( 1, 2 ),
 		);
 	}
 
@@ -737,6 +743,25 @@ class Diagnostics {
 			'label' => $label,
 			'url'   => esc_url_raw( $url ),
 		);
+	}
+
+	private static function modern_url( $target ) {
+		$settings = Validator::get_option();
+		$network  = is_multisite() && ! empty( $settings['network_wide'] );
+		$base     = $network ? network_admin_url( 'admin.php' ) : admin_url( 'options-general.php' );
+		$url      = add_query_arg(
+			array_merge(
+				array( 'page' => Validator::PLUGIN_NAME ),
+				$target
+			),
+			$base
+		);
+
+		if ( ! empty( $target['section'] ) ) {
+			$url .= '#' . rawurlencode( (string) $target['section'] );
+		}
+
+		return esc_url_raw( $url );
 	}
 
 	private static function classic_url( $tab, $section ) {
