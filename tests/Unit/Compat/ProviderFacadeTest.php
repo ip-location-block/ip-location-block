@@ -96,6 +96,12 @@ final class ProviderFacadeTest extends TestCase {
 
 	public function test_register_addon_is_a_noop_and_fires_deprecation_once(): void {
 		Actions\expectDone( 'ip-location-block-deprecated' )->once();
+		// Do not rely on WordPress option functions being absent. Brain Monkey
+		// keeps dynamically declared function symbols available between tests.
+		Functions\when( 'get_option' )->justReturn( array() );
+		Functions\when( 'update_option' )->justReturn( true );
+		Functions\when( 'has_action' )->justReturn( true );
+		Functions\when( 'add_action' )->justReturn( true );
 
 		$before = \IP_Location_Block_Provider::all();
 		\IP_Location_Block_Provider::register_addon( array( 'MyGeo' => array( 'key' => null ), 'Other' => array() ) );

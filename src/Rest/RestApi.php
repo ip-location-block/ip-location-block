@@ -14,6 +14,7 @@
 
 namespace IPLocationBlock\Rest;
 
+use IPLocationBlock\Admin\WelcomeNotice;
 use IPLocationBlock\Core\Validator;
 use IPLocationBlock\Diagnostics\Diagnostics;
 use IPLocationBlock\Geolocation\IpCacheRepository;
@@ -322,8 +323,7 @@ class RestApi {
 	}
 
 	/**
-	 * Persist dismissal of an admin notice. The dismissal flag lives in the
-	 * plugin's settings, so it is per-site rather than per-user.
+	 * Persist dismissal of an admin notice for the current site.
 	 */
 	public static function dismiss_notice( \WP_REST_Request $request ) {
 		$id = sanitize_text_field( (string) $request->get_param( 'id' ) );
@@ -336,9 +336,7 @@ class RestApi {
 			);
 		}
 
-		$settings            = Validator::get_option();
-		$settings['welcome'] = true;
-		Validator::update_option( $settings );
+		WelcomeNotice::dismiss();
 
 		return rest_ensure_response( array( 'dismissed' => true ) );
 	}

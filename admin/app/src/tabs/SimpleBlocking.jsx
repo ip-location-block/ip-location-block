@@ -325,7 +325,10 @@ export default function SimpleBlocking( {
 				onStateChange={ setProviderState }
 				providerAction={ providerAction }
 			/>
-			<Card className="ilb-panel-shell ilb-settings-card ilb-settings-card--simple">
+			<Card
+				id="ilb-location-blocking"
+				className="ilb-panel-shell ilb-settings-card ilb-settings-card--simple"
+			>
 				<CardHeader className="ilb-panel-shell__header">
 					<h2 className="ilb-panel-shell__title">
 						{ __( 'Location blocking', 'ip-location-block' ) }

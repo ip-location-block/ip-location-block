@@ -68,29 +68,33 @@ class IP_Location_Block_Admin {
 	 * Whether the welcome/intro notice should render for this request.
 	 * @return bool
 	 */
-	private function should_show_intro_notice() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+	private function should_show_intro_notice( $hook_suffix = '' ) {
+		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'manage_network_options' ) ) {
 			return false;
 		}
-		if ( $this->is_beta_screen() ) {
-			return false;
-		}
-		$settings = IP_Location_Block::get_option();
 
-		return empty( $settings['welcome'] );
+		if ( '' === $hook_suffix ) {
+			$hook_suffix = isset( $GLOBALS['hook_suffix'] ) ? (string) $GLOBALS['hook_suffix'] : '';
+		}
+
+		if ( ! \IPLocationBlock\Admin\WelcomeNotice::is_eligible_screen( (string) $hook_suffix ) ) {
+			return false;
+		}
+
+		return ! \IPLocationBlock\Admin\WelcomeNotice::is_dismissed();
 	}
 
 	/**
 	 * Enqueue the welcome notice stylesheet.
 	 *
-	 * The notice is hooked to `admin_notices`, so it can render across classic
-	 * admin screens until dismissed. The React Beta screen owns its full page
-	 * shell and opts out in should_show_intro_notice().
+	 * The notice renders on WordPress core screens and this plugin's own screen,
+	 * but never on admin screens registered by another plugin.
 	 *
+	 * @param string $hook_suffix Current admin hook suffix.
 	 * @return void
 	 */
-	public function enqueue_welcome_assets() {
-		if ( ! $this->should_show_intro_notice() ) {
+	public function enqueue_welcome_assets( $hook_suffix = '' ) {
+		if ( ! $this->should_show_intro_notice( $hook_suffix ) ) {
 			return;
 		}
 		wp_enqueue_style(
@@ -99,6 +103,30 @@ class IP_Location_Block_Admin {
 			array( 'dashicons' ),
 			IP_LOCATION_BLOCK_VERSION
 		);
+
+		// The classic plugin screen already has the legacy AJAX dismissal
+		// listener. Core screens and the React plugin screen use this small,
+		// self-contained REST client so the close action always persists.
+		$is_own_screen      = isset( $_GET['page'] ) && 'ip-location-block' === sanitize_key( wp_unslash( $_GET['page'] ) );
+		$uses_classic_ajax = $is_own_screen && ! $this->is_beta_screen();
+
+		if ( ! $uses_classic_ajax ) {
+			wp_enqueue_script(
+				'ip-location-block-welcome-dismiss',
+				plugins_url( 'admin/legacy/js/welcome-dismiss.js', IP_LOCATION_BLOCK_BASE ),
+				array(),
+				IP_LOCATION_BLOCK_VERSION,
+				true
+			);
+			wp_localize_script(
+				'ip-location-block-welcome-dismiss',
+				'ipLocationBlockWelcome',
+				array(
+					'endpoint' => esc_url_raw( rest_url( 'ip-location-block/v1/notices/dismiss' ) ),
+					'nonce'    => wp_create_nonce( 'wp_rest' ),
+				)
+			);
+		}
 	}
 
 	/**
@@ -2332,20 +2360,18 @@ class IP_Location_Block_Admin {
 				break;
 			case 'dismiss-notice':
 				$notice_id = isset( $_POST['notice_id'] ) ? sanitize_text_field( $_POST['notice_id'] ) : '';
-				require_once IP_LOCATION_BLOCK_PATH . 'classes/class-ip-location-block-opts.php';
-				$settings = IP_Location_Block::get_option();
-                $dismissed = false;
+				$dismissed = false;
 
-                if ( 'welcome' === $notice_id ) {
-					$settings['welcome'] = true;
-                    $dismissed = true;
-	                IP_Location_Block::update_option( $settings );
-                }
-                if ( 'cache_compat' === $notice_id ) {
+				if ( 'welcome' === $notice_id ) {
+					\IPLocationBlock\Admin\WelcomeNotice::dismiss();
+					$dismissed = true;
+				}
+				if ( 'cache_compat' === $notice_id ) {
+					$settings                             = IP_Location_Block::get_option();
 					$settings['cache_compat_dismissed'] = true;
-                    $dismissed = true;
-	                IP_Location_Block::update_option( $settings );
-                }
+					$dismissed                            = true;
+					IP_Location_Block::update_option( $settings );
+				}
 				$res = array(
 					'success' => true,
 					'message' => $dismissed ? __( 'Notice dismissed.', 'ip-location-block' ) : __( 'Could not find notice to dismiss.', 'ip-location-block' ),

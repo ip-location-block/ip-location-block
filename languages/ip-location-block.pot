@@ -1755,68 +1755,88 @@ msgstr ""
 msgid "Please set the proper condition to record IP address in cache."
 msgstr ""
 
-#: admin/legacy/includes/welcome.php:47
-msgid "Thanks for installing IP Location Block"
+#: admin/legacy/includes/welcome.php:49
+msgid "Welcome to IP Location Block"
 msgstr ""
 
-#: admin/legacy/includes/welcome.php:51
-msgid "Complete geolocation blocking. Keep unwanted visitors off your site. Free blacklisting and whitelisting by country, with optional state or regional precision."
+#: admin/legacy/includes/welcome.php:53
+msgid "Block unwanted visitors by country, or add state or region precision when you need finer control."
 msgstr ""
 
-#: admin/legacy/includes/welcome.php:55
-msgid "Read the docs"
+#: admin/legacy/includes/welcome.php:62
+msgid "State or region blocking"
 msgstr ""
 
-#: admin/legacy/includes/welcome.php:57
+#: admin/legacy/includes/welcome.php:66
+msgid "Block states, provinces, prefectures, or territories"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:67
+msgid "IPv6 and ASN lookups included"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:68
+msgid "Managed provider built for this plugin"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:72
+msgid "See regional plans"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:82
+msgid "Country-level blocking"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:85
+msgid "Block or allow selected countries"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:86
+msgid "Use a local database or API provider"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:87
+msgid "No regional plan required"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:91
+msgid "Set up country blocking"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:98
+msgid "Getting started"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:99
+msgid "Get protected:"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:100
+msgid "Choose a provider"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:102
+msgid "Select locations"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:104
+msgid "Verify an IP"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:109
+msgid "Support"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:110
+msgid "GitHub"
+msgstr ""
+
+#: admin/legacy/includes/welcome.php:111
 msgid "Give this plugin a five star rating"
 msgstr ""
 
-#: admin/legacy/includes/welcome.php:59
+#: admin/legacy/includes/welcome.php:112
 msgid "Rate this plugin"
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:70
-msgid "State or region precision"
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:71
-msgid "New in 1.2.0+"
-msgstr ""
-
-#. translators: 1: native provider link, 2: pricing page link, 3: setup guide link
-#: admin/legacy/includes/welcome.php:77
-#, php-format
-msgid "Match the administrative area returned for each country, such as a state, province, prefecture, or territory, using the %1$s. Sign up for a %2$s, then %3$s."
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:78
-msgid "IP Location Block provider"
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:79
-msgid "premium plan"
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:80
-msgid "learn how to set it up"
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:89
-msgid "Found a problem?"
-msgstr ""
-
-#. translators: 1: WordPress.org support link, 2: GitHub link
-#: admin/legacy/includes/welcome.php:95
-#, php-format
-msgid "Open a support ticket %1$s, or report the issue on %2$s."
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:96
-msgid "on WordPress.org"
-msgstr ""
-
-#: admin/legacy/includes/welcome.php:97
-msgid "GitHub"
 msgstr ""
 
 #. translators: %s: comma-separated list of ignored provider names.
@@ -2445,6 +2465,7 @@ msgstr ""
 msgid "Protection off"
 msgstr ""
 
+#: admin/legacy/includes/welcome.php:108
 #: admin/app/src/App.jsx:183
 msgid "Documentation"
 msgstr ""
@@ -3242,6 +3263,7 @@ msgstr ""
 msgid "Use the administrative area returned for each country, such as a state, province, prefecture, or region."
 msgstr ""
 
+#: admin/legacy/includes/welcome.php:75
 #: admin/app/src/components/ProviderSetup.jsx:721
 msgid "I already have a key"
 msgstr ""
@@ -3377,6 +3399,7 @@ msgstr ""
 msgid "Actions"
 msgstr ""
 
+#: admin/legacy/includes/welcome.php:63
 #: admin/app/src/components/ProviderTable.jsx:186
 msgid "Recommended"
 msgstr ""

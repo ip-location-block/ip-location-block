@@ -64,7 +64,7 @@ body.toplevel_page_ip-location-block {
 }
 
 #wpbody-content:has(.ilb-view-new) {
-  .notice,
+  .notice:not(.ip-location-block-notice-intro),
   > .updated,
   > .error,
   > .update-nag,
