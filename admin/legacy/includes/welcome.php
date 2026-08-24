@@ -28,7 +28,7 @@ $url_docs      = 'https://iplocationblock.com/docs/getting-started/?utm_source=p
 $url_purchase  = 'https://iplocationblock.com/pricing/?utm_source=plugin&utm_medium=welcome&utm_campaign=api_signups';
 $url_prem_docs = 'https://iplocationblock.com/docs/blocking-rules/state-region/?utm_source=plugin&utm_medium=welcome&utm_campaign=regional_rules';
 $url_native    = 'https://iplocationblock.com/docs/providers/ip-location-block/?utm_source=plugin&utm_medium=welcome&utm_campaign=native_provider';
-$url_github    = 'https://github.com/gdarko/ip-location-block/';
+$url_github    = 'https://github.com/ip-location-block/ip-location-block/';
 $url_wordpress = 'https://wordpress.org/support/plugin/ip-location-block/';
 $url_review    = 'https://wordpress.org/support/plugin/ip-location-block/reviews/#new-post';
 $logo          = plugins_url( 'admin/images/logo.svg', IP_LOCATION_BLOCK_BASE );

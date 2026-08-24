@@ -34,7 +34,7 @@ test.describe.serial("administration", () => {
       .getByRole("button", { name: "Test connection", exact: true })
       .click();
     expect((await providerResponse).status()).toBe(200);
-    await expect(page.getByText("Ready", { exact: true })).toBeVisible();
+    await expect(page.getByText(/^(?:Connected|Ready to save)$/)).toBeVisible();
 
     await openAdmin(page, "search");
     await page

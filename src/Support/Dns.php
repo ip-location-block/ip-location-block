@@ -12,6 +12,9 @@
 
 namespace IPLocationBlock\Support;
 
+use IPLocationBlock\Vendor\NetDNS2\Exception as NetDnsException;
+use IPLocationBlock\Vendor\NetDNS2\Resolver;
+
 /**
  * Class Dns
  *
@@ -20,8 +23,8 @@ namespace IPLocationBlock\Support;
  *
  * Two deliberate changes vs. the legacy class:
  *   - the lazy `require_once includes/Net/DNS2.php` / set_include_path() pair is
- *     dropped; pear/net_dns2 is now provided by the composer autoloader, so
- *     \Net_DNS2_Resolver resolves on demand.
+ *     dropped; the maintained NetDNS2 v2 library is bundled under the plugin's
+ *     private vendor namespace.
  *   - the private inet_pton() polyfill is removed (native since PHP 7.0; the
  *     plugin now targets PHP 8.1+), calling the global inet_pton() directly.
  */
@@ -38,12 +41,12 @@ class Dns {
 		// array( 'nameservers' => array( '1.1.1.1', '1.0.0.1' ) ) // APNIC public DNS
 		$servers = array( 'nameservers' => apply_filters( 'ip-location-block-dns', array() ) );
 		if ( ! empty( $servers['nameservers'] ) ) {
-			$r = new \Net_DNS2_Resolver( $servers );
+			$r = new Resolver( $servers );
 
 			try {
 				$result = $r->query( $ip, 'PTR' );
 			}
-			catch ( \Net_DNS2_Exception $e ) {
+			catch ( NetDnsException $e ) {
 				$result = $e->getMessage();
 			}
 

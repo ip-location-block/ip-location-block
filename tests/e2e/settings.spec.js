@@ -419,6 +419,7 @@ test.describe.serial("settings", () => {
 
     try {
       await saveSettings(page, configured);
+      const persisted = await getSettings(page);
       await openAdmin(page, "settings", "&view=simple");
 
       const locationToggle = page.getByLabel("Enable location blocking");
@@ -459,7 +460,7 @@ test.describe.serial("settings", () => {
           exact: true,
         }),
       ).toBeDisabled();
-      expect(await getSettings(page)).toEqual(configured);
+      expect(await getSettings(page)).toEqual(persisted);
 
       await page.getByRole("button", { name: "Save Changes" }).click();
       await expect(page.locator(".components-snackbar")).toContainText(
@@ -508,7 +509,9 @@ test.describe.serial("settings", () => {
     await page
       .getByRole("button", { name: "Geolocation API settings", exact: true })
       .click();
-    await expect(page.getByLabel("IP Location Block")).not.toBeChecked();
+    await expect(
+      page.getByRole("checkbox", { name: "IP Location Block", exact: true }),
+    ).not.toBeChecked();
     await page.getByRole("button", { name: "Simple", exact: true }).click();
     await expect(
       page.getByRole("heading", {

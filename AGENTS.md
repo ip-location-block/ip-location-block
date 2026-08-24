@@ -4,9 +4,9 @@ Guidance for AI coding agents working in this repository.
 
 ## Project Overview
 
-IP Location Block — a WordPress plugin (fork of the abandoned "IP Geo Block") that blocks access based on IP geolocation. Requires PHP 8.1+. This repo is its own git repository, nested inside the iplocationblock monorepo (the monorepo root's `CLAUDE.md` at `../../../CLAUDE.md` covers the Docker/WP-CLI development environment; WordPress runs at http://wp.iplocationblock.test).
+IP Location Block — a WordPress plugin (fork of the abandoned "IP Geo Block") that blocks access based on IP geolocation. Requires WordPress 6.5+ and PHP 8.1+. This repo is its own git repository, nested inside the iplocationblock monorepo (the monorepo root's `CLAUDE.md` at `../../../CLAUDE.md` covers the Docker/WP-CLI development environment; WordPress runs at http://wp.iplocationblock.test).
 
-Version 1.4.0 is a major restructuring: the runtime moved from legacy `classes/` into PSR-4 `src/`, and a React admin (Beta) was added alongside the frozen classic admin.
+Version 1.4.0 is a major restructuring: the runtime moved from legacy `classes/` into PSR-4 `src/`, and a React admin became the default on WordPress 6.6+ alongside the frozen Classic interface used on WordPress 6.5.
 
 ## Commands
 
@@ -26,12 +26,13 @@ npm run format
 
 # Release
 scripts/release_prepare.sh  # full pipeline: scope → test → prune dev deps → grep-guards → npm build → zip (honors .distignore)
-scripts/release_make.sh     # release_prepare + git tag + WordPress.org SVN deploy
+scripts/validate_release.sh # validates version and compatibility metadata for local and CI releases
+scripts/release_make.sh     # retired safety stub; releases must use an annotated v* tag and GitHub Actions
 ```
 
 The PHPUnit suite runs entirely without WordPress: `tests/bootstrap.php` defines plugin constants and a minimal `WP_Error`; WP functions are stubbed per-test with Brain Monkey. Tests live in `tests/Unit/` mirroring `src/` namespaces, with fakes in `tests/Fakes/` and provider response fixtures in `tests/fixtures/`.
 
-CI (`.github/workflows/release.yml`, on `v*` tags) enforces version consistency across the plugin header `Version:`, the `IP_LOCATION_BLOCK_VERSION` constant, and readme.txt `Stable tag:` — all three must match before tagging a release.
+CI (`.github/workflows/release.yml`, on `v*` tags) runs `scripts/validate_release.sh` to enforce consistency across the plugin header and constant, MU helper, readme, npm manifests, changelogs, and WordPress/PHP compatibility metadata. Release-candidate tags create a WordPress.org SVN tag without changing trunk; only a stable tag uses the full deploy.
 
 ## Architecture
 
@@ -68,9 +69,9 @@ These identities are consumed by deployed mu-plugin copies (which `remove_action
 
 ### Two admin UIs
 
-- `admin/legacy/` — the frozen classic admin (`IP_Location_Block_Admin` + ajax + tab files), the default UI. Never namespaced, treated as read-only except for bug fixes.
-- `admin/app/` — React (Beta) admin built with `@wordpress/scripts`; opt-in submenu (slug `ip-location-block-beta`) registered by `src/Admin/ReactAdmin.php`, which localizes `ipLocationBlockBeta` (REST root/nonce). Source in `admin/app/src/` (tabs, components, lib), built output in `admin/app/build/`, bundled Leaflet in `admin/app/vendor/`.
+- `admin/legacy/` — the frozen Classic admin (`IP_Location_Block_Admin` + ajax + tab files), used on WordPress 6.5 and available through the Classic view switcher on newer WordPress versions. Never namespaced, treated as read-only except for bug fixes.
+- `admin/app/` — React admin built with `@wordpress/scripts`; the default interface on WordPress 6.6+. `src/Admin/ReactAdmin.php` registers the existing settings-page location and localizes `ipLocationBlockBeta` (the historical JavaScript object name, retained for compatibility). Source in `admin/app/src/` (tabs, components, lib), built output in `admin/app/build/`, bundled Leaflet in `admin/app/vendor/`.
 
 ### Vendored/scoped dependencies
 
-Third-party geo libraries (geoip2/maxmind, ip2location, phpseclib) are dev-dependencies that php-scoper rewrites into `vendor_prefixed/` under the `IPLocationBlock\Vendor\` prefix (config: `scoper.inc.php`, map: `bin/build-scoped.php`; auto-runs on `composer install`). **Code in `src/` must reference these libraries only via `IPLocationBlock\Vendor\...`** — `release_prepare.sh` grep-guards fail the build otherwise. The only unscoped runtime Composer dependency is `pear/net_dns2`. The main plugin file loads the scoped autoloader first, then `vendor/autoload.php`.
+Third-party libraries (geoip2/maxmind, ip2location, phpseclib, and maintained NetDNS2 v2) are dev-dependencies that php-scoper rewrites into `vendor_prefixed/` under the `IPLocationBlock\Vendor\` prefix (config: `scoper.inc.php`, map and license copies: `bin/build-scoped.php`; auto-runs on `composer install`). **Code in `src/` must reference these libraries only via `IPLocationBlock\Vendor\...`** — `release_prepare.sh` grep-guards fail the build otherwise. Raw packages are pruned from `vendor/` before release, while their scoped runtime code and license notices ship in `vendor_prefixed/`. The main plugin file loads the scoped autoloader first, then `vendor/autoload.php`.

@@ -30,9 +30,13 @@ class SystemInfo {
 		$val = Dns::gethostbyaddr( '8.8.8.8' );
 		$key = microtime( true ) - $key;
 
-		// MySQL (supress WordPress error: Unknown system variable 'block_encryption_mode')
-		$ver = $GLOBALS['wpdb']->get_var( 'SELECT @@GLOBAL.version' );
-		$bem = $GLOBALS['wpdb']->get_var( 'SELECT @@GLOBAL.block_encryption_mode' ); // `aes-128-ecb` @since MySQL 5.6.17
+		// MySQL. MariaDB and some MySQL-compatible servers do not expose
+		// block_encryption_mode, so keep that optional diagnostic query quiet.
+		$wpdb           = $GLOBALS['wpdb'];
+		$ver            = $wpdb->get_var( 'SELECT @@GLOBAL.version' );
+		$suppress_errors = $wpdb->suppress_errors( true );
+		$bem            = $wpdb->get_var( 'SELECT @@GLOBAL.block_encryption_mode' ); // `aes-128-ecb` @since MySQL 5.6.17
+		$wpdb->suppress_errors( $suppress_errors );
 
 		// Human readable size, Proces owner
 		// https://gist.github.com/mehdichaouch/341a151dd5f469002a021c9396aa2615

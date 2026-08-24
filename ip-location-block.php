@@ -13,9 +13,9 @@
  *
  * Plugin Name:       IP Location Block
  * Plugin URI:        https://wordpress.org/plugins/ip-location-block/
- * Description:       Easily setup location block based on the visitor country, city, state or provider. Also protects your site from spam, login attempts, zero-day exploits, malicious access & more.
+ * Description:       Block visitors by country, state, or region. Add regional precision, bot controls, login protection, and request logs.
  * Version:           1.4.0
- * Requires at least: 5.9
+ * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            IP Location Block
  * Author URI:        https://iplocationblock.com/

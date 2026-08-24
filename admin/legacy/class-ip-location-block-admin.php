@@ -755,8 +755,8 @@ class IP_Location_Block_Admin {
 		$network  = $this->dashboard_url( $settings['network_wide'] );
 
 		// Check version and compatibility
-		if ( version_compare( get_bloginfo( 'version' ), '5.9' ) < 0 ) {
-			self::add_admin_notice( 'error', __( 'You need WordPress 5.9+.', 'ip-location-block' ) );
+		if ( version_compare( get_bloginfo( 'version' ), '6.5' ) < 0 ) {
+			self::add_admin_notice( 'error', __( 'You need WordPress 6.5+.', 'ip-location-block' ) );
 		}
 
 		// Check providers
@@ -1737,7 +1737,9 @@ class IP_Location_Block_Admin {
 		// normalize escaped char
 		$output           ['response_msg'] = preg_replace( '/\\\\/', '', $output           ['response_msg'] );
 		$output['public']['response_msg']  = preg_replace( '/\\\\/', '', $output['public']['response_msg'] );
-		$output['comment']['msg']          = preg_replace( '/\\\\/', '', $output['comment']['msg'] );
+		if ( null !== $output['comment']['msg'] ) {
+			$output['comment']['msg'] = preg_replace( '/\\\\/', '', $output['comment']['msg'] );
+		}
 
 		// sanitize proxy
 		$output['validation']['proxy'] = implode( ',', $this->trim(

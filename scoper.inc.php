@@ -6,9 +6,8 @@
  * `IPLocationBlock\Vendor` so they cannot collide with copies of the same
  * libraries shipped by other plugins.
  *
- * NOTE: pear/net_dns2 is intentionally NOT scoped (PEAR-style dynamic
- * class-name construction breaks under prefixing) and stays in vendor/.
- * phpunit / brain-monkey / mockery are dev-only and never enter vendor_prefixed/.
+ * NetDNS2 v2 is namespaced and can be scoped safely. phpunit / brain-monkey /
+ * mockery are dev-only and never enter vendor_prefixed/.
  *
  * @see https://github.com/humbug/php-scoper
  */
@@ -45,6 +44,14 @@ return [
             ->notName('/LICENSE|.*\\.md|.*\\.dist|Makefile|composer\\.json|.*\\.TXT/')
             ->exclude(['doc', 'docs', 'test', 'tests', 'Tests', 'databases', 'example'])
             ->in('vendor/ip2location'),
+
+        // NetDNS2 v2 resolver.
+        Finder::create()
+            ->files()
+            ->ignoreVCS(true)
+            ->notName('/LICENSE|.*\\.md|.*\\.dist|Makefile|composer\\.json/')
+            ->exclude(['doc', 'docs', 'test', 'tests', 'Tests'])
+            ->in('vendor/mikepultz/netdns2/src'),
 
         // phpseclib3 + bcmath_compat polyfill.
         Finder::create()

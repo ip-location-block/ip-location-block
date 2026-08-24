@@ -32,11 +32,11 @@ class Diagnostics {
 		self::add_check(
 			$checks,
 			'wordpress-version',
-			version_compare( get_bloginfo( 'version' ), '5.9', '<' ) ? 'critical' : 'pass',
+			version_compare( get_bloginfo( 'version' ), '6.5', '<' ) ? 'critical' : 'pass',
 			'system',
 			__( 'WordPress compatibility', 'ip-location-block' ),
-			version_compare( get_bloginfo( 'version' ), '5.9', '<' )
-				? __( 'IP Location Block requires WordPress 5.9 or newer.', 'ip-location-block' )
+			version_compare( get_bloginfo( 'version' ), '6.5', '<' )
+				? __( 'IP Location Block requires WordPress 6.5 or newer.', 'ip-location-block' )
 				: __( 'The installed WordPress version is supported.', 'ip-location-block' )
 		);
 

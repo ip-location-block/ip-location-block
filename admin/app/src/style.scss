@@ -1272,6 +1272,10 @@ body.toplevel_page_ip-location-block {
     margin: 18px 0 0;
     padding: 14px 0 0 54px;
     border-top: 1px solid var(--ilb-border-soft);
+
+    .components-button {
+      min-height: 36px;
+    }
   }
 }
 
@@ -1525,6 +1529,7 @@ body.toplevel_page_ip-location-block {
 
     .components-button.is-link {
       height: auto;
+      min-height: 36px;
     }
 
     .dashicons {

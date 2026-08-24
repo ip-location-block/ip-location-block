@@ -31,6 +31,7 @@ $composerJson = [
     'autoload' => [
         'psr-4' => [
             'IPLocationBlock\\Vendor\\GeoIp2\\' => 'geoip2/geoip2/src/',
+            'IPLocationBlock\\Vendor\\NetDNS2\\' => 'mikepultz/netdns2/src/NetDNS2/',
             'IPLocationBlock\\Vendor\\MaxMind\\Db\\' => 'maxmind-db/reader/src/MaxMind/Db/',
             'IPLocationBlock\\Vendor\\MaxMind\\' => 'maxmind/web-service-common/src/',
             'IPLocationBlock\\Vendor\\Composer\\CaBundle\\' => 'composer/ca-bundle/src/',
@@ -52,3 +53,36 @@ file_put_contents(
     json_encode($composerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n"
 );
 echo "Created vendor_prefixed/composer.json\n";
+
+// Retain the license text for every dependency copied into the scoped runtime
+// tree. The package source directories are removed by the release prune, so
+// these generated copies are the notices that ship in the plugin archive.
+$licenseFiles = [
+    'composer/ca-bundle/LICENSE' => 'composer/ca-bundle/LICENSE',
+    'geoip2/geoip2/LICENSE' => 'geoip2/geoip2/LICENSE',
+    'ip2location/ip2location-php/LICENSE.TXT' => 'ip2location/ip2location-php/LICENSE.TXT',
+    'maxmind/web-service-common/LICENSE' => 'maxmind/web-service-common/LICENSE',
+    'maxmind-db/reader/LICENSE' => 'maxmind-db/reader/LICENSE',
+    'mikepultz/netdns2/LICENSE' => 'mikepultz/netdns2/LICENSE',
+    'paragonie/constant_time_encoding/LICENSE.txt' => 'paragonie/constant_time_encoding/LICENSE.txt',
+    'phpseclib/bcmath_compat/LICENSE.md' => 'phpseclib/bcmath_compat/LICENSE.md',
+    'phpseclib/phpseclib/LICENSE' => 'phpseclib/phpseclib/LICENSE',
+];
+
+foreach ($licenseFiles as $source => $destination) {
+    $sourcePath = dirname(__DIR__) . '/vendor/' . $source;
+    $destinationPath = $vendorPrefixedDir . '/licenses/' . $destination;
+
+    if (!is_file($sourcePath)) {
+        fwrite(STDERR, "Missing scoped dependency license: {$sourcePath}\n");
+        exit(1);
+    }
+
+    if (!is_dir(dirname($destinationPath))) {
+        mkdir(dirname($destinationPath), 0777, true);
+    }
+
+    copy($sourcePath, $destinationPath);
+}
+
+echo "Copied scoped dependency licenses\n";
