@@ -34,31 +34,8 @@ jobs:
             echo "available=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check that the readme Stable tag exists
-        id: check-stable-tag
-        if: steps.check-svn.outputs.available == 'true'
-        env:
-          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
-          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
-        run: |
-          STABLE_TAG=$(awk -F ': *' '/^Stable tag:/ { print $2; exit }' readme.txt)
-          if [ -z "$STABLE_TAG" ]; then
-            echo "::error::readme.txt has no Stable tag"
-            exit 1
-          fi
-
-          if svn info "https://plugins.svn.wordpress.org/ip-location-block/tags/$STABLE_TAG" \
-               --no-auth-cache --non-interactive \
-               --username "$SVN_USERNAME" --password "$SVN_PASSWORD" >/dev/null 2>&1; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-            echo "WordPress.org tag $STABLE_TAG exists; assets may be updated."
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Skipping assets because WordPress.org tag $STABLE_TAG does not exist yet."
-          fi
-
       - name: Update WordPress.org assets
-        if: steps.check-svn.outputs.available == 'true' && steps.check-stable-tag.outputs.ready == 'true'
+        if: steps.check-svn.outputs.available == 'true'
         uses: 10up/action-wordpress-plugin-asset-update@stable
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
