@@ -45,11 +45,11 @@ assert_equal() {
 }
 
 PLUGIN_HEADER_VERSION="$(header_value "$PLUGIN_DIR/ip-location-block.php" "Version")"
-PLUGIN_CONSTANT_VERSION="$(sed -nE "s/.*define\([[:space:]]*'IP_LOCATION_BLOCK_VERSION',[[:space:]]*'([^']+)'.*/\1/p" "$PLUGIN_DIR/ip-location-block.php" | head -n 1)"
+PLUGIN_CONSTANT_VERSION="$(awk -F "'" '/define\([[:space:]]/ && /IP_LOCATION_BLOCK_VERSION/ { print $4; exit }' "$PLUGIN_DIR/ip-location-block.php")"
 MU_VERSION="$(header_value "$PLUGIN_DIR/wp-content/mu-plugins/ip-location-block-mu.php" "Version")"
 README_VERSION="$(header_value "$PLUGIN_DIR/readme.txt" "Stable tag")"
-PACKAGE_VERSION="$(sed -nE 's/^[[:space:]]*"version":[[:space:]]*"([^"]+)".*/\1/p' "$PLUGIN_DIR/package.json" | head -n 1)"
-LOCK_VERSION="$(sed -nE 's/^[[:space:]]*"version":[[:space:]]*"([^"]+)".*/\1/p' "$PLUGIN_DIR/package-lock.json" | head -n 1)"
+PACKAGE_VERSION="$(awk -F '"' '/^[[:space:]]*"version"[[:space:]]*:/ { print $4; exit }' "$PLUGIN_DIR/package.json")"
+LOCK_VERSION="$(awk -F '"' '/^[[:space:]]*"version"[[:space:]]*:/ { print $4; exit }' "$PLUGIN_DIR/package-lock.json")"
 
 assert_equal "$BASE_VERSION" "$PLUGIN_HEADER_VERSION" "Plugin header Version"
 assert_equal "$BASE_VERSION" "$PLUGIN_CONSTANT_VERSION" "IP_LOCATION_BLOCK_VERSION"
@@ -65,7 +65,7 @@ PLUGIN_WP="$(header_value "$PLUGIN_DIR/ip-location-block.php" "Requires at least
 README_WP="$(header_value "$PLUGIN_DIR/readme.txt" "Requires at least")"
 PLUGIN_PHP="$(header_value "$PLUGIN_DIR/ip-location-block.php" "Requires PHP")"
 README_PHP="$(header_value "$PLUGIN_DIR/readme.txt" "Requires PHP")"
-COMPOSER_PHP="$(sed -nE 's/^[[:space:]]*"php":[[:space:]]*">=([^"]+)".*/\1/p' "$PLUGIN_DIR/composer.json" | head -n 1)"
+COMPOSER_PHP="$(awk -F '"' '/^[[:space:]]*"php"[[:space:]]*:[[:space:]]*">=/ { sub( /^>=/, "", $4 ); print $4; exit }' "$PLUGIN_DIR/composer.json")"
 COMPOSER_PLATFORM_PHP="$(awk '
 	/"platform"[[:space:]]*:/ { platform = 1; next }
 	platform && /"php"[[:space:]]*:/ {
