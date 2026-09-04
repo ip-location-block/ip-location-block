@@ -112,6 +112,7 @@ Yes. When old settings are detected, Plugin settings offers a migration preview 
 *Release Date - 4 Sep 2026*
 
 * The release notes panel now appears only on fresh installations. Existing sites are no longer shown it after an update, on single sites and across a network.
+* Simple Mode now has a compact Native Mode suggestion that can be permanently hidden for all administrators on the site.
 * Uninstalling now clears the stored release notes panel state, so a later re-installation is treated as a first install again.
 
 = 1.4.0 =

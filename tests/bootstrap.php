@@ -69,3 +69,21 @@ if (!class_exists('WP_Error')) {
         }
     }
 }
+
+// Minimal request for unit testing REST handlers without loading WordPress.
+if (!class_exists('WP_REST_Request')) {
+    class WP_REST_Request
+    {
+        private array $params = array();
+
+        public function set_param($key, $value): void
+        {
+            $this->params[$key] = $value;
+        }
+
+        public function get_param($key)
+        {
+            return $this->params[$key] ?? null;
+        }
+    }
+}

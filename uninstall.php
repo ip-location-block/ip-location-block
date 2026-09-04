@@ -32,6 +32,7 @@ class IP_Location_Block_Uninstall {
 		// has to be removed explicitly: otherwise a later re-install is no longer
 		// treated as a first install by the panel. @since 1.4.1
 		delete_option( \IPLocationBlock\Admin\WelcomeNotice::OPTION );
+		delete_option( \IPLocationBlock\Admin\NativePromoNotice::OPTION );
 		IP_Location_Block_Logs::delete_tables();
 	}
 

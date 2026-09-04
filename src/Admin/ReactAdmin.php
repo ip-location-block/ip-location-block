@@ -367,6 +367,7 @@ final class ReactAdmin {
 			'logoUrl'            => plugins_url( 'admin/images/logo.svg', IP_LOCATION_BLOCK_BASE ),
 			'docsUrl'            => 'https://iplocationblock.com/docs/?utm_source=plugin&utm_medium=admin&utm_campaign=admin_topbar',
 			'viewSwitchNonce'    => wp_create_nonce( self::VIEW_NONCE ),
+			'nativePromoDismissed' => NativePromoNotice::is_dismissed(),
 		) );
 
 		wp_set_script_translations( self::SLUG, 'ip-location-block' );

@@ -30,6 +30,13 @@ export const saveSettings = ( data, scope = settingsScope ) =>
 export const getDefaults = () =>
 	apiFetch( { path: `/${ ns }/settings/defaults` } );
 
+export const dismissNativePromo = () =>
+	apiFetch( {
+		path: `/${ ns }/notices/dismiss`,
+		method: 'POST',
+		data: { id: 'native-mode-promo' },
+	} );
+
 export const getSettingsContext = () =>
 	apiFetch( {
 		path: `/${ ns }/settings/context?scope=${ encodeURIComponent(

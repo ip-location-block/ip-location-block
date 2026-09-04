@@ -45,7 +45,7 @@ cd "$PLUGIN_DIR"
 [[ -f .distignore ]] || fail ".distignore not found at $PLUGIN_DIR."
 
 step "[1/9] Validating release metadata and dependency declarations"
-bash "$SCRIPT_DIR/validate_release.sh" "v1.4.0"
+bash "$SCRIPT_DIR/validate_release.sh"
 composer validate --no-check-publish
 composer audit --locked
 

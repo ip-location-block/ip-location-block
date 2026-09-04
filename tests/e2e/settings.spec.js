@@ -515,29 +515,33 @@ test.describe.serial("settings", () => {
     await page.getByRole("button", { name: "Simple", exact: true }).click();
     await expect(
       page.getByRole("heading", {
-        name: "Better accuracy, down to state or region.",
+        name: "State and region blocking",
       }),
     ).toBeVisible();
     await expect(
       page.getByText(
-        "Frequently updated premium data improves country accuracy and adds state or region precision.",
+        "Native Mode adds state and region rules using frequently updated geolocation data.",
       ),
     ).toBeVisible();
     await expect(
-      page.getByText("Better accuracy", { exact: true }),
+      page.getByText("Native Mode · Optional", { exact: true }),
     ).toBeVisible();
-    const upgradeLink = page.getByRole("link", {
-      name: "Upgrade to Native Mode",
+    const learnLink = page.getByRole("link", {
+      name: /Learn more/,
     });
-    await expect(upgradeLink).toBeVisible();
-    await expect(upgradeLink).toHaveAttribute(
+    await expect(learnLink).toBeVisible();
+    await expect(learnLink).toHaveAttribute(
       "href",
-      /utm_source=wordpress.*utm_medium=plugin.*utm_campaign=native_mode.*utm_content=provider-card/,
+      "https://iplocationblock.com/docs/blocking-rules/state-region/",
     );
+    await expect(
+      page.getByRole("button", { name: "Connect API key", exact: true }),
+    ).toBeDisabled();
     await page.getByRole("button", { name: "Undo", exact: true }).click();
 
     await expect(page.locator(".ilb-provider-pending")).toHaveCount(0);
     await expect(disconnect).toBeVisible();
+    await expect(page.locator(".ilb-provider-promo")).toHaveCount(0);
     expect(await getSettings(page)).toEqual(baseline);
   });
 });

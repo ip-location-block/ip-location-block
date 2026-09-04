@@ -14,6 +14,7 @@
 
 namespace IPLocationBlock\Rest;
 
+use IPLocationBlock\Admin\NativePromoNotice;
 use IPLocationBlock\Admin\WelcomeNotice;
 use IPLocationBlock\Core\Validator;
 use IPLocationBlock\Diagnostics\Diagnostics;
@@ -328,15 +329,23 @@ class RestApi {
 	public static function dismiss_notice( \WP_REST_Request $request ) {
 		$id = sanitize_text_field( (string) $request->get_param( 'id' ) );
 
-		if ( 'welcome' !== $id ) {
+		if ( 'native-mode-promo' === $id ) {
+			if ( ! NativePromoNotice::dismiss() ) {
+				return new \WP_Error(
+					'ilb_notice_dismiss_failed',
+					__( 'Could not hide this suggestion. Please try again.', 'ip-location-block' ),
+					array( 'status' => 500 )
+				);
+			}
+		} elseif ( 'welcome' === $id ) {
+			WelcomeNotice::dismiss();
+		} else {
 			return new \WP_Error(
 				'ilb_unknown_notice',
 				__( 'Unknown notice.', 'ip-location-block' ),
 				array( 'status' => 400 )
 			);
 		}
-
-		WelcomeNotice::dismiss();
 
 		return rest_ensure_response( array( 'dismissed' => true ) );
 	}

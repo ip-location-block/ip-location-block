@@ -4864,3 +4864,40 @@ msgstr ""
 #: admin/app/src/tabs/Statistics.jsx:862
 msgid "No IP cache entries."
 msgstr ""
+
+#: admin/app/src/components/NativeModeSuggestion.jsx
+msgid "Native Mode · Optional"
+msgstr ""
+
+#: admin/app/src/components/NativeModeSuggestion.jsx
+msgid "State and region blocking"
+msgstr ""
+
+#: admin/app/src/components/NativeModeSuggestion.jsx
+msgid "Native Mode adds state and region rules using frequently updated geolocation data."
+msgstr ""
+
+#: admin/app/src/components/NativeModeSuggestion.jsx
+msgid "Learn more"
+msgstr ""
+
+#: admin/app/src/components/NativeModeSuggestion.jsx
+msgid "(opens in a new tab)"
+msgstr ""
+
+#: admin/app/src/components/NativeModeSuggestion.jsx
+msgid "Connect API key"
+msgstr ""
+
+#: admin/app/src/components/NativeModeSuggestion.jsx
+#: src/Rest/RestApi.php
+msgid "Could not hide this suggestion. Please try again."
+msgstr ""
+
+#: admin/app/src/components/NativeModeSuggestion.jsx
+msgid "Hide this suggestion for this site"
+msgstr ""
+
+#: admin/app/src/components/NativeModeSuggestion.jsx
+msgid "Hidden for all administrators on this site, including after updates."
+msgstr ""

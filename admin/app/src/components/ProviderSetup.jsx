@@ -1,5 +1,5 @@
 /* eslint-disable no-nested-ternary */
-import { useEffect, useMemo, useState } from '@wordpress/element';
+import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import {
 	Button,
 	Card,
@@ -22,7 +22,7 @@ import {
 	quotaBlocksProvider,
 	quotaSummary,
 } from '../providerLogic';
-import { NativeBenefits, UpgradeButton } from './PrecisionContent';
+import NativeModeSuggestion from './NativeModeSuggestion';
 
 const NATIVE = 'IP Location Block';
 const boot = window.ipLocationBlockAdmin || {};
@@ -163,6 +163,15 @@ export default function ProviderSetup( {
 	const [ switchRequest, setSwitchRequest ] = useState( null );
 	const [ testing, setTesting ] = useState( '' );
 	const [ notice, setNotice ] = useState( null );
+	const alternativesRef = useRef( null );
+	const [ focusNativeKey, setFocusNativeKey ] = useState( false );
+
+	useEffect( () => {
+		if ( focusNativeKey && alternativesOpen ) {
+			alternativesRef.current?.querySelector( 'input' )?.focus();
+			setFocusNativeKey( false );
+		}
+	}, [ focusNativeKey, alternativesOpen ] );
 
 	useEffect( () => {
 		setCredentials( ( current ) => {
@@ -693,131 +702,19 @@ export default function ProviderSetup( {
 				) }
 
 				{ ! activeNative && (
-					<section className="ilb-provider-promo">
-						<div className="ilb-provider-promo__content">
-							<span className="ilb-provider-promo__eyebrow">
-								{ __( 'Native Mode', 'ip-location-block' ) }
-							</span>
-							<h3>
-								{ __(
-									'Better accuracy, down to state or region.',
-									'ip-location-block'
-								) }
-							</h3>
-							<p>
-								{ __(
-									'Frequently updated premium data improves country accuracy and adds state or region precision.',
-									'ip-location-block'
-								) }
-							</p>
-							<NativeBenefits />
-							<div className="ilb-provider-promo__actions">
-								<UpgradeButton content="provider-card" />
-								<Button
-									variant="secondary"
-									disabled={ draftLocked }
-									onClick={ () => setNativeFormOpen( true ) }
-								>
-									{ __(
-										'I already have a key',
-										'ip-location-block'
-									) }
-								</Button>
-							</div>
-						</div>
-
-						<div
-							className="ilb-provider-promo__example"
-							role="group"
-							aria-label={ __(
-								'Example lookup',
-								'ip-location-block'
-							) }
-						>
-							<span className="ilb-provider-promo__example-label">
-								{ __( 'Example lookup', 'ip-location-block' ) }
-							</span>
-							<div className="ilb-provider-promo__result is-standard">
-								<span>
-									{ __(
-										'Country-level',
-										'ip-location-block'
-									) }
-								</span>
-								<strong>
-									{ __(
-										'United States',
-										'ip-location-block'
-									) }
-								</strong>
-							</div>
-							<div
-								className="ilb-provider-promo__connector"
-								aria-hidden="true"
-							>
-								↓
-							</div>
-							<div className="ilb-provider-promo__result is-native">
-								<span>
-									{ __( 'Native Mode', 'ip-location-block' ) }
-								</span>
-								<strong>
-									{ __(
-										'United States',
-										'ip-location-block'
-									) }
-								</strong>
-								<em>
-									{ __(
-										'Kentucky · State/region',
-										'ip-location-block'
-									) }
-								</em>
-							</div>
-						</div>
-
-						{ nativeFormOpen && (
-							<div className="ilb-provider-promo__form">
-								<TextControl
-									__nextHasNoMarginBottom
-									type="password"
-									label={ __(
-										'IP Location Block API key',
-										'ip-location-block'
-									) }
-									value={ getCredential( NATIVE ) }
-									disabled={ draftLocked }
-									onChange={ ( value ) =>
-										setCredential( NATIVE, value )
-									}
-									autoComplete="off"
-								/>
-								<div className="ilb-provider-choice__actions">
-									<Button
-										variant="primary"
-										isBusy={ testing === NATIVE }
-										disabled={ !! testing || draftLocked }
-										onClick={ () =>
-											runTest( NATIVE, true )
-										}
-									>
-										{ __(
-											'Test and connect',
-											'ip-location-block'
-										) }
-									</Button>
-									<Button
-										variant="tertiary"
-										onClick={ () =>
-											setNativeFormOpen( false )
-										}
-									>
-										{ __( 'Cancel', 'ip-location-block' ) }
-									</Button>
-								</div>
-							</div>
-						) }
-					</section>
+					<NativeModeSuggestion
+						connectDisabled={ draftLocked || transitioning }
+						onConnect={ () => {
+							setAlternative( NATIVE );
+							setAlternativesOpen( true );
+							setFocusNativeKey( true );
+						} }
+						onDismiss={ () =>
+							alternativesRef.current
+								?.querySelector( 'summary' )
+								?.focus()
+						}
+					/>
 				) }
 
 				{ activeNative && nativeFormOpen && (
@@ -826,6 +723,7 @@ export default function ProviderSetup( {
 							{ __( 'Replace API key', 'ip-location-block' ) }
 						</h3>
 						<TextControl
+							__next40pxDefaultSize
 							__nextHasNoMarginBottom
 							type="password"
 							label={ __( 'New API key', 'ip-location-block' ) }
@@ -860,6 +758,7 @@ export default function ProviderSetup( {
 
 				{ switchableProviders.length > 0 && (
 					<details
+						ref={ alternativesRef }
 						className="ilb-provider-alternatives"
 						open={ alternativesOpen }
 						onToggle={ ( event ) =>
@@ -876,6 +775,7 @@ export default function ProviderSetup( {
 						</summary>
 						<div className="ilb-provider-alternatives__body">
 							<SelectControl
+								__next40pxDefaultSize
 								__nextHasNoMarginBottom
 								label={ __( 'Provider', 'ip-location-block' ) }
 								value={ alternative }
@@ -890,6 +790,7 @@ export default function ProviderSetup( {
 							/>
 							{ alternativeMeta?.auth !== 'none' && (
 								<TextControl
+									__next40pxDefaultSize
 									__nextHasNoMarginBottom
 									type="password"
 									label={ __(

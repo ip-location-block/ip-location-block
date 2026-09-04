@@ -3,6 +3,7 @@
 *Release Date - 4 Sep 2026*
 
 * Change: The release notes panel now appears only on fresh installations. Existing sites are no longer shown it after an update, on single sites and across a network.
+* Improvement: Simple Mode now presents Native Mode in a compact, optional suggestion with a documentation link. Hiding it applies to all administrators on the site and stays in effect after updates.
 * Fix: Uninstalling now clears the stored release notes panel state, so a later re-installation is treated as a first install again.
 
 = 1.4.0 =
