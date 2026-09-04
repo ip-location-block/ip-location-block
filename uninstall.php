@@ -28,6 +28,10 @@ class IP_Location_Block_Uninstall {
 	private static function delete_blog_options() {
 		delete_option( IP_Location_Block::OPTION_NAME ); // @since 1.2.0
 		delete_option( IP_Location_Block::OPTION_META ); // @since 3.0.17
+		// The welcome/release panel state lives outside the settings row, so it
+		// has to be removed explicitly: otherwise a later re-install is no longer
+		// treated as a first install by the panel. @since 1.4.1
+		delete_option( \IPLocationBlock\Admin\WelcomeNotice::OPTION );
 		IP_Location_Block_Logs::delete_tables();
 	}
 

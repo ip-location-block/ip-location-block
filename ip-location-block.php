@@ -14,7 +14,7 @@
  * Plugin Name:       IP Location Block
  * Plugin URI:        https://wordpress.org/plugins/ip-location-block/
  * Description:       Block or allow WordPress visitors by country, US state or region, IP, CIDR, or ASN. Protect public pages, login, and wp-admin.
- * Version:           1.4.0
+ * Version:           1.4.1
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            IP Location Block
@@ -54,7 +54,7 @@ if ( ! defined( 'IP_LOCATION_BLOCK_VERSION' ) ):
 	/*----------------------------------------------------------------------------*
 	 * Global definition
 	 *----------------------------------------------------------------------------*/
-	define( 'IP_LOCATION_BLOCK_VERSION', '1.4.0' );
+	define( 'IP_LOCATION_BLOCK_VERSION', '1.4.1' );
 	define( 'IP_LOCATION_BLOCK_PATH', plugin_dir_path( __FILE__ ) ); // @since  0.2.8
 	define( 'IP_LOCATION_BLOCK_BASE', plugin_basename( __FILE__ ) ); // @since 1.5
 

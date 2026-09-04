@@ -4,7 +4,7 @@ Tags: geo blocking, country block, state blocker, region blocker, ip blocker
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
@@ -107,6 +107,13 @@ Yes. When old settings are detected, Plugin settings offers a migration preview 
 
 == Changelog ==
 
+= 1.4.1 =
+
+*Release Date - 4 Sep 2026*
+
+* The release notes panel now appears only on fresh installations. Existing sites are no longer shown it after an update, on single sites and across a network.
+* Uninstalling now clears the stored release notes panel state, so a later re-installation is treated as a first install again.
+
 = 1.4.0 =
 
 *Release Date - 24 Aug 2026*
@@ -120,6 +127,10 @@ Yes. When old settings are detected, Plugin settings offers a migration preview 
 Older release history is available in `changelog.txt` included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.4.1 =
+
+Maintenance release. The release notes panel is now shown only on fresh installations, so updating the plugin no longer re-opens it on sites that already run it.
 
 = 1.4.0 =
 

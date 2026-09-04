@@ -1,6 +1,6 @@
 {
   "name": "ip-location-block-admin",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "React admin for the IP Location Block WordPress plugin.",
   "private": true,
   "license": "GPL-3.0",

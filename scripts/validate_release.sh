@@ -5,7 +5,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 PLUGIN_DIR="$( cd -- "$(dirname "$SCRIPT_DIR")" >/dev/null 2>&1 ; pwd -P )"
-TAG_VERSION="${1:-v1.4.0}"
+TAG_VERSION="${1:-v1.4.1}"
 VERSION="${TAG_VERSION#v}"
 
 fail() {

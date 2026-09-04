@@ -21,7 +21,12 @@ final class WelcomeNoticeTest extends TestCase {
 		parent::setUp();
 
 		$this->options = array(
-			Validator::OPTION_NAME => array( 'welcome' => false ),
+			Validator::OPTION_NAME => array(
+				'welcome' => false,
+				// Default state for the campaign tests: a first install of the
+				// running version, which is the only install that may see the panel.
+				WelcomeNotice::FIRST_INSTALL_KEY => IP_LOCATION_BLOCK_VERSION,
+			),
 		);
 		$this->writes = array();
 		$this->resetValidatorSettings();
@@ -100,6 +105,42 @@ final class WelcomeNoticeTest extends TestCase {
 			$this->options[ WelcomeNotice::OPTION ]['campaign']
 		);
 		$this->assertFalse( $this->writes[0][2], 'campaign state must not autoload' );
+	}
+
+	/** ===== fresh install gate (1.4.1) ===== */
+
+	public function test_first_install_of_the_running_version_is_fresh(): void {
+		$this->assertTrue( WelcomeNotice::is_fresh_install() );
+	}
+
+	public function test_install_upgraded_from_an_older_version_is_not_fresh(): void {
+		$this->options[ Validator::OPTION_NAME ][ WelcomeNotice::FIRST_INSTALL_KEY ] = '1.3.9';
+
+		$this->assertFalse( WelcomeNotice::is_fresh_install() );
+	}
+
+	public function test_unstamped_install_is_not_treated_as_fresh(): void {
+		unset( $this->options[ Validator::OPTION_NAME ][ WelcomeNotice::FIRST_INSTALL_KEY ] );
+		$this->assertFalse( WelcomeNotice::is_fresh_install() );
+
+		$this->resetValidatorSettings();
+		$this->options[ Validator::OPTION_NAME ][ WelcomeNotice::FIRST_INSTALL_KEY ] = '';
+		$this->assertFalse( WelcomeNotice::is_fresh_install() );
+	}
+
+	public function test_mark_dismissed_closes_the_campaign_without_writing_settings(): void {
+		$this->assertTrue( WelcomeNotice::mark_dismissed() );
+
+		$this->assertSame(
+			WelcomeNotice::CAMPAIGN,
+			$this->options[ WelcomeNotice::OPTION ]['campaign']
+		);
+		$this->assertTrue( WelcomeNotice::is_dismissed() );
+		$this->assertSame(
+			array( WelcomeNotice::OPTION ),
+			array_column( $this->writes, 0 ),
+			'only the campaign option may be written'
+		);
 	}
 
 	public function test_dismiss_stores_campaign_and_keeps_legacy_flag_in_sync(): void {

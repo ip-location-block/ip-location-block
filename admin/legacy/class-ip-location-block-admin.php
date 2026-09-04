@@ -66,6 +66,12 @@ class IP_Location_Block_Admin {
 
 	/**
 	 * Whether the welcome/intro notice should render for this request.
+	 *
+	 * Since 1.4.1 the panel is onboarding for fresh installs only. Sites that
+	 * upgraded into this version are marked dismissed by the upgrade path, and
+	 * the fresh-install check below keeps the panel closed even if that state
+	 * is ever lost.
+	 *
 	 * @return bool
 	 */
 	private function should_show_intro_notice( $hook_suffix = '' ) {
@@ -78,6 +84,10 @@ class IP_Location_Block_Admin {
 		}
 
 		if ( ! \IPLocationBlock\Admin\WelcomeNotice::is_eligible_screen( (string) $hook_suffix ) ) {
+			return false;
+		}
+
+		if ( ! \IPLocationBlock\Admin\WelcomeNotice::is_fresh_install() ) {
 			return false;
 		}
 

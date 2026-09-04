@@ -34,6 +34,10 @@ class Options {
 	private static $option_table = array(
 		'version'              => IP_LOCATION_BLOCK_VERSION,// Version of this table (not package)
 		'welcome'              => false, // @since 1.2.0
+		// @since 1.4.1 The version this site first installed, stamped once by
+		// upgrade(). Empty until the first activation has run. Keeps the release
+		// panel an onboarding surface for fresh installs only.
+		'first_installed_version' => '',
 		// since version 1.0
 		'providers'            => array(), // List of providers and API keys
 		'comment'              => array(   // Message on the comment form
@@ -274,6 +278,13 @@ class Options {
 	 */
 	public static function upgrade() {
 
+		// Read the raw row before anything is written: a site that has no
+		// settings row yet is a first install, everything else is an upgrade.
+		// Validator::get_option() cannot answer this because it silently falls
+		// back to the defaults (and caches them) when the row is absent.
+		$stored     = \get_option( Validator::OPTION_NAME );
+		$is_upgrade = is_array( $stored ) && ! empty( $stored );
+
 		$settings = Validator::get_option();
 		$version  = isset( $settings['version'] ) ? $settings['version'] : '';
 
@@ -388,6 +399,28 @@ class Options {
 					}
 				}
 			}
+		}
+
+		// Stamp the version this site started from, once. A first install records
+		// the running version; an upgrade records the version it came from (or a
+		// sentinel when the stored settings never carried one).
+		$first_install_key = \IPLocationBlock\Admin\WelcomeNotice::FIRST_INSTALL_KEY;
+		if ( empty( $settings[ $first_install_key ] ) ) {
+			if ( $is_upgrade ) {
+				$settings[ $first_install_key ] = '' !== (string) $version ? (string) $version : '0';
+			} else {
+				$settings[ $first_install_key ] = IP_LOCATION_BLOCK_VERSION;
+			}
+		}
+
+		// The release/welcome panel is onboarding for first installs only. Sites
+		// that already had settings are upgraders, so close the current campaign
+		// for them: updating the plugin must never re-open the panel. Sites that
+		// dismissed an earlier campaign keep their own record either way, since
+		// the campaign option is the single source of truth.
+		if ( $is_upgrade ) {
+			$settings['welcome'] = true;
+			\IPLocationBlock\Admin\WelcomeNotice::mark_dismissed();
 		}
 
 		// Update Settings
