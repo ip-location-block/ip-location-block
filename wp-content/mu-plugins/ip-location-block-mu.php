@@ -29,7 +29,7 @@
  * Description:       Early-loading helper for IP Location Block: validates requests at mu-plugin time, before regular plugins load.
  * Version:           1.4.2
  * Author:            darkog
- * Author URI:        https://iplocationblock.com/
+ * Author URI:        https://iplocationblock.net/
  * Text Domain:       ip-location-block
  * License:           GPL-3.0
  * License URI:       https://www.gnu.org/licenses/gpl-3.0.txt

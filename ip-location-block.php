@@ -18,7 +18,7 @@
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            IP Location Block
- * Author URI:        https://iplocationblock.com/
+ * Author URI:        https://iplocationblock.net/
  * Text Domain:       ip-location-block
  * License:           GPL-3.0
  * License URI:       https://www.gnu.org/licenses/gpl-3.0.txt

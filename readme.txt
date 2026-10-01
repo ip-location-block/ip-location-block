@@ -113,6 +113,7 @@ Yes. When old settings are detected, Plugin settings offers a migration preview 
 
 * Fix: Service endpoints moved to iplocationblock.net while iplocationblock.com is unavailable, restoring IP Location Block Cloud lookups and quota checks.
 * New: Define `IP_LOCATION_BLOCK_API_BASE` in wp-config.php to point the cloud provider at a different API address.
+* Change: The default page for blocked visitors moved to geoblocked.im. Sites still using the old default are moved over automatically; custom redirect URLs are not changed.
 
 = 1.4.1 =
 

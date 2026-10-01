@@ -25,7 +25,13 @@ use IPLocationBlock\Core\Validator;
  */
 class Options {
 
-	const DEFAULT_REDIRECT_URL = 'https://blocked.iplocationblock.com/';
+	const DEFAULT_REDIRECT_URL = 'https://geoblocked.im/';
+
+	/**
+	 * Host of the hosted blocked page that was the default from 1.3.0 to 1.4.0.
+	 * The 1.4.2 upgrade moves settings still pointing at it to DEFAULT_REDIRECT_URL.
+	 */
+	const LEGACY_REDIRECT_HOST = 'blocked.iplocationblock.com';
 
 	/**
 	 * Default values of option table to be cached into options database table.
@@ -423,12 +429,41 @@ class Options {
 			\IPLocationBlock\Admin\WelcomeNotice::mark_dismissed();
 		}
 
+		// The hosted blocked page moved to geoblocked.im in 1.4.2. Only values
+		// still on the old hosted default move; a URL the site owner chose stays.
+		if ( version_compare( $version, '1.4.2' ) < 0 ) {
+			if ( isset( $settings['redirect_uri'] ) && self::is_legacy_redirect_url( $settings['redirect_uri'] ) ) {
+				$settings['redirect_uri'] = self::DEFAULT_REDIRECT_URL;
+			}
+			if ( isset( $settings['public']['redirect_uri'] ) && self::is_legacy_redirect_url( $settings['public']['redirect_uri'] ) ) {
+				$settings['public']['redirect_uri'] = self::DEFAULT_REDIRECT_URL;
+			}
+		}
+
 		// Update Settings
 		$settings['version']    = IP_LOCATION_BLOCK_VERSION;
 		$settings['request_ua'] = trim( str_replace( array( 'InfiniteWP' ), '', isset( $_SERVER['HTTP_USER_AGENT'] ) ? $_SERVER['HTTP_USER_AGENT'] : '' ) );
 
 		Validator::update_option( $settings );
 
+	}
+
+	/**
+	 * Whether a stored redirect URL points at the pre-1.4.2 hosted blocked page.
+	 * Matches the host exactly, so look-alike or custom URLs are never rewritten.
+	 *
+	 * @param mixed $url Stored redirect_uri value.
+	 *
+	 * @return bool
+	 */
+	public static function is_legacy_redirect_url( $url ) {
+		if ( ! is_string( $url ) || '' === $url ) {
+			return false;
+		}
+
+		$host = parse_url( $url, PHP_URL_HOST );
+
+		return is_string( $host ) && strtolower( $host ) === self::LEGACY_REDIRECT_HOST;
 	}
 
 	/**

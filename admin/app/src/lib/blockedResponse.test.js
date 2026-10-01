@@ -18,7 +18,7 @@ describe( 'blocked response helpers', () => {
 	);
 
 	test.each( [
-		'https://blocked.iplocationblock.com/',
+		'https://geoblocked.im/',
 		'https://blocked.example.com/',
 		'https://example.net/blocked?from=wordpress',
 		'http://blocked.example.com:8080/',
@@ -61,13 +61,13 @@ describe( 'blocked response helpers', () => {
 	test( 'compares canonical destination URLs', () => {
 		expect(
 			sameRedirectDestination(
-				'https://blocked.iplocationblock.com',
-				'https://blocked.iplocationblock.com/'
+				'https://geoblocked.im',
+				'https://geoblocked.im/'
 			)
 		).toBe( true );
 		expect(
 			sameRedirectDestination(
-				'https://blocked.iplocationblock.com/',
+				'https://geoblocked.im/',
 				'https://blocked.example.com/'
 			)
 		).toBe( false );

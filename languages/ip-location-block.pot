@@ -40,7 +40,7 @@ msgstr ""
 
 #. Author URI of the plugin
 #: ip-location-block.php
-msgid "https://iplocationblock.com/"
+msgid "https://iplocationblock.net/"
 msgstr ""
 
 #: admin/legacy/class-ip-location-block-admin.php:160

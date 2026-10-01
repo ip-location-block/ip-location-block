@@ -11,7 +11,8 @@ use IPLocationBlock\Settings\Options;
 use IPLocationBlock\Tests\Unit\TestCase;
 
 /**
- * The 1.4.1 install-provenance rules in Options::upgrade().
+ * The 1.4.1 install-provenance rules and the 1.4.2 redirect move in
+ * Options::upgrade().
  *
  * A site that already had a settings row is an upgrade: it gets the current
  * welcome campaign closed for it, so updating the plugin never re-opens the
@@ -167,5 +168,70 @@ final class OptionsUpgradeTest extends TestCase {
 			$this->options[ WelcomeNotice::OPTION ]['campaign']
 		);
 		$this->assertTrue( WelcomeNotice::is_dismissed() );
+	}
+
+	/** ===== hosted blocked page move (1.4.2) ===== */
+
+	/**
+	 * Sites already on 1.4.1 must migrate too: the gate is the release that
+	 * shipped the move, not the one before it.
+	 *
+	 * @dataProvider versionsBeforeTheMove
+	 */
+	public function test_upgrade_moves_the_old_hosted_redirect( string $from ): void {
+		$this->seed_existing_install(
+			array(
+				'version'      => $from,
+				'redirect_uri' => 'https://blocked.iplocationblock.com/',
+				'public'       => array( 'redirect_uri' => 'http://blocked.iplocationblock.com' ),
+			)
+		);
+
+		Options::upgrade();
+
+		$saved = $this->options[ Validator::OPTION_NAME ];
+		$this->assertSame( Options::DEFAULT_REDIRECT_URL, $saved['redirect_uri'] );
+		$this->assertSame( Options::DEFAULT_REDIRECT_URL, $saved['public']['redirect_uri'] );
+	}
+
+	/** @return array<string, array{string}> */
+	public static function versionsBeforeTheMove(): array {
+		return array(
+			'from 1.4.0' => array( '1.4.0' ),
+			'from 1.4.1' => array( '1.4.1' ),
+		);
+	}
+
+	public function test_upgrade_keeps_a_custom_redirect(): void {
+		$this->seed_existing_install(
+			array(
+				'version'      => '1.4.1',
+				'redirect_uri' => 'https://example.com/blocked/',
+				'public'       => array( 'redirect_uri' => 'https://example.com/public-blocked/' ),
+			)
+		);
+
+		Options::upgrade();
+
+		$saved = $this->options[ Validator::OPTION_NAME ];
+		$this->assertSame( 'https://example.com/blocked/', $saved['redirect_uri'] );
+		$this->assertSame( 'https://example.com/public-blocked/', $saved['public']['redirect_uri'] );
+	}
+
+	public function test_a_site_past_the_move_keeps_its_redirect(): void {
+		// The owner chose the old URL again after 1.4.2; later upgrades leave it.
+		$this->seed_existing_install(
+			array(
+				'version'      => '1.4.2',
+				'redirect_uri' => 'https://blocked.iplocationblock.com/',
+			)
+		);
+
+		Options::upgrade();
+
+		$this->assertSame(
+			'https://blocked.iplocationblock.com/',
+			$this->options[ Validator::OPTION_NAME ]['redirect_uri']
+		);
 	}
 }

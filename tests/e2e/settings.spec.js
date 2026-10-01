@@ -323,7 +323,7 @@ test.describe.serial("settings", () => {
     setPath(
       configured,
       "public.redirect_uri",
-      "https://blocked.iplocationblock.com/",
+      "https://geoblocked.im/",
     );
     setPath(
       configured,
@@ -341,7 +341,7 @@ test.describe.serial("settings", () => {
 
       await expect(response).toHaveValue("redirect");
       await expect(destination).toHaveValue(
-        "https://blocked.iplocationblock.com/",
+        "https://geoblocked.im/",
       );
       await expect(
         page.getByText("IP Location Block hosted page", { exact: true }),
@@ -354,7 +354,7 @@ test.describe.serial("settings", () => {
       ).toBeVisible();
       await expect(
         page.getByRole("link", { name: /Preview destination/ }),
-      ).toHaveAttribute("href", "https://blocked.iplocationblock.com/");
+      ).toHaveAttribute("href", "https://geoblocked.im/");
 
       await destination.fill(`${new URL(page.url()).origin}/blocked`);
       await expect(
@@ -374,7 +374,7 @@ test.describe.serial("settings", () => {
       await expect(save).toBeDisabled();
       await page.getByRole("button", { name: "Use hosted default" }).click();
       await expect(destination).toHaveValue(
-        "https://blocked.iplocationblock.com/",
+        "https://geoblocked.im/",
       );
       await expect(save).toBeEnabled();
 
@@ -384,7 +384,7 @@ test.describe.serial("settings", () => {
       );
       const saved = await getSettings(page);
       expect(saved.public.redirect_uri).toBe(
-        "https://blocked.iplocationblock.com/",
+        "https://geoblocked.im/",
       );
       expect(saved.public.response_msg).toBe("Blocked by the site owner.");
     } finally {
