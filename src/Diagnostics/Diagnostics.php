@@ -300,8 +300,8 @@ class Diagnostics {
 					? __( 'Upgrade API key', 'ip-location-block' )
 					: __( 'Manage account', 'ip-location-block' ),
 				'key_upgrade_required' === $quota['status']
-					? 'https://app.iplocationblock.com/upgrade-api-key'
-					: ( ! empty( $quota['accountUrl'] ) ? $quota['accountUrl'] : 'https://app.iplocationblock.com/login' )
+					? 'https://app.iplocationblock.net/upgrade-api-key'
+					: ( ! empty( $quota['accountUrl'] ) ? $quota['accountUrl'] : 'https://app.iplocationblock.net/login' )
 			);
 		}
 		self::add_check(
@@ -584,10 +584,10 @@ class Diagnostics {
 		if ( ! empty( $settings['validation']['public'] ) && ( (int) $settings['validation']['public'] & 1 ) ) {
 			if ( function_exists( 'is_wpe' ) && '1' === (string) is_wpe() ) {
 				$cache_host = 'WP Engine';
-				$article    = 'https://iplocationblock.com/codex/compatibility-with-wpengine/';
+				$article    = 'https://iplocationblock.net/codex/compatibility-with-wpengine/';
 			} elseif ( isset( $_SERVER['KINSTA_CACHE_ZONE'] ) ) {
 				$cache_host = 'Kinsta';
-				$article    = 'https://iplocationblock.com/codex/compatibility-with-kinsta/';
+				$article    = 'https://iplocationblock.net/codex/compatibility-with-kinsta/';
 			}
 		}
 		self::add_check(

@@ -365,7 +365,7 @@ final class ReactAdmin {
 			'homeUrl'            => esc_url_raw( is_network_admin() ? network_home_url( '/' ) : home_url( '/' ) ),
 			'defaultRedirectUrl' => \IPLocationBlock\Settings\Options::DEFAULT_REDIRECT_URL,
 			'logoUrl'            => plugins_url( 'admin/images/logo.svg', IP_LOCATION_BLOCK_BASE ),
-			'docsUrl'            => 'https://iplocationblock.com/docs/?utm_source=plugin&utm_medium=admin&utm_campaign=admin_topbar',
+			'docsUrl'            => 'https://iplocationblock.net/docs/?utm_source=plugin&utm_medium=admin&utm_campaign=admin_topbar',
 			'viewSwitchNonce'    => wp_create_nonce( self::VIEW_NONCE ),
 			'nativePromoDismissed' => NativePromoNotice::is_dismissed(),
 		) );

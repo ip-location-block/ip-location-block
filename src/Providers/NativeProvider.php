@@ -1,6 +1,6 @@
 <?php
 /**
- * Native provider — api.iplocationblock.com.
+ * Native provider — api.iplocationblock.net (overridable, see apiBase()).
  *
  * @package IP_Location_Block
  * @since   1.4.0
@@ -17,24 +17,66 @@ namespace IPLocationBlock\Providers;
  * provider whose city/state precision survives GeolocationResolver's gate. It
  * also owns every monetization URL as a constant.
  *
- * The URL and transform map must match the api.iplocationblock.com wire
- * contract exactly.
+ * The URL and transform map must match the native API wire contract exactly.
  */
 final class NativeProvider extends AbstractRemoteProvider implements PrecisionLocationSource {
 
 	public const ID = 'IP Location Block';
 
-	/** Quota service endpoint (per-key balance). */
-	public const QUOTA_ENDPOINT = 'https://api.iplocationblock.com/quota/';
+	/**
+	 * Default API base URL (no trailing slash). Define IP_LOCATION_BLOCK_API_BASE
+	 * (e.g. in wp-config.php) to point lookups and quota checks elsewhere.
+	 */
+	public const DEFAULT_API_BASE = 'https://api.iplocationblock.net';
+
+	/** Quota endpoint on the default API base; requests use quotaEndpoint(). */
+	public const QUOTA_ENDPOINT = self::DEFAULT_API_BASE . '/quota/';
 
 	/** Account dashboard. */
-	public const ACCOUNT_URL = 'https://app.iplocationblock.com/login';
+	public const ACCOUNT_URL = 'https://app.iplocationblock.net/login';
 
 	/** Upgrade / pricing (quota UI). */
-	public const UPGRADE_URL = 'https://iplocationblock.com/pricing/?utm_source=wordpress&utm_medium=site&utm_campaign=cloud';
+	public const UPGRADE_URL = 'https://iplocationblock.net/pricing/?utm_source=wordpress&utm_medium=site&utm_campaign=cloud';
 
 	/** Registry sign-up link. */
-	public const PRICING_URL = 'https://iplocationblock.com/pricing';
+	public const PRICING_URL = 'https://iplocationblock.net/pricing';
+
+	/**
+	 * The API base URL in effect: IP_LOCATION_BLOCK_API_BASE when it holds an
+	 * absolute http(s) URL, otherwise DEFAULT_API_BASE.
+	 */
+	public static function apiBase(): string {
+		$override = defined( 'IP_LOCATION_BLOCK_API_BASE' ) ? constant( 'IP_LOCATION_BLOCK_API_BASE' ) : null;
+
+		return self::normalizeApiBase( $override ) ?? self::DEFAULT_API_BASE;
+	}
+
+	/**
+	 * Validate an API base override. Returns it without a trailing slash, or
+	 * null unless it is an absolute http(s) URL with no query or fragment.
+	 *
+	 * @param mixed $value
+	 */
+	public static function normalizeApiBase( $value ): ?string {
+		if ( ! is_string( $value ) ) {
+			return null;
+		}
+
+		$base  = rtrim( trim( $value ), '/' );
+		$parts = parse_url( $base );
+		if ( ! is_array( $parts ) || empty( $parts['host'] ) || isset( $parts['query'] ) || isset( $parts['fragment'] ) ) {
+			return null;
+		}
+
+		$scheme = strtolower( $parts['scheme'] ?? '' );
+
+		return 'https' === $scheme || 'http' === $scheme ? $base : null;
+	}
+
+	/** Quota service endpoint (per-key balance). */
+	public static function quotaEndpoint(): string {
+		return self::apiBase() . '/quota/';
+	}
 
 	public function id(): string {
 		return self::ID;
@@ -61,7 +103,7 @@ final class NativeProvider extends AbstractRemoteProvider implements PrecisionLo
 	}
 
 	protected function urlTemplate(): string {
-		return 'https://api.iplocationblock.com/v1/%API_IP%?api_key=%API_KEY%';
+		return self::apiBase() . '/v1/%API_IP%?api_key=%API_KEY%';
 	}
 
 	protected function transformMap(): array {

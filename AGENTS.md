@@ -65,7 +65,7 @@ These identities are consumed by deployed mu-plugin copies (which `remove_action
 
 ### Sealed provider registry — deliberate, do not "fix"
 
-`src/Providers/ProviderRegistry` is `final` with a private `const PROVIDERS` list and **no registration method and no filters**. This seals the monetization core: only `NativeProvider` (api.iplocationblock.com) implements `PrecisionLocationSource` (city/state precision). External provider registration was removed in 1.4.0 — `IP_Location_Block_Provider::register_addon()` is a deprecated no-op and third-party `IP_Location_Block_API` subclasses are inert. Do not add extensibility filters to the provider subsystem. Other providers: remote (ipinfodb, ipinfo.io, ip-api, ipstack) and local DBs (IP2Location, MaxMind GeoLite2). `LegacyMeta` reshapes the registry into the legacy provider-meta payloads for REST and the compat facade.
+`src/Providers/ProviderRegistry` is `final` with a private `const PROVIDERS` list and **no registration method and no filters**. This seals the monetization core: only `NativeProvider` (api.iplocationblock.net by default; `IP_LOCATION_BLOCK_API_BASE` in wp-config.php overrides it) implements `PrecisionLocationSource` (city/state precision). External provider registration was removed in 1.4.0 — `IP_Location_Block_Provider::register_addon()` is a deprecated no-op and third-party `IP_Location_Block_API` subclasses are inert. Do not add extensibility filters to the provider subsystem. Other providers: remote (ipinfodb, ipinfo.io, ip-api, ipstack) and local DBs (IP2Location, MaxMind GeoLite2). `LegacyMeta` reshapes the registry into the legacy provider-meta payloads for REST and the compat facade.
 
 ### Two admin UIs
 

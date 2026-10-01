@@ -66,7 +66,7 @@ class IP_Location_Block_Admin_Tab {
 			$section = $plugin_slug . '-validation-rule',
 			array(
 				__( 'Validation rules and behavior', 'ip-location-block' ),
-				'<a href="https://iplocationblock.com/docs/advanced-settings/validation-rules/" title="Validation rules and behavior | IP Location Block">' . $common[4] . '</a>'
+				'<a href="https://iplocationblock.net/docs/advanced-settings/validation-rules/" title="Validation rules and behavior | IP Location Block">' . $common[4] . '</a>'
 			),
 			null,
 			$option_slug
@@ -132,8 +132,8 @@ class IP_Location_Block_Admin_Tab {
 
 		$rule_desc = array(
 			__( 'Please select either &#8220;Whitelist&#8221; or &#8220;Blacklist&#8221;.', 'ip-location-block' ),
-			__( '<dfn title="&#8220;Block by location&#8221; will be bypassed in case of empty. The special code &#8220;XX&#8221; is assigned as private IP address including localhost. And &#8220;ZZ&#8221; is for unknown IP address (i.e. not in the geolocation databases). Please use &#8220;YY&#8221; if you need the code that does not correspond to any of the countries.">Whitelist of country code or pattern</dfn>', 'ip-location-block' ) . '<br />(<a target="_blank" rel="noreferrer" href="https://iplocationblock.com/docs/advanced-settings/validation-rules/" title="Validation rules and behavior">Supported formats</a>)',
-			__( '<dfn title="&#8220;Block by location&#8221; will be bypassed in case of empty. The special code &#8220;XX&#8221; is assigned as private IP address including localhost. And &#8220;ZZ&#8221; is for unknown IP address (i.e. not in the geolocation databases). Please use &#8220;YY&#8221; if you need the code that does not correspond to any of the countries.">Blacklist of country code or pattern</dfn>', 'ip-location-block' ) . '<br />(<a target="_blank" rel="noreferrer" href="https://iplocationblock.com/docs/advanced-settings/validation-rules/" title="Validation rules and behavior">Supported formats</a>)',
+			__( '<dfn title="&#8220;Block by location&#8221; will be bypassed in case of empty. The special code &#8220;XX&#8221; is assigned as private IP address including localhost. And &#8220;ZZ&#8221; is for unknown IP address (i.e. not in the geolocation databases). Please use &#8220;YY&#8221; if you need the code that does not correspond to any of the countries.">Whitelist of country code or pattern</dfn>', 'ip-location-block' ) . '<br />(<a target="_blank" rel="noreferrer" href="https://iplocationblock.net/docs/advanced-settings/validation-rules/" title="Validation rules and behavior">Supported formats</a>)',
+			__( '<dfn title="&#8220;Block by location&#8221; will be bypassed in case of empty. The special code &#8220;XX&#8221; is assigned as private IP address including localhost. And &#8220;ZZ&#8221; is for unknown IP address (i.e. not in the geolocation databases). Please use &#8220;YY&#8221; if you need the code that does not correspond to any of the countries.">Blacklist of country code or pattern</dfn>', 'ip-location-block' ) . '<br />(<a target="_blank" rel="noreferrer" href="https://iplocationblock.net/docs/advanced-settings/validation-rules/" title="Validation rules and behavior">Supported formats</a>)',
 		);
 
 		// Matching rule
@@ -194,7 +194,7 @@ class IP_Location_Block_Admin_Tab {
 		// Use AS number
 		$providers   = array_keys( IP_Location_Block_Provider::get_providers_by_feature( 'asn' ) );
 		$description = '<p class="ip-location-block-desc">' . sprintf( __( '<strong>Important</strong>: Currently supported providers are: <strong>%s</strong>. If using this feature make sure <strong>ONLY</strong> those providers are enabled.', 'ip-location-block' ), implode( ', ', $providers ) ) . '</p>';
-		$description .= '<p class="ip-location-block-desc">' . sprintf( __( 'Some useful tools to find ASN are introduced in &#8220;%s&#8221;.', 'ip-location-block' ), '<a rel="noreferrer" href="https://iplocationblock.com/codex/utilizing-as-number/" title="Utilizing AS number | IP Location Block">Utilizing AS number</a>' ) . '</p>';
+		$description .= '<p class="ip-location-block-desc">' . sprintf( __( 'Some useful tools to find ASN are introduced in &#8220;%s&#8221;.', 'ip-location-block' ), '<a rel="noreferrer" href="https://iplocationblock.net/codex/utilizing-as-number/" title="Utilizing AS number | IP Location Block">Utilizing AS number</a>' ) . '</p>';
 		add_settings_field(
 			$option_name . '_use_asn',
 			__( '<dfn title="It enables utilizing &#8220;AS number&#8221; in the &#8220;Whitelist/Blacklist of extra IP addresses&#8221; to specify a group of IP networks.">Use Autonomous System Number</dfn>', 'ip-location-block' ) .
@@ -449,7 +449,7 @@ class IP_Location_Block_Admin_Tab {
 				),
 				'desc'      => array(
 					0 => __( 'Validate at &#8220;init&#8221; action hook in the same manner as typical plugins.', 'ip-location-block' ),
-					1 => __( 'Validate at an earlier phase than other typical plugins. It can reduce load on server but has <a rel=\'noreferrer\' href=\'https://iplocationblock.com/codex/validation-timing/\' title=\'Validation timing | IP Location Block\'>some restrictions</a>.', 'ip-location-block' ),
+					1 => __( 'Validate at an earlier phase than other typical plugins. It can reduce load on server but has <a rel=\'noreferrer\' href=\'https://iplocationblock.net/codex/validation-timing/\' title=\'Validation timing | IP Location Block\'>some restrictions</a>.', 'ip-location-block' ),
 				),
 			)
 		);
@@ -476,7 +476,7 @@ class IP_Location_Block_Admin_Tab {
 			$section = $plugin_slug . '-validation-target',
 			array(
 				__( 'Back-end target settings', 'ip-location-block' ),
-				'<a href="https://iplocationblock.com/docs/advanced-settings/back-end-targets/" title="Back-end target settings | IP Location Block">' . $common[4] . '</a>'
+				'<a href="https://iplocationblock.net/docs/advanced-settings/back-end-targets/" title="Back-end target settings | IP Location Block">' . $common[4] . '</a>'
 			),
 			array( __CLASS__, 'note_target' ),
 			$option_slug
@@ -811,7 +811,7 @@ class IP_Location_Block_Admin_Tab {
 			$section = $plugin_slug . '-public',
 			array(
 				__( 'Front-end target settings', 'ip-location-block' ),
-				'<a href="https://iplocationblock.com/docs/advanced-settings/front-end-targets/" title="Front-end target settings | IP Location Block">' . $common[4] . '</a>'
+				'<a href="https://iplocationblock.net/docs/advanced-settings/front-end-targets/" title="Front-end target settings | IP Location Block">' . $common[4] . '</a>'
 			),
 			array( __CLASS__, 'note_public' ),
 			$option_slug
@@ -1126,7 +1126,7 @@ class IP_Location_Block_Admin_Tab {
 			$section = $plugin_slug . '-recording',
 			array(
 				__( 'Privacy and record settings', 'ip-location-block' ),
-				'<a href="https://iplocationblock.com/docs/advanced-settings/privacy-records/" title="Privacy and record settings | IP Location Block">' . $common[4] . '</a>'
+				'<a href="https://iplocationblock.net/docs/advanced-settings/privacy-records/" title="Privacy and record settings | IP Location Block">' . $common[4] . '</a>'
 			),
 			array( __CLASS__, 'note_privacy' ),
 			$option_slug
@@ -1376,7 +1376,7 @@ class IP_Location_Block_Admin_Tab {
 			$section = $plugin_slug . '-provider',
 			array(
 				__( 'Geolocation API settings', 'ip-location-block' ),
-				'<a href="https://iplocationblock.com/docs/advanced-settings/geolocation-api/" title="Geolocation API settings | IP Location Block">' . $common[4] . '</a>'
+				'<a href="https://iplocationblock.net/docs/advanced-settings/geolocation-api/" title="Geolocation API settings | IP Location Block">' . $common[4] . '</a>'
 			),
 			array( __CLASS__, 'note_services' ),
 			$option_slug
@@ -1437,7 +1437,7 @@ class IP_Location_Block_Admin_Tab {
 			$section = $plugin_slug . '-database',
 			array(
 				__( 'Local database settings', 'ip-location-block' ),
-				'<a href="https://iplocationblock.com/docs/advanced-settings/local-databases/" title="Local database settings | IP Location Block">' . $common[4] . '</a>'
+				'<a href="https://iplocationblock.net/docs/advanced-settings/local-databases/" title="Local database settings | IP Location Block">' . $common[4] . '</a>'
 			),
 			array( __CLASS__, 'note_database' ),
 			$option_slug
@@ -1516,7 +1516,7 @@ class IP_Location_Block_Admin_Tab {
 			$section = $plugin_slug . '-others',
 			array(
 				__( 'Plugin settings', 'ip-location-block' ),
-				'<a href="https://iplocationblock.com/docs/advanced-settings/plugin-settings/" title="Plugin settings | IP Location Block">' . $common[4] . '</a>'
+				'<a href="https://iplocationblock.net/docs/advanced-settings/plugin-settings/" title="Plugin settings | IP Location Block">' . $common[4] . '</a>'
 			),
 			null,
 			$option_slug
@@ -1678,7 +1678,7 @@ class IP_Location_Block_Admin_Tab {
 	public static function note_public() {
 		echo
 		'<ul class="ip-location-block-note">', "\n",
-		'<li>', sprintf( __( 'Please refer to "%sCompatibility with cache plugins%s" for to read more about caching plugins compatibility.', 'ip-location-block' ), '<a href="https://iplocationblock.com/codex/compatibility-with-cache-plugins/" title="Compatibility with cache plugins | IP Location Block">', '</a>' ), '</li>', "\n",
+		'<li>', sprintf( __( 'Please refer to "%sCompatibility with cache plugins%s" for to read more about caching plugins compatibility.', 'ip-location-block' ), '<a href="https://iplocationblock.net/codex/compatibility-with-cache-plugins/" title="Compatibility with cache plugins | IP Location Block">', '</a>' ), '</li>', "\n",
 		'</ul>', "\n";
 	}
 

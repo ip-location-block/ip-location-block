@@ -13,7 +13,7 @@ namespace IPLocationBlock\Providers;
 use IPLocationBlock\Support\Util;
 
 /**
- * Fetches and normalizes the api.iplocationblock.com per-key quota. Blocking
+ * Fetches and normalizes the native API's per-key quota. Blocking
  * statuses gate provider readiness in REST.
  *
  * Transient name: `ip_location_block_quota_<fingerprint40>`.
@@ -61,7 +61,7 @@ final class NativeQuotaService {
 		}
 
 		$response = wp_remote_get(
-			esc_url( NativeProvider::QUOTA_ENDPOINT . rawurlencode( $key ) ),
+			esc_url( NativeProvider::quotaEndpoint() . rawurlencode( $key ) ),
 			array( 'timeout' => 5 )
 		);
 		if ( is_wp_error( $response ) ) {

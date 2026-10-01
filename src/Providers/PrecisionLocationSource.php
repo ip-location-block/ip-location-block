@@ -19,7 +19,7 @@ namespace IPLocationBlock\Providers;
  * (LocationResult::withoutPrecision()).
  *
  * This is the structural enforcement of the monetization invariant — only
- * api.iplocationblock.com (the native provider) may deliver city/state
+ * the native IP Location Block API (NativeProvider) may deliver city/state
  * precision. The gate checks `instanceof`, never a capability bit, so the
  * invariant cannot be circumvented by editing metadata.
  *

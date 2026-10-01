@@ -559,7 +559,7 @@ export default function Logs() {
 					</h2>
 					<a
 						className="ilb-panel-shell__help"
-						href="https://iplocationblock.com/docs/monitoring/validation-logs/"
+						href="https://iplocationblock.net/docs/monitoring/validation-logs/"
 						target="_blank"
 						rel="noopener noreferrer"
 					>

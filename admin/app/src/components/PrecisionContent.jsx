@@ -3,9 +3,9 @@ import { __ } from '@wordpress/i18n';
 
 import { betaUrl } from '../navigation';
 
-export const UPGRADE_URL = 'https://iplocationblock.com/pricing/';
+export const UPGRADE_URL = 'https://iplocationblock.net/pricing/';
 export const PATTERNS_URL =
-	'https://iplocationblock.com/docs/blocking-rules/state-region/';
+	'https://iplocationblock.net/docs/blocking-rules/state-region/';
 
 export const nativeUpgradeUrl = ( content = 'provider-card' ) => {
 	const url = new window.URL( UPGRADE_URL );

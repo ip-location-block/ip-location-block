@@ -190,7 +190,7 @@ class IP_Location_Block_Admin {
 
 		// If API key needs upgrade, show the notice
 		if ( isset( $quota['name'] ) && $quota['name'] === 'requires-api-key-upgrade' ) {
-			$upgrade_url = 'https://app.iplocationblock.com/upgrade-api-key?api_key=' . urlencode( $api_key );
+			$upgrade_url = 'https://app.iplocationblock.net/upgrade-api-key?api_key=' . urlencode( $api_key );
 			ob_start();
 			?>
 			<div class="notice notice-warning ip-location-block-notice-api-key-upgrade">
@@ -204,7 +204,7 @@ class IP_Location_Block_Admin {
 					<a href="<?php echo esc_url( $upgrade_url ); ?>" class="button button-primary" target="_blank">
 						<?php _e( 'Upgrade API Key Now', 'ip-location-block' ); ?>
 					</a>
-					<a href="https://iplocationblock.com/api-platform-upgrade/" class="button button-secondary" target="_blank">
+					<a href="https://iplocationblock.net/api-platform-upgrade/" class="button button-secondary" target="_blank">
 						<?php _e( 'Learn More', 'ip-location-block' ); ?>
 					</a>
 				</p>
@@ -252,10 +252,10 @@ class IP_Location_Block_Admin {
 		// Detect hosting environment
 		if ( function_exists( 'is_wpe' ) && is_wpe() === '1' ) {
 			$host_name   = 'WP Engine';
-			$article_url = 'https://iplocationblock.com/codex/compatibility-with-wpengine/';
+			$article_url = 'https://iplocationblock.net/codex/compatibility-with-wpengine/';
 		} elseif ( isset( $_SERVER['KINSTA_CACHE_ZONE'] ) ) {
 			$host_name   = 'Kinsta';
-			$article_url = 'https://iplocationblock.com/codex/compatibility-with-kinsta/';
+			$article_url = 'https://iplocationblock.net/codex/compatibility-with-kinsta/';
 		} else {
 			return;
 		}
@@ -871,7 +871,7 @@ class IP_Location_Block_Admin {
 								$feature,
 								$valid_provider,
 								$valid_provider,
-								'https://iplocationblock.com/codex/supported-geo-location-rule-formats/'
+								'https://iplocationblock.net/codex/supported-geo-location-rule-formats/'
 							) );
 						}
 					}
@@ -916,7 +916,7 @@ class IP_Location_Block_Admin {
 						__( 'The option <strong>"%s"</strong> is not properly configured, it contains invalid rules: <strong>%s</strong>. For more details please check <a target="_blank" href="%s">Validation rules and behavior</a>', 'ip-location-block' ),
 						$list_name,
 						implode( ', ', $invalid[ $list_key ] ),
-						esc_url( 'https://iplocationblock.com/codex/validation-rules-and-behavior/#whitelistblacklist-of-extra-ip-addresses-prior-to-country-code' )
+						esc_url( 'https://iplocationblock.net/codex/validation-rules-and-behavior/#whitelistblacklist-of-extra-ip-addresses-prior-to-country-code' )
 					) );
 				}
 				if ( ! empty( $asn_use[ $list_key ] ) ) {
@@ -1280,7 +1280,7 @@ class IP_Location_Block_Admin {
 				}
 				echo '<p>', implode( '<br />', $tab ), "</p>\n";
 				echo '<p>', __( 'Thanks for providing these great services for free.', 'ip-location-block' ), "<br />\n";
-				echo __( '(Most browsers will redirect you to each site <a href="https://iplocationblock.com/referer-checker/" title="Referer Checker">without referrer when you click the link</a>.)', 'ip-location-block' ), "</p>\n";
+				echo __( '(Most browsers will redirect you to each site <a href="https://iplocationblock.net/referer-checker/" title="Referer Checker">without referrer when you click the link</a>.)', 'ip-location-block' ), "</p>\n";
 			} ?>
 			<?php if ( defined( 'IP_LOCATION_BLOCK_DEBUG' ) && IP_LOCATION_BLOCK_DEBUG ) {
 				echo '<p>', get_num_queries(), ' queries. ', timer_stop( 0 ), ' seconds. ', memory_get_usage(), " bytes.</p>\n";

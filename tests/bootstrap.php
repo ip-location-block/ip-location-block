@@ -23,7 +23,7 @@ if (!defined('IP_LOCATION_BLOCK_VERSION')) {
     // Keep the numeric part in sync with the released version: version_compare()
     // ranks a trailing "-test" BELOW the same plain version, so a stale number
     // here would make the suite disagree with production about what is current.
-    define('IP_LOCATION_BLOCK_VERSION', '1.4.1-test');
+    define('IP_LOCATION_BLOCK_VERSION', '1.4.2-test');
 }
 
 if (!defined('IP_LOCATION_BLOCK_PATH')) {

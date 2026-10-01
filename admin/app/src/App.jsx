@@ -175,7 +175,7 @@ function Header() {
 					<a
 						className="ilb-topbar__docs"
 						href={
-							boot.docsUrl || 'https://iplocationblock.com/docs/'
+							boot.docsUrl || 'https://iplocationblock.net/docs/'
 						}
 						target="_blank"
 						rel="noopener noreferrer"

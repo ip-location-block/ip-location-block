@@ -4,7 +4,7 @@ Tags: geo blocking, country block, state blocker, region blocker, ip blocker
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.4.1
+Stable tag: 1.4.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
@@ -16,7 +16,7 @@ IP Location Block is a WordPress geo blocking plugin for blocking or allowing vi
 
 Simple view covers common rules. Advanced view adds login, registration, comment, XML-RPC, bot, response, logging, privacy, provider, and diagnostic controls.
 
-For the recommended setup, connect the [IP Location Block Cloud provider](https://iplocationblock.com/docs/providers/ip-location-block/?utm_source=plugin&utm_medium=wporgpage&utm_campaign=readme) for premium, frequently updated data, better country accuracy, ASN data, and state or region precision.
+For the recommended setup, connect the [IP Location Block Cloud provider](https://iplocationblock.net/docs/providers/ip-location-block/?utm_source=plugin&utm_medium=wporgpage&utm_campaign=readme) for premium, frequently updated data, better country accuracy, ASN data, and state or region precision.
 
 = WordPress geo blocking by country, state, or region =
 
@@ -42,7 +42,7 @@ Legacy local and third-party providers remain supported for existing installatio
 
 = External services and privacy =
 
-* **IP Location Block Cloud provider:** Selecting this provider sends the visitor IP and configured credential to IP Location Block for lookup. Review its [privacy policy](https://iplocationblock.com/privacy-policy/) and [terms](https://iplocationblock.com/terms-and-conditions/).
+* **IP Location Block Cloud provider:** Selecting this provider sends the visitor IP and configured credential to IP Location Block for lookup. Review its [privacy policy](https://iplocationblock.net/privacy-policy/) and [terms](https://iplocationblock.net/terms-and-conditions/).
 * **IP2Location LITE:** For compatibility with this provider, the plugin downloads country databases on activation and scheduled updates. Review its [terms](https://lite.ip2location.com/terms-of-use) and [privacy policy](https://www.ip2location.com/privacy-policy).
 * **MaxMind GeoLite2:** For compatibility with this provider, the plugin uses your license key to download databases. Review its [license](https://www.maxmind.com/en/geolite2/eula) and [privacy policy](https://www.maxmind.com/en/privacy-policy).
 * **Other remote providers:** Selecting IPInfoDB, IPinfo.io, ipapi, or ipstack sends the visitor IP and configured credential to that service for lookup. No remote provider is selected automatically.
@@ -53,7 +53,7 @@ The administrator chooses the providers and is responsible for any required cons
 
 = Documentation, support, and credits =
 
-Use the [documentation](https://iplocationblock.com/docs/?utm_source=plugin&utm_medium=wporgpage&utm_campaign=readme), [troubleshooting guide](https://iplocationblock.com/docs/troubleshooting/), [support forum](https://wordpress.org/support/plugin/ip-location-block/), or [GitHub](https://github.com/ip-location-block/ip-location-block).
+Use the [documentation](https://iplocationblock.net/docs/?utm_source=plugin&utm_medium=wporgpage&utm_campaign=readme), [troubleshooting guide](https://iplocationblock.net/docs/troubleshooting/), [support forum](https://wordpress.org/support/plugin/ip-location-block/), or [GitHub](https://github.com/ip-location-block/ip-location-block).
 
 Independently maintained, IP Location Block is based on IP Geo Block by tokkonopapa. It uses IP2Location LITE and GeoLite2 data under their licenses.
 
@@ -65,13 +65,13 @@ Independently maintained, IP Location Block is based on IP Geo Block by tokkonop
 4. Connect the IP Location Block Cloud provider for the recommended accuracy, ASN data, and regional precision.
 5. Verify representative IPs in **Search**, save the rules, and use **Advanced** view when you need more control.
 
-See the [getting started guide](https://iplocationblock.com/docs/getting-started/) for a complete walkthrough.
+See the [getting started guide](https://iplocationblock.net/docs/getting-started/) for a complete walkthrough.
 
 == Frequently Asked Questions ==
 
 = Can I block visitors from specific US states? =
 
-Yes. Connect the IP Location Block Cloud provider, add a United States rule, then select states under **Regional rules**. Other countries use their equivalent administrative areas. See [state or region rules](https://iplocationblock.com/docs/blocking-rules/state-region/).
+Yes. Connect the IP Location Block Cloud provider, add a United States rule, then select states under **Regional rules**. Other countries use their equivalent administrative areas. See [state or region rules](https://iplocationblock.net/docs/blocking-rules/state-region/).
 
 = What does the IP Location Block Cloud provider add? =
 
@@ -83,11 +83,11 @@ Public pages, login, registration, comments, XML-RPC, and selected wp-admin requ
 
 = Does it work with page caches, CDNs, and reverse proxies? =
 
-Yes, when configured correctly. Page caches may respond before WordPress runs, while a CDN or proxy can hide the visitor IP. Review the [page-cache guide](https://iplocationblock.com/docs/blocking-rules/page-cache/) and test **Search**.
+Yes, when configured correctly. Page caches may respond before WordPress runs, while a CDN or proxy can hide the visitor IP. Review the [page-cache guide](https://iplocationblock.net/docs/blocking-rules/page-cache/) and test **Search**.
 
 = What if I block myself from wp-admin? =
 
-Bookmark the private emergency link before enforcing admin rules. If blocked, follow the [admin access steps](https://iplocationblock.com/docs/troubleshooting/#admin-access-problem).
+Bookmark the private emergency link before enforcing admin rules. If blocked, follow the [admin access steps](https://iplocationblock.net/docs/troubleshooting/#admin-access-problem).
 
 = Can I migrate settings from IP Geo Block? =
 
@@ -106,6 +106,13 @@ Yes. When old settings are detected, Plugin settings offers a migration preview 
 9. Check configuration, providers, compatibility, and emergency access.
 
 == Changelog ==
+
+= 1.4.2 =
+
+*Release Date - 1 Oct 2026*
+
+* Fix: Service endpoints moved to iplocationblock.net while iplocationblock.com is unavailable, restoring IP Location Block Cloud lookups and quota checks.
+* New: Define `IP_LOCATION_BLOCK_API_BASE` in wp-config.php to point the cloud provider at a different API address.
 
 = 1.4.1 =
 
@@ -128,6 +135,10 @@ Yes. When old settings are detected, Plugin settings offers a migration preview 
 Older release history is available in `changelog.txt` included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.4.2 =
+
+Required for IP Location Block Cloud provider users: lookups and quota checks now use api.iplocationblock.net because iplocationblock.com is temporarily unavailable.
 
 = 1.4.1 =
 

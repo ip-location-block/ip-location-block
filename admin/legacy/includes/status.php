@@ -86,12 +86,12 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 						<?php if ( ! empty( $api_key ) ): ?>
 							<p>
 								<a target="_blank" class="button button-primary button-small"
-								   href="<?php echo esc_url( 'https://app.iplocationblock.com/upgrade-api-key?api_key=' . urlencode( $api_key ) ); ?>"><?php _e( 'Upgrade API Key', 'ip-location-block' ); ?></a>
+								   href="<?php echo esc_url( 'https://app.iplocationblock.net/upgrade-api-key?api_key=' . urlencode( $api_key ) ); ?>"><?php _e( 'Upgrade API Key', 'ip-location-block' ); ?></a>
 							</p>
 						<?php else: ?>
 							<p>
 								<a target="_blank" class="button button-primary button-small"
-								   href="https://app.iplocationblock.com/upgrade-api-key"><?php _e( 'Upgrade API Key', 'ip-location-block' ); ?></a>
+								   href="https://app.iplocationblock.net/upgrade-api-key"><?php _e( 'Upgrade API Key', 'ip-location-block' ); ?></a>
 							</p>
 						<?php endif; ?>
 					</div>
@@ -112,12 +112,12 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 						<?php if ( ! empty( $api_key ) ): ?>
 							<p>
 								<a target="_blank" class="button button-primary button-small"
-								   href="<?php echo esc_url( 'https://app.iplocationblock.com/upgrade-api-key?api_key=' . urlencode( $api_key ) ); ?>"><?php _e( 'Upgrade Your Plan', 'ip-location-block' ); ?></a>
+								   href="<?php echo esc_url( 'https://app.iplocationblock.net/upgrade-api-key?api_key=' . urlencode( $api_key ) ); ?>"><?php _e( 'Upgrade Your Plan', 'ip-location-block' ); ?></a>
 							</p>
 						<?php else: ?>
 							<p>
 								<a target="_blank" class="button button-primary button-small"
-								   href="https://app.iplocationblock.com/billing/plans?utm_source=wordpress&utm_medium=site&utm_campaign=cloud"><?php _e( 'Upgrade Your Plan', 'ip-location-block' ); ?></a>
+								   href="https://app.iplocationblock.net/billing/plans?utm_source=wordpress&utm_medium=site&utm_campaign=cloud"><?php _e( 'Upgrade Your Plan', 'ip-location-block' ); ?></a>
 							</p>
 						<?php endif; ?>
 					</div>
@@ -129,7 +129,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 							<strong><?php _e( 'Quota unavailable', 'ip-location-block' ); ?>:</strong>
 							<?php echo esc_html( ! empty( $quota_status['message'] ) ? $quota_status['message'] : __( 'Quota information is temporarily unavailable.', 'ip-location-block' ) ); ?>
 						</p>
-						<p><a target="_blank" class="button button-primary button-small" href="https://app.iplocationblock.com/login"><?php _e( 'My Account', 'ip-location-block' ); ?></a></p>
+						<p><a target="_blank" class="button button-primary button-small" href="https://app.iplocationblock.net/login"><?php _e( 'My Account', 'ip-location-block' ); ?></a></p>
 					</div>
 				</div>
 			<?php elseif ( $is_balance_zero ): ?>
@@ -141,7 +141,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 						</p>
 						<p>
 							<a target="_blank" class="button button-primary button-small"
-							   href="https://iplocationblock.com/?utm_source=wordpress&utm_medium=site&utm_campaign=cloud"><?php _e( 'Upgrade', 'ip-location-block' ); ?></a>
+							   href="https://iplocationblock.net/?utm_source=wordpress&utm_medium=site&utm_campaign=cloud"><?php _e( 'Upgrade', 'ip-location-block' ); ?></a>
 						</p>
 					</div>
 				</div>
@@ -149,7 +149,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 				<div class="ip-location-block-provider-meta-row">
 					<div class="ip-location-block-provider-meta-account">
 						<a target="_blank" class="button button-primary button-small"
-						   href="https://app.iplocationblock.com/login"><?php _e( 'My Account', 'ip-location-block' ); ?></a>
+						   href="https://app.iplocationblock.net/login"><?php _e( 'My Account', 'ip-location-block' ); ?></a>
 					</div>
 				</div>
 			<?php endif; ?>
@@ -188,7 +188,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 			</ul>
 			<p><strong><?php _e('Native Mode', 'ip-location-block'); ?></strong></p>
 			<ul>
-				<li><?php _e('Country, state or region blocking', 'ip-location-block'); ?> &amp; <a href="https://iplocationblock.com/docs/blocking-rules/state-region/" target="_blank"><?php _e('Regional rules', 'ip-location-block'); ?></a></li>
+				<li><?php _e('Country, state or region blocking', 'ip-location-block'); ?> &amp; <a href="https://iplocationblock.net/docs/blocking-rules/state-region/" target="_blank"><?php _e('Regional rules', 'ip-location-block'); ?></a></li>
 				<li><?php _e('Premium, frequently updated geolocation data', 'ip-location-block'); ?></li>
 				<li><?php _e('Priority support', 'ip-location-block'); ?><br/><em><?php _e('1-5 hr response', 'ip-location-block'); ?></em></li>
 			</ul>
@@ -201,7 +201,7 @@ $is_quota_unavailable = $quota_status && 'unavailable' === $quota_status['status
 						<?php _e('Native Mode is prioritized automatically for regional rules. Other providers can remain available as country-level fallbacks.', 'ip-location-block'); ?>
 					</p>
 					<p class="ilb-text-center">
-						<a target="_blank" class="button button-primary button-small" href="https://iplocationblock.com/pricing/?utm_source=wordpress&utm_medium=plugin&utm_campaign=native_mode&utm_content=classic-status"><?php _e( 'Upgrade to Native Mode', 'ip-location-block' ); ?></a>
+						<a target="_blank" class="button button-primary button-small" href="https://iplocationblock.net/pricing/?utm_source=wordpress&utm_medium=plugin&utm_campaign=native_mode&utm_content=classic-status"><?php _e( 'Upgrade to Native Mode', 'ip-location-block' ); ?></a>
 					</p>
 				</div>
 			</div>

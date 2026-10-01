@@ -5,8 +5,8 @@
  * @package IP_Location_Block
  */
 
-$url_docs      = 'https://iplocationblock.com/docs/getting-started/?utm_source=plugin&utm_medium=welcome&utm_campaign=documentation';
-$url_purchase  = 'https://iplocationblock.com/pricing/?utm_source=wordpress&utm_medium=plugin&utm_campaign=native_mode&utm_content=welcome';
+$url_docs      = 'https://iplocationblock.net/docs/getting-started/?utm_source=plugin&utm_medium=welcome&utm_campaign=documentation';
+$url_purchase  = 'https://iplocationblock.net/pricing/?utm_source=wordpress&utm_medium=plugin&utm_campaign=native_mode&utm_content=welcome';
 $url_github    = 'https://github.com/ip-location-block/ip-location-block/';
 $url_wordpress = 'https://wordpress.org/support/plugin/ip-location-block/';
 $url_review    = 'https://wordpress.org/support/plugin/ip-location-block/reviews/#new-post';

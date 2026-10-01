@@ -53,6 +53,21 @@ final class ProviderTransformTest extends TestCase {
 		$this->assertTrue( $result->isUsable() );
 	}
 
+	public function test_native_lookup_requests_the_default_api_base(): void {
+		$this->stubResponse( 'application/json; charset=utf-8', $this->fixture( 'native.json' ) );
+		$requested = null;
+		Functions\when( 'wp_remote_get' )->alias(
+			static function ( $url ) use ( &$requested ) {
+				$requested = $url;
+				return array( '__ct' => 'application/json', '__body' => '{}' );
+			}
+		);
+
+		( new NativeProvider() )->lookup( '8.8.8.8', $this->context( 'IP Location Block' ) );
+
+		$this->assertSame( 'https://api.iplocationblock.net/v1/8.8.8.8?api_key=test-key', $requested );
+	}
+
 	public function test_ipinfoio_splits_loc_and_parses_asn(): void {
 		$this->stubResponse( 'application/json', $this->fixture( 'ipinfoio.json' ) );
 

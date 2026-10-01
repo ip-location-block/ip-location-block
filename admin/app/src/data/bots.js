@@ -27,7 +27,7 @@
  */
 
 export const PATTERNS_URL =
-	'https://iplocationblock.com/docs/advanced-settings/bot-catalog/';
+	'https://iplocationblock.net/docs/advanced-settings/bot-catalog/';
 
 export const CATEGORIES = [
 	'search',

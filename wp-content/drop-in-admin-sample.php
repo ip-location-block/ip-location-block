@@ -12,8 +12,8 @@
  * @package   IP_Location_Block
  * @author    darkog <dg@darkog.com>
  * @license   GPL-3.0
- * @see      http://iplocationblock.com/codex/my-custom-functions-in-functions-php-doesnt-work/
- * @see       https://iplocationblock.com/?codex-category=actions-and-filters
+ * @see      http://iplocationblock.net/codex/my-custom-functions-in-functions-php-doesnt-work/
+ * @see       https://iplocationblock.net/?codex-category=actions-and-filters
  * @example   Use `IP_Location_Block::add_filter()` instead of `add_filter()`
  */
 class_exists( 'IP_Location_Block', false ) or die;

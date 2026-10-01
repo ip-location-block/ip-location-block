@@ -412,7 +412,7 @@ msgid "Thanks for providing these great services for free."
 msgstr ""
 
 #: admin/legacy/class-ip-location-block-admin.php:1236
-msgid "(Most browsers will redirect you to each site <a href=\"https://iplocationblock.com/referer-checker/\" title=\"Referer Checker\">without referrer when you click the link</a>.)"
+msgid "(Most browsers will redirect you to each site <a href=\"https://iplocationblock.net/referer-checker/\" title=\"Referer Checker\">without referrer when you click the link</a>.)"
 msgstr ""
 
 #: admin/legacy/class-ip-location-block-admin.php:1241
@@ -1118,7 +1118,7 @@ msgid "Validate at &#8220;init&#8221; action hook in the same manner as typical 
 msgstr ""
 
 #: admin/legacy/includes/tab-settings.php:452
-msgid "Validate at an earlier phase than other typical plugins. It can reduce load on server but has <a rel='noreferrer' href='https://iplocationblock.com/codex/validation-timing/' title='Validation timing | IP Location Block'>some restrictions</a>."
+msgid "Validate at an earlier phase than other typical plugins. It can reduce load on server but has <a rel='noreferrer' href='https://iplocationblock.net/codex/validation-timing/' title='Validation timing | IP Location Block'>some restrictions</a>."
 msgstr ""
 
 #: admin/legacy/includes/tab-settings.php:460

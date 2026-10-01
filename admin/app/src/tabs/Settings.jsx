@@ -52,7 +52,7 @@ const boot = window.ipLocationBlockAdmin || {};
 export const advancedGuideUrl = ( docsPath, sectionKey ) => {
 	const url = new URL(
 		docsPath,
-		boot.docsUrl || 'https://iplocationblock.com/docs/'
+		boot.docsUrl || 'https://iplocationblock.net/docs/'
 	);
 	url.searchParams.set( 'utm_source', 'plugin' );
 	url.searchParams.set( 'utm_medium', 'admin' );

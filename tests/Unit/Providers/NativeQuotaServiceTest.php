@@ -164,6 +164,23 @@ final class NativeQuotaServiceTest extends TestCase {
 		$this->assertSame( 'ok', $this->service()->cachedStatus( 'valid-key' ) );
 	}
 
+	public function test_fetch_requests_the_default_quota_endpoint(): void {
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\when( 'set_transient' )->justReturn( true );
+		Functions\when( 'wp_remote_retrieve_body' )->justReturn( '{"balance":{"total":1}}' );
+		$requested = null;
+		Functions\when( 'wp_remote_get' )->alias(
+			static function ( $url ) use ( &$requested ) {
+				$requested = $url;
+				return array();
+			}
+		);
+
+		$this->service()->fetch( 'valid-key' );
+
+		$this->assertSame( 'https://api.iplocationblock.net/quota/valid-key', $requested );
+	}
+
 	public function test_fetch_stores_fresh_response_in_transient(): void {
 		$body = '{"balance":{"recurring":100,"total":100}}';
 		Functions\when( 'get_transient' )->justReturn( false );

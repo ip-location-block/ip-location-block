@@ -1,3 +1,10 @@
+= 1.4.2 =
+
+*Release Date - 1 Oct 2026*
+
+* Fix: Service endpoints moved to iplocationblock.net while iplocationblock.com is unavailable. IP Location Block Cloud lookups, quota checks, and account and documentation links now use the new domain.
+* New: Define `IP_LOCATION_BLOCK_API_BASE` in wp-config.php to point the IP Location Block Cloud provider at a different API address without a plugin update.
+
 = 1.4.1 =
 
 *Release Date - 4 Sep 2026*

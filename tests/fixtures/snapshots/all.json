@@ -2,7 +2,7 @@
     "IP Location Block": {
         "key": "",
         "type": "IPv4, IPv6 / free for non-commercial use",
-        "link": "https://iplocationblock.com/pricing",
+        "link": "https://iplocationblock.net/pricing",
         "supports": [
             "ipv4",
             "ipv6",
