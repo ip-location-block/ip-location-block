@@ -43,7 +43,7 @@ describe( 'NativeModeSuggestion', () => {
 		render( { onConnect } );
 		const link = container.querySelector( 'a' );
 		expect( link.href ).toBe(
-			'https://iplocationblock.com/docs/blocking-rules/state-region/'
+			'https://iplocationblock.net/docs/blocking-rules/state-region/'
 		);
 		expect( onConnect ).not.toHaveBeenCalled();
 		act( () => container.querySelector( 'button.is-link' ).click() );

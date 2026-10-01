@@ -532,7 +532,7 @@ test.describe.serial("settings", () => {
     await expect(learnLink).toBeVisible();
     await expect(learnLink).toHaveAttribute(
       "href",
-      "https://iplocationblock.com/docs/blocking-rules/state-region/",
+      "https://iplocationblock.net/docs/blocking-rules/state-region/",
     );
     await expect(
       page.getByRole("button", { name: "Connect API key", exact: true }),
