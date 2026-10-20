@@ -245,12 +245,67 @@ class Scheduler {
 	 * @param $settings
 	 */
 	public static function exec_cache_gc( $settings ) {
+		// Queue the next run first, so a run that dies half way (database
+		// error, timeout) doesn't leave the cleanup without a schedule.
 		self::stop_cache_gc();
+		self::start_cache_gc( $settings );
 
 		Logs::delete_expired( array(
 			min( 365, max( 1, (int) $settings['validation']['explogs'] ) ) * DAY_IN_SECONDS,
 			(int) $settings['cache_time']
 		) );
+	}
+
+	/**
+	 * Whether automatic database updates have something to download: they are
+	 * enabled and at least one enabled local provider downloads a database.
+	 * Sites using only remote providers never need the update event.
+	 *
+	 * @param array $settings
+	 *
+	 * @return bool
+	 */
+	public static function needs_db_updates( $settings ) {
+		if ( empty( $settings['update']['auto'] ) ) {
+			return false;
+		}
+
+		$registry  = ProviderRegistry::instance();
+		$providers = isset( $settings['providers'] ) && is_array( $settings['providers'] ) ? $settings['providers'] : array();
+		foreach ( $registry->localProviderIds( $providers ) as $provider ) {
+			if ( $registry->get( $provider ) instanceof DownloadableProviderInterface ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Next queued database update: the regular run, or the one-off run that
+	 * activation schedules (args `array( true )`) until it completes.
+	 *
+	 * @return int|false Timestamp, or false when nothing is queued.
+	 */
+	public static function next_db_update() {
+		$next = wp_next_scheduled( Validator::CRON_NAME, array( false ) );
+
+		return $next ? $next : wp_next_scheduled( Validator::CRON_NAME, array( true ) );
+	}
+
+	/**
+	 * Recreate missing cron events. Both events schedule their next run only
+	 * when the current one finishes, so one failed run used to break the
+	 * chain for good. Hooked on admin_init; wp_next_scheduled() only reads the
+	 * autoloaded cron option.
+	 */
+	public static function ensure_events() {
+		$settings = Validator::get_option();
+
+		if ( self::needs_db_updates( $settings ) && ! self::next_db_update() &&
+		     ( is_main_site() || ! is_plugin_active_for_network( IP_LOCATION_BLOCK_BASE ) ) ) {
+			self::schedule_cron_job( $settings['update'], null );
+		}
 
 		self::start_cache_gc( $settings );
 	}

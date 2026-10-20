@@ -9,6 +9,7 @@
 namespace IPLocationBlock\Diagnostics;
 
 use IPLocationBlock\Core\Validator;
+use IPLocationBlock\Cron\Scheduler;
 use IPLocationBlock\Providers\LegacyMeta;
 use IPLocationBlock\Support\Util;
 
@@ -536,8 +537,8 @@ class Diagnostics {
 			$outdated ? array( self::settings_action( __( 'Manage emergency login link', 'ip-location-block' ), 'others', 7 ) ) : array()
 		);
 
-		$database_schedule = wp_next_scheduled( Validator::CRON_NAME, array( false ) );
-		$database_missing  = ! empty( $settings['update']['auto'] ) && ! $database_schedule;
+		// Only sites with a downloadable local database need the update event.
+		$database_missing = Scheduler::needs_db_updates( $settings ) && ! Scheduler::next_db_update();
 		self::add_check(
 			$checks,
 			'database-update-schedule',

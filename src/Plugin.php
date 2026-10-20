@@ -70,6 +70,9 @@ final class Plugin
             // default. New code (not frozen), so it is autoloaded under its
             // namespaced identity rather than a legacy require + class name.
             \add_action('plugins_loaded', array(Admin\ReactAdmin::class, 'get_instance'));
+
+            // Recreate cron events whose self-rescheduling chain broke.
+            \add_action('admin_init', array(Cron\Scheduler::class, 'ensure_events'));
         }
     }
 }

@@ -17,6 +17,7 @@ namespace IPLocationBlock\Rest;
 use IPLocationBlock\Admin\NativePromoNotice;
 use IPLocationBlock\Admin\WelcomeNotice;
 use IPLocationBlock\Core\Validator;
+use IPLocationBlock\Cron\Scheduler;
 use IPLocationBlock\Diagnostics\Diagnostics;
 use IPLocationBlock\Geolocation\IpCacheRepository;
 use IPLocationBlock\Logging\Logs;
@@ -537,7 +538,7 @@ class RestApi {
 		}
 
 		$legacy = get_option( 'ip_geo_block_settings' );
-		$database_schedule = wp_next_scheduled( Validator::CRON_NAME, array( false ) );
+		$database_schedule = Scheduler::next_db_update();
 		$cleanup_schedule  = wp_next_scheduled( Validator::CACHE_NAME );
 
 		return rest_ensure_response( array(
@@ -554,7 +555,7 @@ class RestApi {
 					! Util::is_private_ip( $server_ip ),
 			),
 			'schedules' => array(
-				'database' => self::schedule_status( $database_schedule, ! empty( $settings['update']['auto'] ) ),
+				'database' => self::schedule_status( $database_schedule, Scheduler::needs_db_updates( $settings ) ),
 				'cleanup'  => self::schedule_status( $cleanup_schedule, true ),
 			),
 			'mimeTypes' => $mime_types,
