@@ -1,3 +1,14 @@
+= 1.4.3 =
+
+*Release Date - 20 Oct 2026*
+
+* Fix: Saving settings in the new interface failed with "The response is not a valid JSON response" on hosts with a web application firewall, such as WordPress.com, because the request carried the bad-signature list (`../`, `/wp-config.php`, `passwd`) in plain text. The new interface now sends that list rot13 and base64 encoded, as the classic interface always did, and settings imports travel encoded as well.
+* Fix: On hosts without the PHP bcmath extension, IP Location Block 1.4.0 to 1.4.2 declared global bc*() polyfill functions on every request, and every call to them threw an exception. Other plugins that detect bcmath with function_exists(), such as Woo Discount Rules, failed as a result. The polyfill is no longer global: the bundled IP2Location library uses native bcmath when available and a private polyfill otherwise, so IPv6 lookups keep working.
+* Fix: On hosts where WordPress cannot write files directly and no FTP constants are defined, the WordPress FTP credentials form was printed on every request, in front of pages and REST responses. This also made the new interface report "Failed to load settings". The form is no longer printed, and the drop-in check on each request no longer touches the filesystem API.
+* Fix: Sites that use only remote providers no longer get a "database update schedule is missing" diagnostic, and the database update and cache cleanup schedules are recreated in the admin if a failed run broke them. Cleanup now schedules its next run before it starts.
+* Improvement: "Failed to load settings" and failed saves now name the request that failed, and explain when a firewall or another plugin changed the response.
+* Improvement: System Info reports BC Math only when the native extension is loaded.
+
 = 1.4.2 =
 
 *Release Date - 1 Oct 2026*

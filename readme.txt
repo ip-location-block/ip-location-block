@@ -4,7 +4,7 @@ Tags: geo blocking, country block, state blocker, region blocker, ip blocker
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.4.2
+Stable tag: 1.4.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
@@ -107,6 +107,16 @@ Yes. When old settings are detected, Plugin settings offers a migration preview 
 
 == Changelog ==
 
+= 1.4.3 =
+
+*Release Date - 20 Oct 2026*
+
+* Fix: Saving settings in the new interface failed with "The response is not a valid JSON response" on hosts with a web application firewall, such as WordPress.com. The bad-signature list is now sent encoded, as the classic interface always did. Importing and exporting settings are covered too.
+* Fix: On hosts without the PHP bcmath extension, IP Location Block 1.4.0 to 1.4.2 defined global bcmath functions that always failed, which broke other plugins that use them (for example, saving rules in Woo Discount Rules). The plugin no longer defines global functions, and IPv6 lookups with the local IP2Location database keep working without bcmath.
+* Fix: On hosts where WordPress cannot write files directly, the WordPress FTP credentials form no longer appears in front of pages and admin requests. This also caused "Failed to load settings" in the new interface.
+* Fix: Diagnostics no longer report a missing database update schedule on sites that don't use a local database, and missing database update and cleanup schedules are recreated automatically.
+* Improvement: "Failed to load settings" and failed saves now say which request failed and why.
+
 = 1.4.2 =
 
 *Release Date - 1 Oct 2026*
@@ -136,6 +146,10 @@ Yes. When old settings are detected, Plugin settings offers a migration preview 
 Older release history is available in `changelog.txt` included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.4.3 =
+
+Recommended for all sites: fixes saving settings on firewall-protected hosts such as WordPress.com, a conflict with other plugins on hosts without bcmath, and false cron warnings.
 
 = 1.4.2 =
 

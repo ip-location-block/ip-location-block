@@ -27,7 +27,7 @@
  * Plugin Name:       IP Location Block (mu)
  * Plugin URI:        https://wordpress.org/plugins/ip-location-block/
  * Description:       Early-loading helper for IP Location Block: validates requests at mu-plugin time, before regular plugins load.
- * Version:           1.4.2
+ * Version:           1.4.3
  * Author:            darkog
  * Author URI:        https://iplocationblock.net/
  * Text Domain:       ip-location-block
