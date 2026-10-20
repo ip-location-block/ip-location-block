@@ -72,7 +72,7 @@ class Validator {
 
 
 		// include drop in if it exists
-		$dropin_path = Util::get_dropins_storage_dir( 'drop-in.php' );
+		$dropin_path = Util::get_dropin_path( 'drop-in.php' );
 		if ( \file_exists( $dropin_path ) ) {
 			include_once $dropin_path;
 		}

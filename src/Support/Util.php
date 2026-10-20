@@ -83,6 +83,20 @@ class Util {
 	}
 
 	/**
+	 * Path of a drop-in without creating the storage dirs or touching the
+	 * filesystem API, for the per-request existence check.
+	 *
+	 * @param string $dropin_name
+	 *
+	 * @return string
+	 */
+	public static function get_dropin_path( $dropin_name ) {
+		$wp_upload_dir = wp_upload_dir( null, false );
+
+		return self::slashit( $wp_upload_dir['basedir'] ) . 'ip-location-block/dropins/' . $dropin_name;
+	}
+
+	/**
 	 * Return local time of day.
 	 *
 	 * @param bool $timestamp

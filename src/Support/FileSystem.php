@@ -26,6 +26,7 @@ class FileSystem {
 	 */
 	private static $instance = null;
 	private static $method = 'direct';
+	private static $unavailable = false; // credentials were requested and not available
 
 	/**
 	 * Create an instance of this class.
@@ -65,11 +66,20 @@ class FileSystem {
 						sprintf( __( 'This plugin does not support method &#8220;%s&#8221; for FTP or SSH based file operations. Please refer to <a href="https://codex.wordpress.org/Editing_wp-config.php#WordPress_Upgrade_Constants" title="Editing wp-config.php &laquo; WordPress Codex">this document</a> for more details.', 'ip-location-block' ), self::$method )
 					);
 				}
-			} else {
+			} elseif ( ! self::$unavailable ) {
 				// Determines the method on the filesystem.
 				self::$method = get_filesystem_method();
 
-				if ( false !== ( $creds = request_filesystem_credentials( admin_url(), '', false, false, null ) ) ) {
+				// Without direct access and FTP constants, WordPress prints its
+				// FTP credentials form here. That would land in front of every
+				// page and REST response, so capture it and remember the failure.
+				ob_start();
+				$creds = request_filesystem_credentials( admin_url(), '', false, false, null );
+				ob_end_clean();
+
+				self::$unavailable = false === $creds;
+
+				if ( ! self::$unavailable ) {
 					WP_Filesystem( $creds );
 				} elseif ( class_exists( 'IP_Location_Block_Admin', false ) ) {
 					\IP_Location_Block_Admin::add_admin_notice(
