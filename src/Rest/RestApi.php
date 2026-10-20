@@ -648,8 +648,7 @@ class RestApi {
 	 * result is returned to the form for review and is not persisted here.
 	 */
 	public static function import_settings( \WP_REST_Request $request ) {
-		$payload = $request->get_json_params();
-		$data    = isset( $payload['data'] ) ? $payload['data'] : null;
+		$data = self::import_payload_data( $request->get_json_params() );
 		if ( ! is_array( $data ) ) {
 			return new \WP_Error(
 				'ilb_invalid_settings_file',
@@ -761,6 +760,51 @@ class RestApi {
 	}
 
 	/**
+	 * The React admin sends the bad-signature list as `signature_encoded`
+	 * (rot13, then base64 — the classic admin's transport format) because web
+	 * application firewalls reject request bodies containing `../`,
+	 * `/wp-config.php` or `passwd`. Restore the readable `signature`; an
+	 * undecodable value keeps the stored list.
+	 *
+	 * @param array  $input    Settings draft.
+	 * @param string $fallback Signature to keep when decoding fails.
+	 *
+	 * @return array
+	 */
+	private static function decode_transport_signature( $input, $fallback ) {
+		if ( ! array_key_exists( 'signature_encoded', $input ) ) {
+			return $input;
+		}
+
+		$encoded = $input['signature_encoded'];
+		unset( $input['signature_encoded'] );
+
+		$decoded            = is_string( $encoded ) ? base64_decode( $encoded, true ) : false;
+		$input['signature'] = false === $decoded ? $fallback : str_rot13( $decoded );
+
+		return $input;
+	}
+
+	/**
+	 * Settings file sent to /settings/import. The React admin base64-encodes
+	 * the whole file as `data_encoded` so firewalls don't reject it for the
+	 * signature list; a plain `data` object is still accepted.
+	 *
+	 * @param mixed $payload JSON body.
+	 *
+	 * @return mixed Decoded file, or null when it can't be read.
+	 */
+	private static function import_payload_data( $payload ) {
+		if ( isset( $payload['data_encoded'] ) && is_string( $payload['data_encoded'] ) ) {
+			$json = base64_decode( $payload['data_encoded'], true );
+
+			return false === $json ? null : json_decode( $json, true );
+		}
+
+		return isset( $payload['data'] ) ? $payload['data'] : null;
+	}
+
+	/**
 	 * Sanitize a full React payload while preserving operational values that
 	 * are deliberately never sent to the browser.
 	 *
@@ -777,6 +821,11 @@ class RestApi {
 		if ( isset( $current['login_link'] ) ) {
 			$input['login_link'] = $current['login_link'];
 		}
+
+		$input = self::decode_transport_signature(
+			$input,
+			isset( $current['signature'] ) ? (string) $current['signature'] : ''
+		);
 
 		// A raw one-item signature is valid in the React form. The classic
 		// sanitizer treats every comma-less value as its private encoded form,

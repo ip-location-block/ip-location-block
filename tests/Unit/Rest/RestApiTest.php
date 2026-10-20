@@ -21,6 +21,46 @@ final class RestApiTest extends TestCase {
 		return $ref->invokeArgs( null, $args );
 	}
 
+	/** ===== decode_transport_signature() ===== */
+
+	public function test_decode_transport_signature_restores_the_readable_list(): void {
+		$input = $this->call( 'decode_transport_signature', array(
+			array( 'signature_encoded' => base64_encode( str_rot13( "../,/wp-config.php,/passwd\nünï:.4" ) ), 'timeout' => 30 ),
+			'stored',
+		) );
+
+		$this->assertSame( array( 'timeout' => 30, 'signature' => "../,/wp-config.php,/passwd\nünï:.4" ), $input );
+	}
+
+	public function test_decode_transport_signature_keeps_the_stored_list_when_undecodable(): void {
+		$this->assertSame(
+			array( 'signature' => '../,/passwd' ),
+			$this->call( 'decode_transport_signature', array( array( 'signature_encoded' => '%%not base64%%' ), '../,/passwd' ) )
+		);
+		$this->assertSame(
+			array( 'signature' => '../,/passwd' ),
+			$this->call( 'decode_transport_signature', array( array( 'signature_encoded' => array( 'x' ) ), '../,/passwd' ) )
+		);
+	}
+
+	public function test_decode_transport_signature_leaves_raw_payloads_alone(): void {
+		$this->assertSame(
+			array( 'signature' => 'passwd' ),
+			$this->call( 'decode_transport_signature', array( array( 'signature' => 'passwd' ), 'stored' ) )
+		);
+	}
+
+	/** ===== import_payload_data() ===== */
+
+	public function test_import_payload_data_decodes_the_encoded_file(): void {
+		$file = array( 'ip_location_block_settings[signature]' => '../,/passwd' );
+
+		$this->assertSame( $file, $this->call( 'import_payload_data', array( array( 'data_encoded' => base64_encode( json_encode( $file ) ) ) ) ) );
+		$this->assertSame( $file, $this->call( 'import_payload_data', array( array( 'data' => $file ) ) ) );
+		$this->assertNull( $this->call( 'import_payload_data', array( array( 'data_encoded' => '%%' ) ) ) );
+		$this->assertNull( $this->call( 'import_payload_data', array( array() ) ) );
+	}
+
 	/** ===== provider_is_selected() ===== */
 
 	public function test_provider_is_selected_uses_explicit_stored_value(): void {

@@ -1,11 +1,83 @@
 import {
 	decodeLegacySignature,
+	describeRequestError,
+	encodePayload,
+	encodeSignature,
 	rot13,
 	saveWarnings,
 	selectedMimeMap,
+	withEncodedSignature,
 } from './settingsLogic';
 
+// Server side: str_rot13( base64_decode( $value ) ) over UTF-8 bytes.
+const decodeLikeServer = ( value ) =>
+	rot13(
+		decodeURIComponent(
+			Array.from( globalThis.atob( value ), ( character ) =>
+				'%' + character.charCodeAt( 0 ).toString( 16 ).padStart( 2, '0' )
+			).join( '' )
+		)
+	);
+
 describe( 'settings logic', () => {
+	test( 'encodes signatures in the classic transport format', () => {
+		expect( encodeSignature( '../,/wp-config.php,/passwd' ) ).toBe(
+			'Li4vLC9qYy1wYmFzdnQuY3VjLC9jbmZmanE='
+		);
+		expect(
+			decodeLegacySignature(
+				encodeSignature( '../,/wp-config.php,/passwd' )
+			)
+		).toBe( '../,/wp-config.php,/passwd' );
+	} );
+
+	test( 'encoded signatures survive non-ASCII text', () => {
+		const value = 'select:.5,ünïcode:.4\ncurl';
+		expect( decodeLikeServer( encodeSignature( value ) ) ).toBe( value );
+	} );
+
+	test( 'never sends the readable signature in a settings body', () => {
+		const body = withEncodedSignature( {
+			signature: '../,/wp-config.php,/passwd',
+			matching_rule: 1,
+		} );
+		expect( body ).toEqual( {
+			matching_rule: 1,
+			signature_encoded: 'Li4vLC9qYy1wYmFzdnQuY3VjLC9jbmZmanE=',
+		} );
+		expect( JSON.stringify( body ) ).not.toMatch( /\.\.\/|wp-config|passwd/ );
+		expect( withEncodedSignature( { matching_rule: 1 } ) ).toEqual( {
+			matching_rule: 1,
+		} );
+	} );
+
+	test( 'encodes a whole settings file for import', () => {
+		const file = {
+			'ip_location_block_settings[signature]': '../,/passwd',
+		};
+		const encoded = encodePayload( file );
+		expect( encoded ).not.toMatch( /\.\.\/|passwd/ );
+		expect( JSON.parse( globalThis.atob( encoded ) ) ).toEqual( file );
+	} );
+
+	test( 'names the failed request and explains non-JSON answers', () => {
+		expect(
+			describeRequestError(
+				{
+					code: 'invalid_json',
+					message: 'The response is not a valid JSON response.',
+				},
+				'settings/context'
+			)
+		).toMatch(
+			/^The response is not a valid JSON response\. \(request: settings\/context\) The site answered with a page instead of data\./
+		);
+		expect(
+			describeRequestError( { code: 'rest_forbidden', message: 'Nope.' } )
+		).toBe( 'Nope.' );
+		expect( describeRequestError( undefined ) ).toBe( 'Unknown error.' );
+	} );
+
 	test( 'restores the classic encoded signature format', () => {
 		expect(
 			decodeLegacySignature( 'Li4vLC9qYy1wYmFzdnQuY3VjLC9jbmZmanE=' )

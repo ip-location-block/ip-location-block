@@ -27,7 +27,7 @@ import {
 	getSettingsContext,
 } from '../api';
 import { SECTIONS } from './settingsSchema';
-import { saveWarnings } from '../settingsLogic';
+import { describeRequestError, saveWarnings } from '../settingsLogic';
 import { setPath } from './paths';
 import SettingsField from './SettingsField';
 import SimpleBlocking from './SimpleBlocking';
@@ -171,6 +171,7 @@ export default function Settings() {
 	} );
 	const [ mode, setMode ] = useState( null ); // resolved once settings load
 	const [ loading, setLoading ] = useState( true );
+	const [ loadError, setLoadError ] = useState( '' );
 	const [ saving, setSaving ] = useState( false );
 	const [ saveNotices, setSaveNotices ] = useState( [] );
 	const [ readyOverrides, setReadyOverrides ] = useState( {} );
@@ -185,15 +186,18 @@ export default function Settings() {
 	}, [] );
 
 	useEffect( () => {
+		// Remember which request failed so the notice can name it.
+		const tagged = ( endpoint, request ) =>
+			request.catch( ( error ) => Promise.reject( { error, endpoint } ) );
 		Promise.all( [
-			getSettings(),
-			getContent(),
-			getExceptions(),
-			getProviders(),
+			tagged( 'settings', getSettings() ),
+			tagged( 'content', getContent() ),
+			tagged( 'exceptions', getExceptions() ),
+			tagged( 'providers', getProviders() ),
 			getProviderStatus().catch( () => null ),
-			getDatabaseStatus(),
+			tagged( 'database/status', getDatabaseStatus() ),
 			getMode().catch( () => null ),
-			getSettingsContext(),
+			tagged( 'settings/context', getSettingsContext() ),
 		] )
 			.then(
 				( [
@@ -226,7 +230,15 @@ export default function Settings() {
 					);
 				}
 			)
-			.catch( () => setSettings( null ) )
+			.catch( ( failure ) => {
+				setSettings( null );
+				setLoadError(
+					describeRequestError(
+						failure?.error ?? failure,
+						failure?.endpoint
+					)
+				);
+			} )
 			.finally( () => setLoading( false ) );
 	}, [ requestedView ] );
 
@@ -267,6 +279,7 @@ export default function Settings() {
 		return (
 			<Notice status="error" isDismissible={ false }>
 				{ __( 'Failed to load settings.', 'ip-location-block' ) }
+				{ loadError && <p>{ loadError }</p> }
 			</Notice>
 		);
 	}
@@ -439,7 +452,7 @@ export default function Settings() {
 					{
 						id: `error-${ ++noticeSequence.current }`,
 						status: 'error',
-						message: e.message,
+						message: describeRequestError( e ),
 						persistent: true,
 					},
 				] )

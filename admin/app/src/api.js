@@ -4,6 +4,7 @@
  * bootstrap nonce explicitly for robustness.
  */
 import apiFetch from '@wordpress/api-fetch';
+import { encodePayload, withEncodedSignature } from './settingsLogic';
 
 const boot = window.ipLocationBlockAdmin || {};
 const ns = boot.restNamespace || 'ip-location-block/v1';
@@ -24,7 +25,7 @@ export const saveSettings = ( data, scope = settingsScope ) =>
 	apiFetch( {
 		path: `/${ ns }/settings?scope=${ encodeURIComponent( scope ) }`,
 		method: 'POST',
-		data,
+		data: withEncodedSignature( data ),
 	} );
 
 export const getDefaults = () =>
@@ -48,14 +49,14 @@ export const exportSettings = ( settings ) =>
 	apiFetch( {
 		path: `/${ ns }/settings/export`,
 		method: 'POST',
-		data: { settings },
+		data: { settings: withEncodedSignature( settings ) },
 	} );
 
 export const importSettings = ( data ) =>
 	apiFetch( {
 		path: `/${ ns }/settings/import`,
 		method: 'POST',
-		data: { data },
+		data: { data_encoded: encodePayload( data ) },
 	} );
 
 export const getLegacySettings = () =>
