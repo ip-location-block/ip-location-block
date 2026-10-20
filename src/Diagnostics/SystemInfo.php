@@ -64,7 +64,7 @@ class SystemInfo {
 			'Zlib:'          => function_exists( 'gzopen' ) ? 'yes' : 'no',
 			'ZipArchive:'    => class_exists( 'ZipArchive', false ) ? 'yes' : 'no',
 			'PECL phar:'     => class_exists( 'PharData', false ) ? 'yes' : 'no',
-			'BC Math:'       => ( extension_loaded( 'gmp' ) ? 'gmp ' : '' ) . ( function_exists( 'bcadd' ) ? 'yes' : 'no' ),
+			'BC Math:'       => ( extension_loaded( 'gmp' ) ? 'gmp ' : '' ) . ( extension_loaded( 'bcmath' ) ? 'yes' : 'no' ),
 			'mb_strcut:'     => function_exists( 'mb_strcut' ) ? 'yes' : 'no', // @since PHP 4.0.6
 			'OpenSSL:'       => defined( 'OPENSSL_RAW_DATA' ) ? 'yes' : 'no', // @since PHP 5.3.3
 			'SQLite(PDO):'   => extension_loaded( 'pdo_sqlite' ) ? 'yes' : 'no',

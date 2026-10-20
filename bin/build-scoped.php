@@ -42,9 +42,9 @@ $composerJson = [
         'classmap' => [
             'ip2location/ip2location-php/IP2Location.php',
         ],
-        'files' => [
-            'phpseclib/bcmath_compat/lib/bcmath.php',
-        ],
+        // No 'files': bcmath_compat's global bc*() functions are deliberately
+        // not shipped (see scoper.inc.php); IPLocationBlock\Support\BcMath
+        // calls the scoped BCMath class instead.
     ],
 ];
 

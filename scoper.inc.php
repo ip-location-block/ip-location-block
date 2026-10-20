@@ -53,11 +53,15 @@ return [
             ->exclude(['doc', 'docs', 'test', 'tests', 'Tests'])
             ->in('vendor/mikepultz/netdns2/src'),
 
-        // phpseclib3 + bcmath_compat polyfill.
+        // phpseclib3 + the bcmath_compat BCMath class. Its lib/bcmath.php is left
+        // out: it declares global bc*() functions, which other plugins detect
+        // with function_exists() and then call. IPLocationBlock\Support\BcMath
+        // reaches the BCMath class directly instead.
         Finder::create()
             ->files()
             ->ignoreVCS(true)
             ->notName('/LICENSE|.*\\.md|.*\\.dist|Makefile|composer\\.json/')
+            ->notPath('bcmath_compat/lib')
             ->exclude(['doc', 'docs', 'test', 'tests', 'Tests'])
             ->in('vendor/phpseclib'),
 
@@ -110,49 +114,46 @@ return [
     // WordPress core classes must stay global.
     'exclude-classes' => $loadExcludes('exclude-wordpress-classes.json'),
 
-    // WordPress core functions + the bcmath_compat polyfill functions must stay
-    // global so bcmath_compat remains a working global fallback when the native
-    // bcmath extension is absent.
-    'exclude-functions' => array_merge(
-        $loadExcludes('exclude-wordpress-functions.json'),
-        [
-            'bcadd',
-            'bcsub',
-            'bcmul',
-            'bcdiv',
-            'bcmod',
-            'bcpow',
-            'bcpowmod',
-            'bcsqrt',
-            'bccomp',
-            'bcscale',
-        ]
-    ),
+    // WordPress core functions must stay global.
+    'exclude-functions' => $loadExcludes('exclude-wordpress-functions.json'),
 
     // WordPress core constants must stay global.
     'exclude-constants' => $loadExcludes('exclude-wordpress-constants.json'),
 
     // Patchers for specific files that need manual adjustments.
     'patchers' => [
-        // bcmath_compat's lib/bcmath.php declares the global bc* polyfill
-        // functions (bcadd, bcsub, ...). php-scoper prefixes the file's
-        // namespace, which would turn those declarations into
-        // IPLocationBlock\Vendor\bcadd(), while scoped phpseclib still calls
-        // the GLOBAL \bcadd() (kept global via exclude-functions above). On a
-        // host without the native bcmath extension that mismatch would fatal.
-        // Strip the prefixed namespace from this one file so the polyfill
-        // declarations stay in the global namespace; the backing BCMath class
-        // is still reached through the file's (scoped) `use` import.
+        // phpseclib builds some class names from string literals
+        // ('phpseclib3\\Math\\BigInteger\\Engines\\' . $engine) that php-scoper
+        // doesn't rewrite. Unpatched, the scoped BigInteger finds no engine and
+        // every BCMath polyfill call throws "No valid BigInteger found".
         static function (string $filePath, string $prefix, string $contents): string {
-            if (!str_ends_with(str_replace('\\', '/', $filePath), 'bcmath_compat/lib/bcmath.php')) {
+            if (!str_contains(str_replace('\\', '/', $filePath), 'phpseclib/phpseclib/')) {
+                return $contents;
+            }
+
+            $escaped = str_replace('\\', '\\\\', $prefix);
+
+            return str_replace(
+                ["'phpseclib3\\\\", "'\\\\phpseclib3\\\\"],
+                ["'{$escaped}\\\\phpseclib3\\\\", "'\\\\{$escaped}\\\\phpseclib3\\\\"],
+                $contents
+            );
+        },
+
+        // IP2Location does its IPv6 math with bc*(), and the BCMath polyfill
+        // itself calls bccomp() once (in pow). Route those calls through
+        // IPLocationBlock\Support\BcMath, which uses the native extension when
+        // it's loaded and the scoped BCMath polyfill otherwise.
+        static function (string $filePath, string $prefix, string $contents): string {
+            $path = str_replace('\\', '/', $filePath);
+            if (!str_ends_with($path, 'ip2location-php/IP2Location.php') && !str_ends_with($path, 'bcmath_compat/src/BCMath.php')) {
                 return $contents;
             }
 
             return preg_replace(
-                '/^namespace ' . preg_quote($prefix, '/') . ';\R/m',
-                '',
-                $contents,
-                1
+                '/(?<![\w\\\\$>:])\\\\?bc(add|comp|div|mul|pow|sub)\s*\(/',
+                '\\\\IPLocationBlock\\\\Support\\\\BcMath::$1(',
+                $contents
             );
         },
     ],

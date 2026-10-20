@@ -90,3 +90,31 @@ for license in "${REQUIRED_LICENSES[@]}"; do
 	fi
 done
 echo "OK (e): scoped dependency licenses are present."
+
+# (f) bc* math: no global bc*() may be declared (other plugins detect them with
+#     function_exists() and call them), IP2Location and the BCMath polyfill must
+#     reach the math only through IPLocationBlock\Support\BcMath, and phpseclib's
+#     class-name string literals must be prefixed. The scoper.inc.php patchers
+#     do this against upstream source text, so a dependency bump can undo it.
+GLOBAL_BC=$(grep -RInE 'function bc[a-z]+ *\(' "$PLUGIN_DIR/vendor_prefixed" --include='*.php' 2>/dev/null || true)
+if [[ -n "$GLOBAL_BC" ]]; then
+	fail "Found bc*() function declarations in vendor_prefixed/ — the bcmath_compat polyfill must not ship:
+$GLOBAL_BC"
+fi
+UNROUTED_BC=$(grep -nE '(^|[^A-Za-z0-9_>:$\\])\\?bc(add|sub|mul|div|pow|comp) *\(' \
+	"$PLUGIN_DIR/vendor_prefixed/ip2location/ip2location-php/IP2Location.php" \
+	"$PLUGIN_DIR/vendor_prefixed/phpseclib/bcmath_compat/src/BCMath.php" 2>/dev/null || true)
+if [[ -n "$UNROUTED_BC" ]]; then
+	fail "Found bc*() calls not routed through IPLocationBlock\\Support\\BcMath (check the scoper.inc.php patcher):
+$UNROUTED_BC"
+fi
+UNPREFIXED_LITERALS=$(grep -RInF -e "'phpseclib3\\\\" -e "'\\\\phpseclib3\\\\" \
+	"$PLUGIN_DIR/vendor_prefixed/phpseclib" --include='*.php' 2>/dev/null || true)
+if [[ -n "$UNPREFIXED_LITERALS" ]]; then
+	fail "Found unprefixed phpseclib3 class-name strings in vendor_prefixed/ (check the scoper.inc.php patcher):
+$UNPREFIXED_LITERALS"
+fi
+echo "OK (f): no global bc*() declared, bc* math routed through BcMath, phpseclib class-name strings prefixed."
+
+# (g) Runtime check of the same, without php.ini (so normally without bcmath).
+php -n "$SCRIPT_DIR/smoke_scoped_build.php" "$PLUGIN_DIR" || fail "The scoped build smoke test failed."
